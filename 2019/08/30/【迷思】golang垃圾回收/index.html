@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）">
+<meta name="keywords" content="迷思,golang,垃圾回收">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【迷思】golang垃圾回收">
+<meta property="og:url" content="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/4/4a/Animation_of_the_Naive_Mark_and_Sweep_Garbage_Collector_Algorithm.gif">
+<meta property="og:updated_time" content="2019-09-15T03:52:22.428Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【迷思】golang垃圾回收">
+<meta name="twitter:description" content="这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/4/4a/Animation_of_the_Naive_Mark_and_Sweep_Garbage_Collector_Algorithm.gif">
+  <link rel="canonical" href="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【迷思】golang垃圾回收 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【迷思】golang垃圾回收
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-30 17:43:42" itemprop="dateCreated datePublished" datetime="2019-08-30T17:43:42+08:00">2019-08-30</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-09-15 11:52:22" itemprop="dateModified" datetime="2019-09-15T11:52:22+08:00">2019-09-15</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.9k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）</p><a id="more"></a>
+<p>通过这篇文章，你会知道：</p>
+<ul>
+<li>垃圾回收的常见的几种方式：引用计数，标记清理，复制收集，分代收集</li>
+<li>golang不同版本的几个垃圾收集的方式</li>
+</ul>
+<h2 id="常见垃圾收集"><a href="#常见垃圾收集" class="headerlink" title="常见垃圾收集"></a>常见垃圾收集</h2><h3 id="引用计数（reference-counting）"><a href="#引用计数（reference-counting）" class="headerlink" title="引用计数（reference counting）"></a>引用计数（reference counting）</h3><p>引用计数的思想非常简单：每个单元（对象）维护一个域，保存其它单元指向它的引用数量（类似有向图的入度）。如果多一个对这个对象的引用（指针），那么计数加一；而删除某个指向这个对象的引用（指针），那么计数减一。当其引用计数为 0 的时候，该单元会被进行回收。</p>
+<ul>
+<li>优点<ul>
+<li>渐进式。内存管理与用户程序的执行交织在一起，将 GC 的代价分散到整个程序。</li>
+<li>内存单元能够很快被回收。相比于其他垃圾回收算法，堆被耗尽或者达到某个阈值才会进行垃圾回收。</li>
+<li>算法易于实现。</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>原始的引用计数不能处理循环引用。</li>
+<li>维护引用计数降低运行效率。这是引用计数的代价，其他的垃圾收集也会有对应的代价方式。</li>
+</ul>
+</li>
+</ul>
+<h3 id="标记-清理（mark-and-sweep）"><a href="#标记-清理（mark-and-sweep）" class="headerlink" title="标记-清理（mark and sweep）"></a>标记-清理（mark and sweep）</h3><p>标记-清扫算法是一种基于追踪的自动内存管理。内存单元在程序运行过程中并不会在变成垃圾立刻回收，而是保持不可达状态，直到到达某个阈值或者固定时间长度。这个时候系统会挂起用户程序，也就是 STW（Stop The World，GC 的时候挂起用户程序），转而执行垃圾回收程序。垃圾回收程序对所有的存活单元进行一次全局遍历确定哪些单元可以回收。算法分两个部分：标记（mark）和清扫（sweep）。标记阶段表明所有的存活单元，清扫阶段将垃圾单元回收。如下图：</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Animation_of_the_Naive_Mark_and_Sweep_Garbage_Collector_Algorithm.gif" alt></p>
+<ul>
+<li>优点<ul>
+<li>可以处理循环引用的问题</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>在垃圾回收阶段会停止运行程序，大大增加程序的响应时间和不稳定性</li>
+</ul>
+</li>
+</ul>
+<h3 id="三色标记（Tri-color-marking）"><a href="#三色标记（Tri-color-marking）" class="headerlink" title="三色标记（Tri-color marking）"></a>三色标记（Tri-color marking）</h3><p>有三种集合：白色，黑色，灰色</p>
+<ul>
+<li>白色集合，或者叫危险集合，是垃圾回收的候选对象的集合</li>
+<li>黑色集合，黑色集合是根集合可达的集合，且没有白色集合中对象的传出引用，不参与垃圾回收</li>
+<li>灰色集包含从根可到达的所有对象，但尚未扫描以查找对“白色”对象的引用。 由于已知它们可以从根部到达，因此它们不能被垃圾收集，并且在扫描后将最终成为黑色集合。</li>
+</ul>
+<h4 id="清理过程"><a href="#清理过程" class="headerlink" title="清理过程"></a>清理过程</h4><ol>
+<li>首先，黑集里是空的，白集是满的，灰集也是空的（这其实不重要）。</li>
+<li>将所有对象放入白色集合中。</li>
+<li>然后从根节点开始遍历所有对象（注意这里并不递归遍历），把遍历到的对象从白色集合放入灰色集合。</li>
+<li>之后遍历灰色集合，将灰色对象引用的对象从白色集合放入灰色集合，之后将此灰色对象放入黑色集合</li>
+<li>重复上一步直到灰色中无任何对象（这能保证所有白色集合中被灰色集合中对象引用的对象都被放到黑色集合中）</li>
+<li>收集所有白色对象（垃圾）</li>
+</ol>
+<ul>
+<li>优点<ul>
+<li>这个算法可以实现 “on-the-fly”，也就是在程序执行的同时进行收集，并不需要暂停整个程序。</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>可能程序中的垃圾产生的速度会大于垃圾收集的速度，这样会导致程序中的垃圾越来越多无法被收集掉。</li>
+</ul>
+</li>
+</ul>
+<h3 id="复制收集（Copy-and-Collection）"><a href="#复制收集（Copy-and-Collection）" class="headerlink" title="复制收集（Copy and Collection）"></a>复制收集（Copy and Collection）</h3><p>复制收集也是一个基于追踪的垃圾收集算法。他在开始追踪前会开辟一个区域，这里叫做 ToSpace吧。一次扫描将追踪工作堆上的对象，将根集合可达的对象复制到ToSpace上。扫描完成后，将将ToSpace切换为工作堆，然后将老的工作堆上的对象全部清理。</p>
+<ul>
+<li>优点<ul>
+<li>所有存活的数据结构都缩并地排列在 Tospace 的底部，这样就不会存在内存碎片的问题。</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>内存得不到充分利用，总有一半的内存空间处于浪费状态。</li>
+</ul>
+</li>
+</ul>
+<h3 id="分代收集（generation-collector）"><a href="#分代收集（generation-collector）" class="headerlink" title="分代收集（generation collector）"></a>分代收集（generation collector）</h3><p>这种收集方式用了程序的一种特性：大部分对象会从产生开始在很短的时间内变成垃圾，而存在的很长时间的对象往往都有较长的生命周期。后产生的对象先收集，基于“most object die young“这样的事实。</p>
+<p>新创建的对象存放在称为 新生代（young generation）中（一般来说，新生代的大小会比 老年代小很多）。高频对新生成的对象进行回收，称为「小回收」，低频对所有对象回收，称为「大回收」。每一次「小回收」过后，就把存活下来的对象归为老年代，「小回收」的时候，遇到老年代直接跳过。大多数分代回收算法都采用的「复制收集」方法，因为小回收中垃圾的比例较大。</p>
+<ul>
+<li>优点<ul>
+<li>性能好</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>实现复杂，且需要结合其他垃圾回收算法</li>
+</ul>
+</li>
+</ul>
+<h2 id="golang的垃圾回收器"><a href="#golang的垃圾回收器" class="headerlink" title="golang的垃圾回收器"></a>golang的垃圾回收器</h2><h3 id="v1-3以前（mark-and-sweep（STW））"><a href="#v1-3以前（mark-and-sweep（STW））" class="headerlink" title="v1.3以前（mark-and-sweep（STW））"></a>v1.3以前（mark-and-sweep（STW））</h3><p>go runtime在一定条件下（内存超过阈值或定期如2min），暂停所有任务的执行，进行mark&amp;sweep操作，操作完成后启动所有任务的执行。</p>
+<h3 id="v1-3（mark（STW）and-sweep）"><a href="#v1-3（mark（STW）and-sweep）" class="headerlink" title="v1.3（mark（STW）and sweep）"></a>v1.3（mark（STW）and sweep）</h3><p>go runtime分离了mark和sweep操作，和以前一样，也是先暂停所有任务执行并启动mark，mark完成后马上就重新启动被暂停的任务了，而是让sweep任务和普通协程任务一样并行的和其他任务一起执行。</p>
+<h3 id="v1-5（三色标记）"><a href="#v1-5（三色标记）" class="headerlink" title="v1.5（三色标记）"></a>v1.5（三色标记）</h3><p>go 1.5正在实现的垃圾回收器是“非分代的、非移动的、并发的、三色的标记清除垃圾收集器”。这种方法的mark操作是可以渐进执行的而不需每次都扫描整个内存空间.</p>
+<h2 id="write-barrier"><a href="#write-barrier" class="headerlink" title="write barrier"></a>write barrier</h2><p>垃圾回收中的 write barrier 可以理解为编译器在写操作时特意插入的一段代码，对应的还有 read barrier。为什么需要 write barrier，很简单，对于和用户程序并发运行的垃圾回收算法，用户程序会一直修改内存，所以需要记录下来。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p> 实际上，gc低延迟是有代价的，其中最大的是吞吐量的下降。由于需要实现并行处理，线程间同步和多余的数据生成复制都会占用实际逻辑业务代码运行的时间。这就导致业务代码执行时间减少，吞吐量下降。并行GC的第二个代价是不可预测的堆空间扩大。程序在GC的运行期间仍能不断分配任意大小的堆空间，因此我们需要在到达最大的堆空间之前实行一次GC（不然就堆溢出了），但是过早实行GC会造成不必要的GC扫描，这也是需要衡量利弊的。</p>
+<p>垃圾收集是一个难题，没有所谓十全十美的方案，通常是为了适应应用场景做出的一种取舍。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://idiotsky.top/2017/08/16/gc-three-color/" target="_blank" rel="noopener">http://idiotsky.top/2017/08/16/gc-three-color/</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking</a></p>
+<p><a href="http://legendtkl.com/2017/04/28/golang-gc/#more" target="_blank" rel="noopener">http://legendtkl.com/2017/04/28/golang-gc/#more</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/迷思/" rel="tag"># 迷思</a>
+            
+              <a href="/tags/golang/" rel="tag"># golang</a>
+            
+              <a href="/tags/垃圾回收/" rel="tag"># 垃圾回收</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/08/30/【翻译】理解pulsar如何工作/" rel="next" title="【翻译】理解pulsar如何工作">
+                  <i class="fa fa-chevron-left"></i> 【翻译】理解pulsar如何工作
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/09/09/【学习】git不同阶段撤回/" rel="prev" title="【学习】git不同阶段撤回">
+                  【学习】git不同阶段撤回 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#常见垃圾收集"><span class="nav-number">1.</span> <span class="nav-text">常见垃圾收集</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#引用计数（reference-counting）"><span class="nav-number">1.1.</span> <span class="nav-text">引用计数（reference counting）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#标记-清理（mark-and-sweep）"><span class="nav-number">1.2.</span> <span class="nav-text">标记-清理（mark and sweep）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三色标记（Tri-color-marking）"><span class="nav-number">1.3.</span> <span class="nav-text">三色标记（Tri-color marking）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#清理过程"><span class="nav-number">1.3.1.</span> <span class="nav-text">清理过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#复制收集（Copy-and-Collection）"><span class="nav-number">1.4.</span> <span class="nav-text">复制收集（Copy and Collection）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分代收集（generation-collector）"><span class="nav-number">1.5.</span> <span class="nav-text">分代收集（generation collector）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#golang的垃圾回收器"><span class="nav-number">2.</span> <span class="nav-text">golang的垃圾回收器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#v1-3以前（mark-and-sweep（STW））"><span class="nav-number">2.1.</span> <span class="nav-text">v1.3以前（mark-and-sweep（STW））</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#v1-3（mark（STW）and-sweep）"><span class="nav-number">2.2.</span> <span class="nav-text">v1.3（mark（STW）and sweep）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#v1-5（三色标记）"><span class="nav-number">2.3.</span> <span class="nav-text">v1.5（三色标记）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#write-barrier"><span class="nav-number">3.</span> <span class="nav-text">write barrier</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">19k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">18 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
