@@ -59,7 +59,7 @@
 <meta name="keywords" content="翻译,消息队列,Apache Pulsar">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【翻译】理解pulsar如何工作">
-<meta property="og:url" content="http://yoursite.com/2019/08/30/【翻译】理解pulsar如何工作/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
 <meta property="og:locale" content="zh-CN">
@@ -74,12 +74,12 @@
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538560169571-MKFXQQ8FJ6MMJH4V59EO/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerReads.png">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538601042753-J8IXQ06HUPV1R7PEAPFE/ke17ZwdGBToddI8pDm48kGp6mpaF6fRR69MhdwssQUgUqsxRUqqbr1mOJYKfIPR7LoDQ9mXPOjoJoqy81S2I8N_N4V1vUb5AoIIIbLZhVYxCRW4BPu10St3TBAUQYVKcUp2nWII0JUNTlurDWjlSqtH1pYxrnuysKJX4SS0MkLn8sIGgGTuW_pGj0nnlCENC/image-asset.png">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538583413563-QVJ2MWQQK1B10NIP45NZ/ke17ZwdGBToddI8pDm48kF9K_vvjtFzVXH1W4f_DQEpZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyf1S8Qn827K1psbrnM8HhCaEP0bNw_lw7ho1MuAex3PfHhIYVgeZkiJDc-4VfhUAY/RoundUp.png">
-<meta property="og:updated_time" content="2019-09-09T03:26:46.506Z">
+<meta property="og:updated_time" content="2019-10-08T08:13:31.831Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【翻译】理解pulsar如何工作">
 <meta name="twitter:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
 <meta name="twitter:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png">
-  <link rel="canonical" href="http://yoursite.com/2019/08/30/【翻译】理解pulsar如何工作/">
+  <link rel="canonical" href="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/">
 
 
 <script id="page-configurations">
@@ -241,7 +241,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/【翻译】理解pulsar如何工作/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -283,7 +283,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-09 11:26:46" itemprop="dateModified" datetime="2019-09-09T11:26:46+08:00">2019-09-09</time>
+                <time title="修改时间：2019-10-08 16:13:31" itemprop="dateModified" datetime="2019-10-08T16:13:31+08:00">2019-10-08</time>
               </span>
             
           
@@ -538,7 +538,7 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/08/15/【迷思】IO多路复用/" rel="next" title="【迷思】IO多路复用">
+                <a href="/2019/08/15/reflection/【迷思】IO多路复用/" rel="next" title="【迷思】IO多路复用">
                   <i class="fa fa-chevron-left"></i> 【迷思】IO多路复用
                 </a>
               
@@ -548,7 +548,7 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/08/30/【迷思】golang垃圾回收/" rel="prev" title="【迷思】golang垃圾回收">
+                <a href="/2019/08/30/reflection/【迷思】golang垃圾回收/" rel="prev" title="【迷思】golang垃圾回收">
                   【迷思】golang垃圾回收 <i class="fa fa-chevron-right"></i>
                 </a>
               
@@ -607,7 +607,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -626,7 +626,13 @@
         
           
         
-        <span class="site-state-item-count">2</span>
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -661,7 +667,17 @@
         
           
         
-        <span class="site-state-item-count">10</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -729,12 +745,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">19k</span>
+    <span title="站点总字数">24k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">18 分钟</span>
+    <span title="站点阅读时长">22 分钟</span>
 </div>
 
         

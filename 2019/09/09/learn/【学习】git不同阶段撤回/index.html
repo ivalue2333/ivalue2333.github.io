@@ -55,19 +55,19 @@
   };
 </script>
 
-  <meta name="description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库 文件有5个状态：origin， modified，staged，committed，pushed 如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改 是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作">
+  <meta name="description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库  文件有5个状态：origin， modified，staged，committed，pushed  如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改  [TOC]是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也">
 <meta name="keywords" content="学习,git">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【学习】git不同阶段撤回">
-<meta property="og:url" content="http://yoursite.com/2019/09/09/【学习】git不同阶段撤回/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/09/09/learn/【学习】git不同阶段撤回/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库 文件有5个状态：origin， modified，staged，committed，pushed 如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改 是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作">
+<meta property="og:description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库  文件有5个状态：origin， modified，staged，committed，pushed  如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改  [TOC]是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-09-09T12:47:41.125Z">
+<meta property="og:updated_time" content="2019-10-08T08:18:11.942Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【学习】git不同阶段撤回">
-<meta name="twitter:description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库 文件有5个状态：origin， modified，staged，committed，pushed 如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改 是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作">
-  <link rel="canonical" href="http://yoursite.com/2019/09/09/【学习】git不同阶段撤回/">
+<meta name="twitter:description" content="通过这篇文章，你会知道： git有四个区：工作区，暂存区，本地仓库，远程仓库  文件有5个状态：origin， modified，staged，committed，pushed  如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改  [TOC]是什么大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也">
+  <link rel="canonical" href="http://yoursite.com/2019/09/09/learn/【学习】git不同阶段撤回/">
 
 
 <script id="page-configurations">
@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/09/【学习】git不同阶段撤回/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/09/learn/【学习】git不同阶段撤回/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -260,11 +260,19 @@
                 
               
 
-              <time title="创建时间：2019-09-09 20:40:33 / 修改时间：20:47:41" itemprop="dateCreated datePublished" datetime="2019-09-09T20:40:33+08:00">2019-09-09</time>
+              <time title="创建时间：2019-09-09 20:40:33" itemprop="dateCreated datePublished" datetime="2019-09-09T20:40:33+08:00">2019-09-09</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-08 16:18:11" itemprop="dateModified" datetime="2019-10-08T16:18:11+08:00">2019-10-08</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -290,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>2.5k</span>
+              <span>2.6k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -314,10 +322,14 @@
 
       
         <p>通过这篇文章，你会知道：</p><ul>
-<li>git有四个区：工作区，暂存区，本地仓库，远程仓库</li>
-<li>文件有5个状态：origin， modified，staged，committed，pushed</li>
-<li>如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改</li>
-</ul><h2 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h2><p>大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作区提交代码</p><a id="more"></a>
+<li><p>git有四个区：工作区，暂存区，本地仓库，远程仓库</p>
+</li>
+<li><p>文件有5个状态：origin， modified，staged，committed，pushed</p>
+</li>
+<li><p>如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改</p>
+</li>
+</ul><p>[TOC]</p><h2 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h2><p>大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作区提交代码</p><a id="more"></a>
+
 
 
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m "commit"</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
@@ -374,9 +386,12 @@
 <p><strong>不要再公共分支上 git push -f</strong></p>
 <h2 id="怎么实现"><a href="#怎么实现" class="headerlink" title="怎么实现"></a>怎么实现</h2><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过这篇文章，你会知道。</p>
 <ul>
-<li>git有四个区：工作区，暂存区，本地仓库，远程仓库</li>
-<li>文件有5个状态：origin， modified，staged，committed，pushed</li>
-<li>如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改</li>
+<li><p>git有四个区：工作区，暂存区，本地仓库，远程仓库</p>
+</li>
+<li><p>文件有5个状态：origin， modified，staged，committed，pushed</p>
+</li>
+<li><p>如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改</p>
+</li>
 </ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>原文链接：<a href="http://einverne.github.io/post/2017/12/git-reset.html" target="_blank" rel="noopener">http://einverne.github.io/post/2017/12/git-reset.html</a></p>
 
@@ -406,7 +421,7 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/08/30/【迷思】golang垃圾回收/" rel="next" title="【迷思】golang垃圾回收">
+                <a href="/2019/08/30/reflection/【迷思】golang垃圾回收/" rel="next" title="【迷思】golang垃圾回收">
                   <i class="fa fa-chevron-left"></i> 【迷思】golang垃圾回收
                 </a>
               
@@ -415,6 +430,10 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/09/16/learn/【学习】微信开发踩坑记/" rel="prev" title="【学习】微信开发采坑记">
+                  【学习】微信开发采坑记 <i class="fa fa-chevron-right"></i>
+                </a>
               
             </div>
           </div>
@@ -471,7 +490,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -490,7 +509,13 @@
         
           
         
-        <span class="site-state-item-count">2</span>
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -525,7 +550,17 @@
         
           
         
-        <span class="site-state-item-count">10</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -593,12 +628,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">19k</span>
+    <span title="站点总字数">24k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">18 分钟</span>
+    <span title="站点阅读时长">22 分钟</span>
 </div>
 
         

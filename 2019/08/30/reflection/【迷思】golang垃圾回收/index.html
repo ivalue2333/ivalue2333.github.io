@@ -59,17 +59,17 @@
 <meta name="keywords" content="迷思,golang,垃圾回收">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【迷思】golang垃圾回收">
-<meta property="og:url" content="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/08/30/reflection/【迷思】golang垃圾回收/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/4/4a/Animation_of_the_Naive_Mark_and_Sweep_Garbage_Collector_Algorithm.gif">
-<meta property="og:updated_time" content="2019-09-15T03:52:22.428Z">
+<meta property="og:updated_time" content="2019-10-08T08:13:10.599Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【迷思】golang垃圾回收">
 <meta name="twitter:description" content="这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）">
 <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/4/4a/Animation_of_the_Naive_Mark_and_Sweep_Garbage_Collector_Algorithm.gif">
-  <link rel="canonical" href="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/">
+  <link rel="canonical" href="http://yoursite.com/2019/08/30/reflection/【迷思】golang垃圾回收/">
 
 
 <script id="page-configurations">
@@ -231,7 +231,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/【迷思】golang垃圾回收/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/reflection/【迷思】golang垃圾回收/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -273,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-15 11:52:22" itemprop="dateModified" datetime="2019-09-15T11:52:22+08:00">2019-09-15</time>
+                <time title="修改时间：2019-10-08 16:13:10" itemprop="dateModified" datetime="2019-10-08T16:13:10+08:00">2019-10-08</time>
               </span>
             
           
@@ -300,7 +300,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>2.9k</span>
+              <span>3k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -408,9 +408,15 @@
 <h2 id="write-barrier"><a href="#write-barrier" class="headerlink" title="write barrier"></a>write barrier</h2><p>垃圾回收中的 write barrier 可以理解为编译器在写操作时特意插入的一段代码，对应的还有 read barrier。为什么需要 write barrier，很简单，对于和用户程序并发运行的垃圾回收算法，用户程序会一直修改内存，所以需要记录下来。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p> 实际上，gc低延迟是有代价的，其中最大的是吞吐量的下降。由于需要实现并行处理，线程间同步和多余的数据生成复制都会占用实际逻辑业务代码运行的时间。这就导致业务代码执行时间减少，吞吐量下降。并行GC的第二个代价是不可预测的堆空间扩大。程序在GC的运行期间仍能不断分配任意大小的堆空间，因此我们需要在到达最大的堆空间之前实行一次GC（不然就堆溢出了），但是过早实行GC会造成不必要的GC扫描，这也是需要衡量利弊的。</p>
 <p>垃圾收集是一个难题，没有所谓十全十美的方案，通常是为了适应应用场景做出的一种取舍。</p>
+<p>通过这篇文章，你会知道：</p>
+<ul>
+<li>垃圾回收的常见的几种方式：引用计数，标记清理，复制收集，分代收集</li>
+<li>golang不同版本的几个垃圾收集的方式</li>
+</ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://idiotsky.top/2017/08/16/gc-three-color/" target="_blank" rel="noopener">http://idiotsky.top/2017/08/16/gc-three-color/</a></p>
 <p><a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking</a></p>
 <p><a href="http://legendtkl.com/2017/04/28/golang-gc/#more" target="_blank" rel="noopener">http://legendtkl.com/2017/04/28/golang-gc/#more</a></p>
+<p><a href="https://segmentfault.com/a/1190000018161588" target="_blank" rel="noopener">https://segmentfault.com/a/1190000018161588</a></p>
 
     </div>
 
@@ -440,7 +446,7 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/08/30/【翻译】理解pulsar如何工作/" rel="next" title="【翻译】理解pulsar如何工作">
+                <a href="/2019/08/30/translation/【翻译】理解pulsar如何工作/" rel="next" title="【翻译】理解pulsar如何工作">
                   <i class="fa fa-chevron-left"></i> 【翻译】理解pulsar如何工作
                 </a>
               
@@ -450,7 +456,7 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/09/09/【学习】git不同阶段撤回/" rel="prev" title="【学习】git不同阶段撤回">
+                <a href="/2019/09/09/learn/【学习】git不同阶段撤回/" rel="prev" title="【学习】git不同阶段撤回">
                   【学习】git不同阶段撤回 <i class="fa fa-chevron-right"></i>
                 </a>
               
@@ -509,7 +515,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -528,7 +534,13 @@
         
           
         
-        <span class="site-state-item-count">2</span>
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -563,7 +575,17 @@
         
           
         
-        <span class="site-state-item-count">10</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -631,12 +653,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">19k</span>
+    <span title="站点总字数">24k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">18 分钟</span>
+    <span title="站点阅读时长">22 分钟</span>
 </div>
 
         
