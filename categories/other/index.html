@@ -55,19 +55,15 @@
   };
 </script>
 
-  <meta name="description" content="坑们 Makefile中的tab123456789101112131415# 报错makefile:4: *** missing separator. Stop# 原因makefile中的tab就是tab不能使用空格来替代# 检查cat -e -t -v Makefile^I开头^M$结尾就是正确的# 解决错误的那一行是因为缺少^I，加上就可以了# 参考https://stackoverflow.">
-<meta name="keywords" content="blog, 编程, python, golang">
-<meta property="og:type" content="article">
+  <meta name="keywords" content="blog, 编程, python, golang">
+<meta property="og:type" content="website">
 <meta property="og:title" content="blog | percy">
-<meta property="og:url" content="http://yoursite.com/2019/12/21/【一些小坑】/index.html">
+<meta property="og:url" content="http://yoursite.com/categories/other/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="坑们 Makefile中的tab123456789101112131415# 报错makefile:4: *** missing separator. Stop# 原因makefile中的tab就是tab不能使用空格来替代# 检查cat -e -t -v Makefile^I开头^M$结尾就是正确的# 解决错误的那一行是因为缺少^I，加上就可以了# 参考https://stackoverflow.">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-19T08:22:45.108Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="blog | percy">
-<meta name="twitter:description" content="坑们 Makefile中的tab123456789101112131415# 报错makefile:4: *** missing separator. Stop# 原因makefile中的tab就是tab不能使用空格来替代# 检查cat -e -t -v Makefile^I开头^M$结尾就是正确的# 解决错误的那一行是因为缺少^I，加上就可以了# 参考https://stackoverflow.">
-  <link rel="canonical" href="http://yoursite.com/2019/12/21/【一些小坑】/">
+  <link rel="canonical" href="http://yoursite.com/categories/other/">
 
 
 <script id="page-configurations">
@@ -75,13 +71,13 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: true,
+    isPost: false,
     isPage: false,
     isArchive: false
   };
 </script>
 
-  <title> | blog | percy</title>
+  <title>分类: other | blog | percy</title>
   
 
 
@@ -218,137 +214,90 @@
         <div class="content-wrap">
             
 
-          <div id="content" class="content page-post-detail">
-            
-
-  <div id="posts" class="posts-expand">
+    
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
     
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+
+          <div id="content" class="content ">
+            
+
   
   
   
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/21/【一些小坑】/">
+  <div class="post-block category">
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2019-12-21 23:33:40" itemprop="dateCreated datePublished" datetime="2019-12-21T23:33:40+08:00">2019-12-21</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-19 16:22:45" itemprop="dateModified" datetime="2019-11-19T16:22:45+08:00">2019-11-19</time>
-              </span>
-            
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>236</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
+    <div id="posts" class="posts-collapse">
+      <div class="collection-title">
+        <h1>other<small>分类</small>
+        </h1>
+      </div>
 
       
-        <p>坑们</p>
-<h3 id="Makefile中的tab"><a href="#Makefile中的tab" class="headerlink" title="Makefile中的tab"></a>Makefile中的tab</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 报错</span><br><span class="line">makefile:4: *** missing separator. Stop</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 原因</span><br><span class="line">makefile中的tab就是tab不能使用空格来替代</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 检查</span><br><span class="line">cat -e -t -v Makefile</span><br><span class="line">^I开头^M$结尾就是正确的</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 解决</span><br><span class="line">错误的那一行是因为缺少^I，加上就可以了</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 参考</span><br><span class="line">https://stackoverflow.com/questions/16931770/makefile4-missing-separator-stop</span><br></pre></td></tr></table></figure>
+
+  
+  
+  
+
+  
+    
+    <div class="collection-title">
+      <h1 class="archive-year" id="archive-year-1212">1212</h1>
+    </div>
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h2 class="post-title">
+        
+          <a class="post-title-link" href="/1212/12/12/other/house_knowledeg/" itemprop="url">
+            
+              <span itemprop="name">【other】房子的知识</span>
+            
+          </a>
+        
+      </h2>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated"
+              datetime="1212-12-12T12:12:12+08:00"
+              content="1212-12-12">
+          12-12
+        </time>
+      </div>
+
+    </header>
+  </article>
+
 
 
     </div>
 
-    
-    
-    
-        
-      
-
-      <footer class="post-footer">
-
-        
-
-          <div class="post-nav">
-            <div class="post-nav-next post-nav-item">
-              
-                <a href="/2019/12/21/other/house_knowledeg/" rel="next" title="">
-                  <i class="fa fa-chevron-left"></i> 
-                </a>
-              
-            </div>
-
-            <span class="post-nav-divider"></span>
-
-            <div class="post-nav-prev post-nav-item">
-              
-            </div>
-          </div>
-        
-      </footer>
-    
   </div>
   
   
   
-  </article>
 
-  </div>
+  
+
 
 
           </div>
@@ -367,17 +316,8 @@
 
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-inner">
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <div class="site-overview-wrap sidebar-panel">
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
 
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -421,7 +361,11 @@
         
           
         
-        <span class="site-state-item-count">7</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -476,7 +420,11 @@
         
           
         
-        <span class="site-state-item-count">20</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -507,23 +455,6 @@
 
         </div>
       </div>
-      <!--noindex-->
-        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-            
-            
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Makefile中的tab"><span class="nav-number">1.</span> <span class="nav-text">Makefile中的tab</span></a></li></ol></div>
-            
-
-          </div>
-        </div>
-      <!--/noindex-->
-      
 
     </div>
   </aside>
@@ -628,9 +559,5 @@
 
 
   
-  <script src="/js/scrollspy.js?v=7.3.0"></script>
-<script src="/js/post-details.js?v=7.3.0"></script>
-
-
 </body>
 </html>
