@@ -56,14 +56,14 @@
 </script>
 
   <meta name="description" content="概述Content-Type，内容类型。用于定义网络文件的类型和网页的编码，告知文件接收方文件的形式，文件的编码方式。一种常见的误解是content-type只有POST请求才需要，或者说才可以设置，这是一种误解。所有类型的请求，包括POST，GET都可以设置请求Content-Type。实际上Content-Type是一种约定，约定的双方定义了这种数据请求，解析，返回的格式。便于正确的解析数据。">
-<meta name="keywords" content="http - Content-Type">
+<meta name="keywords" content="http,Content-Type">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【http】关于http请求Content-Type，你想要知道的一切">
 <meta property="og:url" content="http://yoursite.com/2019/12/24/http/【http】关于http请求Content-Type，你想要知道的一切/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="概述Content-Type，内容类型。用于定义网络文件的类型和网页的编码，告知文件接收方文件的形式，文件的编码方式。一种常见的误解是content-type只有POST请求才需要，或者说才可以设置，这是一种误解。所有类型的请求，包括POST，GET都可以设置请求Content-Type。实际上Content-Type是一种约定，约定的双方定义了这种数据请求，解析，返回的格式。便于正确的解析数据。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-12-24T15:25:31.795Z">
+<meta property="og:updated_time" content="2019-12-29T06:38:44.042Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于http请求Content-Type，你想要知道的一切">
 <meta name="twitter:description" content="概述Content-Type，内容类型。用于定义网络文件的类型和网页的编码，告知文件接收方文件的形式，文件的编码方式。一种常见的误解是content-type只有POST请求才需要，或者说才可以设置，这是一种误解。所有类型的请求，包括POST，GET都可以设置请求Content-Type。实际上Content-Type是一种约定，约定的双方定义了这种数据请求，解析，返回的格式。便于正确的解析数据。">
@@ -260,11 +260,19 @@
                 
               
 
-              <time title="创建时间：2019-12-24 22:33:05 / 修改时间：23:25:31" itemprop="dateCreated datePublished" datetime="2019-12-24T22:33:05+08:00">2019-12-24</time>
+              <time title="创建时间：2019-12-24 22:33:05" itemprop="dateCreated datePublished" datetime="2019-12-24T22:33:05+08:00">2019-12-24</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-29 14:38:44" itemprop="dateModified" datetime="2019-12-29T14:38:44+08:00">2019-12-29</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -349,7 +357,7 @@
 <p>在golang中的写法</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">httpWriter.Header().Set(<span class="string">"Content-Type"</span>, <span class="string">"multipart/form-data; charset=UTF-8"</span>)</span><br><span class="line"></span><br><span class="line">httpWriter.Header().Set(<span class="string">"Content-disposition"</span>, fmt.Sprintf(<span class="string">"attachment; filename=%s"</span>, fileName))</span><br></pre></td></tr></table></figure>
 
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p>requests流式上传：<a href="https://2.python-requests.org//zh_CN/latest/user/advanced.html#advanced" target="_blank" rel="noopener">https://2.python-requests.org//zh_CN/latest/user/advanced.html#advanced</a></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p>python requests流式上传：<a href="https://2.python-requests.org//zh_CN/latest/user/advanced.html#advanced" target="_blank" rel="noopener">https://2.python-requests.org//zh_CN/latest/user/advanced.html#advanced</a></p>
 <p>content-type详解：<a href="https://www.jianshu.com/p/de5845b4c095" target="_blank" rel="noopener">https://www.jianshu.com/p/de5845b4c095</a></p>
 <p>http请求测试：<a href="https://ivalue2333.github.io/categories/http/" target="_blank" rel="noopener">https://ivalue2333.github.io/categories/http/</a></p>
 
@@ -367,7 +375,9 @@
           
           <div class="post-tags">
             
-              <a href="/tags/http-Content-Type/" rel="tag"># http - Content-Type</a>
+              <a href="/tags/http/" rel="tag"># http</a>
+            
+              <a href="/tags/Content-Type/" rel="tag"># Content-Type</a>
             
           </div>
         
@@ -386,6 +396,10 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/12/29/http/【http】关于http长连接，你想要知道的一切/" rel="prev" title="【http】关于http长连接，你想要知道的一切">
+                  【http】关于http长连接，你想要知道的一切 <i class="fa fa-chevron-right"></i>
+                </a>
               
             </div>
           </div>
@@ -442,7 +456,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -475,7 +489,9 @@
         
           
         
-        <span class="site-state-item-count">9</span>
+          
+        
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -534,7 +550,23 @@
         
           
         
-        <span class="site-state-item-count">22</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -602,12 +634,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">47k</span>
+    <span title="站点总字数">61k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">43 分钟</span>
+    <span title="站点阅读时长">55 分钟</span>
 </div>
 
         

@@ -56,14 +56,14 @@
 </script>
 
   <meta name="description" content="测试代码server代码(python)123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657#!/usr/bin/env python# coding:utf-8import tornado.ioloopimport tornado.webc">
-<meta name="keywords" content="http - 请求参数">
+<meta name="keywords" content="http,请求参数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【http】关于http请求参数，你想要知道的一切">
 <meta property="og:url" content="http://yoursite.com/2019/12/21/http/【http】关于http请求参数，你想要知道的一切/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="测试代码server代码(python)123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657#!/usr/bin/env python# coding:utf-8import tornado.ioloopimport tornado.webc">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-12-24T15:25:08.330Z">
+<meta property="og:updated_time" content="2019-12-29T06:38:51.146Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于http请求参数，你想要知道的一切">
 <meta name="twitter:description" content="测试代码server代码(python)123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657#!/usr/bin/env python# coding:utf-8import tornado.ioloopimport tornado.webc">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-24 23:25:08" itemprop="dateModified" datetime="2019-12-24T23:25:08+08:00">2019-12-24</time>
+                <time title="修改时间：2019-12-29 14:38:51" itemprop="dateModified" datetime="2019-12-29T14:38:51+08:00">2019-12-29</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>7.1k</span>
+              <span>7.4k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -308,7 +308,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>6 分钟</span>
+              <span>7 分钟</span>
             </span>
           
 
@@ -356,6 +356,11 @@
 </ul>
 <h3 id="揭秘"><a href="#揭秘" class="headerlink" title="揭秘"></a>揭秘</h3><p>那么为什么很多人有GET请求只能在请求行参数中传递参数，而POST就可以在BODY中传递参数呢？这是因为大多数人都遵循网页中的form表单提交get，和post请求来了。在网页form表单中，把 form 的 method 设置为 post, 表单数据会放在 body 中，而 method 为 get(默认值) 时, 提交时浏览器会把表单中的字符拼接到 action 的 URL 后作为 query parameter 传送。于是乎就有了这么一种假像：HTTP GET 必须通过 URL 的查询参数来发送数据。</p>
 <h3 id="一个但是"><a href="#一个但是" class="headerlink" title="一个但是"></a>一个但是</h3><p>但是，即使GET请求在http协议中并没有规定不能在body中携带参数，我们也应该这么做！！！这是因为get请求从http协议的设计初衷，就是为了获取网络资源，它的请求行uri和host就应该是它全部携带的payload，这在很多缓存系统，很多后端服务框架中都是默认的。一个GET请求，最好就不要携带一堆payload了。</p>
+<p>rfc7231有如下的描述（<a href="https://tools.ietf.org/html/rfc7231#section-4.3.1" target="_blank" rel="noopener">链接</a>）：</p>
+<blockquote>
+<p>A payload within a GET request message has no defined semantics;<br>sending a payload body on a GET request might cause some existing implementations to reject the request.</p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>rfc7231：<a href="https://tools.ietf.org/html/rfc7231#section-4.3.1" target="_blank" rel="noopener">https://tools.ietf.org/html/rfc7231#section-4.3.1</a></p>
 
     </div>
 
@@ -371,7 +376,9 @@
           
           <div class="post-tags">
             
-              <a href="/tags/http-请求参数/" rel="tag"># http - 请求参数</a>
+              <a href="/tags/http/" rel="tag"># http</a>
+            
+              <a href="/tags/请求参数/" rel="tag"># 请求参数</a>
             
           </div>
         
@@ -450,7 +457,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -483,7 +490,9 @@
         
           
         
-        <span class="site-state-item-count">9</span>
+          
+        
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -542,7 +551,23 @@
         
           
         
-        <span class="site-state-item-count">22</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -583,7 +608,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#测试代码"><span class="nav-number">1.</span> <span class="nav-text">测试代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#server代码-python"><span class="nav-number">1.1.</span> <span class="nav-text">server代码(python)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#server代码-golang"><span class="nav-number">1.2.</span> <span class="nav-text">server代码(golang)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test代码-python3"><span class="nav-number">1.3.</span> <span class="nav-text">test代码(python3)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求参数"><span class="nav-number">2.</span> <span class="nav-text">请求参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v1"><span class="nav-number">2.1.</span> <span class="nav-text">test_get_v1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v2"><span class="nav-number">2.2.</span> <span class="nav-text">test_get_v2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v2-v1"><span class="nav-number">2.3.</span> <span class="nav-text">test_get_v2_v1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v3"><span class="nav-number">2.4.</span> <span class="nav-text">test_get_v3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v4"><span class="nav-number">2.5.</span> <span class="nav-text">test_get_v4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结论"><span class="nav-number">2.6.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#揭秘"><span class="nav-number">2.7.</span> <span class="nav-text">揭秘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个但是"><span class="nav-number">2.8.</span> <span class="nav-text">一个但是</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#测试代码"><span class="nav-number">1.</span> <span class="nav-text">测试代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#server代码-python"><span class="nav-number">1.1.</span> <span class="nav-text">server代码(python)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#server代码-golang"><span class="nav-number">1.2.</span> <span class="nav-text">server代码(golang)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test代码-python3"><span class="nav-number">1.3.</span> <span class="nav-text">test代码(python3)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求参数"><span class="nav-number">2.</span> <span class="nav-text">请求参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v1"><span class="nav-number">2.1.</span> <span class="nav-text">test_get_v1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v2"><span class="nav-number">2.2.</span> <span class="nav-text">test_get_v2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v2-v1"><span class="nav-number">2.3.</span> <span class="nav-text">test_get_v2_v1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v3"><span class="nav-number">2.4.</span> <span class="nav-text">test_get_v3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#test-get-v4"><span class="nav-number">2.5.</span> <span class="nav-text">test_get_v4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结论"><span class="nav-number">2.6.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#揭秘"><span class="nav-number">2.7.</span> <span class="nav-text">揭秘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个但是"><span class="nav-number">2.8.</span> <span class="nav-text">一个但是</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -610,12 +635,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">47k</span>
+    <span title="站点总字数">61k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">43 分钟</span>
+    <span title="站点阅读时长">55 分钟</span>
 </div>
 
         
