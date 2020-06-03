@@ -55,19 +55,19 @@
   };
 </script>
 
-  <meta name="description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
-<meta name="keywords" content="学习,redis">
+  <meta name="description" content="OAuth2.0是什么 支持第三方登陆的功能 当然，有了第三方登陆，那么也就有了第三方的接口权限，毕竟有了access_token，相当于第三方开放了一些用户的接口，你可以使用用户的授权（access_token），去请求这些接口，这些接口会返回授权用户的一些信息。例如，在电商项目中，获取到一个店铺的授权后，就可以通过淘宝的开放平台拿取到授权店铺的在售商品等。">
+<meta name="keywords" content="学习,oauth">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【学习】redis中scan的详解">
-<meta property="og:url" content="http://yoursite.com/2019/10/12/learn/【学习】redis中scan的详解/index.html">
+<meta property="og:title" content="【学习】OAuth2.0">
+<meta property="og:url" content="http://yoursite.com/2020/05/04/learn/【学习】OAuth/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
+<meta property="og:description" content="OAuth2.0是什么 支持第三方登陆的功能 当然，有了第三方登陆，那么也就有了第三方的接口权限，毕竟有了access_token，相当于第三方开放了一些用户的接口，你可以使用用户的授权（access_token），去请求这些接口，这些接口会返回授权用户的一些信息。例如，在电商项目中，获取到一个店铺的授权后，就可以通过淘宝的开放平台拿取到授权店铺的在售商品等。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-11-26T10:49:55.445Z">
+<meta property="og:updated_time" content="2020-05-05T13:46:06.646Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【学习】redis中scan的详解">
-<meta name="twitter:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
-  <link rel="canonical" href="http://yoursite.com/2019/10/12/learn/【学习】redis中scan的详解/">
+<meta name="twitter:title" content="【学习】OAuth2.0">
+<meta name="twitter:description" content="OAuth2.0是什么 支持第三方登陆的功能 当然，有了第三方登陆，那么也就有了第三方的接口权限，毕竟有了access_token，相当于第三方开放了一些用户的接口，你可以使用用户的授权（access_token），去请求这些接口，这些接口会返回授权用户的一些信息。例如，在电商项目中，获取到一个店铺的授权后，就可以通过淘宝的开放平台拿取到授权店铺的在售商品等。">
+  <link rel="canonical" href="http://yoursite.com/2020/05/04/learn/【学习】OAuth/">
 
 
 <script id="page-configurations">
@@ -81,7 +81,7 @@
   };
 </script>
 
-  <title>【学习】redis中scan的详解 | blog | percy</title>
+  <title>【学习】OAuth2.0 | blog | percy</title>
   
 
 
@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/12/learn/【学习】redis中scan的详解/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/04/learn/【学习】OAuth/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -243,7 +243,7 @@
       <header class="post-header">
 
         
-          <h1 class="post-title" itemprop="name headline">【学习】redis中scan的详解
+          <h1 class="post-title" itemprop="name headline">【学习】OAuth2.0
 
             
           </h1>
@@ -260,7 +260,7 @@
                 
               
 
-              <time title="创建时间：2019-10-12 20:40:33" itemprop="dateCreated datePublished" datetime="2019-10-12T20:40:33+08:00">2019-10-12</time>
+              <time title="创建时间：2020-05-04 21:21:13" itemprop="dateCreated datePublished" datetime="2020-05-04T21:21:13+08:00">2020-05-04</time>
             </span>
           
             
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-26 18:49:55" itemprop="dateModified" datetime="2019-11-26T18:49:55+08:00">2019-11-26</time>
+                <time title="修改时间：2020-05-05 21:46:06" itemprop="dateModified" datetime="2020-05-05T21:46:06+08:00">2020-05-05</time>
               </span>
             
           
@@ -281,7 +281,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
 
                 
                 
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.9k</span>
+              <span>761</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -308,7 +308,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>2 分钟</span>
+              <span>1 分钟</span>
             </span>
           
 
@@ -321,32 +321,19 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"> #</span> 从开始开始遍历</span><br><span class="line"> scan 0 MATCH key* COUNT 10</span><br><span class="line"><span class="meta"> #</span> 或者</span><br><span class="line"> scan 0 MATCH "key* COUNT 10</span><br><span class="line"> </span><br><span class="line"><span class="meta"> #</span> 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是"0"时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果集是否为空判断迭代结束。）</span><br><span class="line">1) "76"</span><br><span class="line">2)  1) "key56"</span><br><span class="line">    2) "key91"</span><br><span class="line">    3) "key17"</span><br><span class="line">    4) "key51"</span><br><span class="line">    5) "key54"</span><br><span class="line">    6) "key86"</span><br><span class="line">    7) "key98"</span><br><span class="line">    8) "key0"</span><br><span class="line">    9) "key41"</span><br><span class="line">   10) "key97"</span><br><span class="line">   11) "key82"</span><br><span class="line">   </span><br><span class="line"><span class="meta">#</span> 例如，下一次迭代</span><br><span class="line">scan 76 MATCH "key*" COUNT 10</span><br></pre></td></tr></table></figure><a id="more"></a>
-
-<h3 id="和keys对比"><a href="#和keys对比" class="headerlink" title="和keys对比"></a>和keys对比</h3><p>keys *的缺点</p>
-<ul>
-<li>没有 offset、limit 参数，一次性吐出所有满足条件的 key，万一实例中有几百 w 个 key 满足条件，</li>
-<li>keys 算法是遍历算法，复杂度是 O(n)，如果实例中有千万级以上的 key，这个指令就会导致 Redis 服务卡顿，</li>
-<li>所有读写 Redis 的其它的指令都会被延后甚至会超时报错，</li>
-<li>因为 Redis 是单线程程序，顺序执行所有指令，其它指令必须等到当前的 keys 指令执行完了才可以继续。</li>
-<li><strong>建议生产环境屏蔽keys命令</strong></li>
-</ul>
-<h3 id="大key扫描"><a href="#大key扫描" class="headerlink" title="大key扫描"></a>大key扫描</h3><p>有时候会因为业务人员使用不当，在 Redis 实例中会形成很大的对象，比如一个很大的 hash，一个很大的 zset 这都是经常出现的。这样的问题是在内存分配上，如果一个 key 太大，那么当它需要扩容时，会一次性申请更大的一块内存，这也会导致卡顿。如果这个大 key 被删除，内存会一次性回收，卡顿现象会再一次产生。</p>
-<h4 id="如何定位大key"><a href="#如何定位大key" class="headerlink" title="如何定位大key"></a>如何定位大key</h4><p>用 <code>scan</code> 指令，对于扫描出来的每一个 key，使用 type 指令获得 key 的类型，然后使用相应数据结构的 size 或者 len 方法来得到它的大小，对于每一种类型，保留大小的前 N 名作为扫描结果展示出来。</p>
-<p>上面这样的过程需要编写脚本，比较繁琐，不过 Redis 官方已经在 redis-cli 指令中提供了这样的扫描功能，我们可以直接拿来即用。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli  --bigkeys</span><br><span class="line"><span class="meta">#</span> 如果你担心这个指令会大幅抬升 Redis 的 ops 导致线上报警，还可以增加一个休眠参数。</span><br><span class="line">redis-cli --bigkeys -i 0.1</span><br><span class="line"><span class="meta">#</span> 上面这个指令每隔 100 条 scan 指令就会休眠 0.1s，ops 就不会剧烈抬升，但是扫描的时间会变长。</span><br></pre></td></tr></table></figure>
-
-<h2 id="需要注意的点"><a href="#需要注意的点" class="headerlink" title="需要注意的点"></a>需要注意的点</h2><h3 id="count选项"><a href="#count选项" class="headerlink" title="count选项"></a>count选项</h3><p>虽然增量式迭代命令不保证每次迭代所返回的元素数量， 但我们可以使用 COUNT 选项， 对命令的行为进行一定程度上的调整。</p>
-<p>基本上， COUNT 选项的作用就是让用户告知迭代命令， 在每次迭代中应该从数据集里返回多少元素。</p>
-<p>虽然 COUNT 选项只是对增量式迭代命令的一种提示（hint）， 但是在大多数情况下， 这种提示都是有效的。</p>
-<p>COUNT 参数的默认值为 10 </p>
-<h3 id="MATCH-选项"><a href="#MATCH-选项" class="headerlink" title="MATCH 选项"></a>MATCH 选项</h3><p>增量式迭代命令也可以通过提供一个 glob 风格的模式参数， 让命令只返回和给定模式相匹配的元素。需要注意的是， 对元素的模式匹配工作是在命令从数据集中取出元素之后， 向客户端返回元素之前的这段时间内进行的， 所以如果被迭代的数据集中只有少量元素和模式相匹配， 那么迭代命令或许会在多次执行中都不返回任何元素。</p>
-<h3 id="redis-server支持多个迭代并发进行"><a href="#redis-server支持多个迭代并发进行" class="headerlink" title="redis server支持多个迭代并发进行"></a>redis server支持多个迭代并发进行</h3><p>在同一时间， 可以有任意多个客户端对同一数据集进行迭代， 客户端每次执行迭代都需要传入一个游标， 并在迭代执行之后获得一个新的游标， 而这个游标就包含了迭代的所有状态， 因此，redis服务器无须为迭代记录任何状态。</p>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><p>同一个元素可能会被返回多次。 处理重复元素的工作交由应用程序负责， 比如说， 可以考虑将迭代返回的元素仅仅用于可以安全地重复执行多次的操作上。</p>
-<p>如果一个元素是在迭代过程中被添加到数据集的， 又或者是在迭代过程中从数据集中被删除的， 那么这个元素可能会被返回， 也可能不会， 这是未定义的（undefined）。</p>
-<p>遍历的过程中如果有数据修改，改动后的数据能不能遍历到是不确定的。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://doc.redisfans.com/key/scan.html" target="_blank" rel="noopener">http://doc.redisfans.com/key/scan.html</a></p>
-<p><a href="http://jinguoxing.github.io/redis/2018/09/04/redis-scan/" target="_blank" rel="noopener">http://jinguoxing.github.io/redis/2018/09/04/redis-scan/</a></p>
+        <h2 id="OAuth2-0是什么"><a href="#OAuth2-0是什么" class="headerlink" title="OAuth2.0是什么"></a>OAuth2.0是什么</h2><ul>
+<li>支持第三方登陆的功能</li>
+<li>当然，有了第三方登陆，那么也就有了第三方的接口权限，毕竟有了access_token，相当于第三方开放了一些用户的接口，你可以使用用户的授权（access_token），去请求这些接口，这些接口会返回授权用户的一些信息。例如，在电商项目中，获取到一个店铺的授权后，就可以通过淘宝的开放平台拿取到授权店铺的在售商品等。</li>
+</ul><a id="more"></a>
+<h2 id="OAuth2-0的客户端需要做什么"><a href="#OAuth2-0的客户端需要做什么" class="headerlink" title="OAuth2.0的客户端需要做什么"></a>OAuth2.0的客户端需要做什么</h2><ol>
+<li>在授权服务器中申请一个应用，这将获得 client_id, client_secret。</li>
+<li>在授权服务器中填写回调的redirec_uri。</li>
+<li>按照授权服务器的url拼接方式，拼接授权ur（这应该会包含client_id）。用户打开此url，将跳转到授权服务器的根域名下的一个页面，用户在此页面<strong>执行授权操作</strong>（点击按钮，或者扫描二维码）。</li>
+<li>当授权服务器验证两个URL一致时，会通知浏览器跳转到redirect_uri，同时，在redirect_uri后附加用户凭证（code）的相关信息。</li>
+<li>客户端接受回调的redirect_uri，这里面有code信息（也有用户在授权服务器的用户信息，如用户名等），客户端拿着code，并带上申请到的client_id, client_secret， 去请求授权服务器，授权服务器验证code和client_id，保证请求access_token的应用就是用户授权的应用，并返回access_token。</li>
+<li>客户端可能需要定时刷新token，这是因为access_token一般都有过期时间，在access_token过期前，客户端主动刷新token，可以免去access_token过期后用户又要授权的问题。</li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://zhuanlan.zhihu.com/p/20913727" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/20913727</a></p>
 
     </div>
 
@@ -364,7 +351,7 @@
             
               <a href="/tags/学习/" rel="tag"># 学习</a>
             
-              <a href="/tags/redis/" rel="tag"># redis</a>
+              <a href="/tags/oauth/" rel="tag"># oauth</a>
             
           </div>
         
@@ -374,8 +361,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/10/08/exception/【异常】docker容器无法重启-网络未清理/" rel="next" title="【异常】docker容器无法重启-网络未清理">
-                  <i class="fa fa-chevron-left"></i> 【异常】docker容器无法重启-网络未清理
+                <a href="/2020/03/24/learn/【学习】windows如何开始使用kubectl/" rel="next" title="【学习】windows如何开始使用kubectl">
+                  <i class="fa fa-chevron-left"></i> 【学习】windows如何开始使用kubectl
                 </a>
               
             </div>
@@ -384,8 +371,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/10/14/learn/【学习】golang中的pprof/" rel="prev" title="【学习】golang中的pprof">
-                  【学习】golang中的pprof <i class="fa fa-chevron-right"></i>
+                <a href="/2020/05/13/learn/【学习】docker使用文档/" rel="prev" title="【学习】docker使用文档">
+                  【学习】docker使用文档 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -443,7 +430,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -480,7 +467,9 @@
         
           
         
-        <span class="site-state-item-count">11</span>
+          
+        
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -563,7 +552,33 @@
         
           
         
-        <span class="site-state-item-count">34</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">47</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -604,7 +619,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#实践"><span class="nav-number">1.</span> <span class="nav-text">实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#和keys对比"><span class="nav-number">1.1.</span> <span class="nav-text">和keys对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#大key扫描"><span class="nav-number">1.2.</span> <span class="nav-text">大key扫描</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何定位大key"><span class="nav-number">1.2.1.</span> <span class="nav-text">如何定位大key</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需要注意的点"><span class="nav-number">2.</span> <span class="nav-text">需要注意的点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#count选项"><span class="nav-number">2.1.</span> <span class="nav-text">count选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MATCH-选项"><span class="nav-number">2.2.</span> <span class="nav-text">MATCH 选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-server支持多个迭代并发进行"><span class="nav-number">2.3.</span> <span class="nav-text">redis server支持多个迭代并发进行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点"><span class="nav-number">2.4.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#OAuth2-0是什么"><span class="nav-number">1.</span> <span class="nav-text">OAuth2.0是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OAuth2-0的客户端需要做什么"><span class="nav-number">2.</span> <span class="nav-text">OAuth2.0的客户端需要做什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -631,12 +646,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">63k</span>
+    <span title="站点总字数">84k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">57 分钟</span>
+    <span title="站点阅读时长">1:16</span>
 </div>
 
         
