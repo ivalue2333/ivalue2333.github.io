@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="译者注：国内很多人对这两个词语的翻译总是让人糊涂的，这里译者统一做如下翻译，在讨论内存领域的问题时，stack统一翻译为堆栈，而heap统一翻译为堆。（而在讨论数据结构问题时，倾向于将stack翻译为栈，而heap翻译为堆）基础计算体系结构中的堆栈是内存的区域，在其中以后进先出（LIFO）的方式添加或删除数据。">
+<meta name="keywords" content="堆栈,堆,计算机基础,翻译,内存分配">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【翻译】基于堆栈(stack)的内存分配">
+<meta property="og:url" content="http://yoursite.com/2020/06/05/translation/【翻译】基于堆栈(stack)的内存分配/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="译者注：国内很多人对这两个词语的翻译总是让人糊涂的，这里译者统一做如下翻译，在讨论内存领域的问题时，stack统一翻译为堆栈，而heap统一翻译为堆。（而在讨论数据结构问题时，倾向于将stack翻译为栈，而heap翻译为堆）基础计算体系结构中的堆栈是内存的区域，在其中以后进先出（LIFO）的方式添加或删除数据。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-05T08:32:04.574Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【翻译】基于堆栈(stack)的内存分配">
+<meta name="twitter:description" content="译者注：国内很多人对这两个词语的翻译总是让人糊涂的，这里译者统一做如下翻译，在讨论内存领域的问题时，stack统一翻译为堆栈，而heap统一翻译为堆。（而在讨论数据结构问题时，倾向于将stack翻译为栈，而heap翻译为堆）基础计算体系结构中的堆栈是内存的区域，在其中以后进先出（LIFO）的方式添加或删除数据。">
+  <link rel="canonical" href="http://yoursite.com/2020/06/05/translation/【翻译】基于堆栈(stack)的内存分配/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【翻译】基于堆栈(stack)的内存分配 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/05/translation/【翻译】基于堆栈(stack)的内存分配/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【翻译】基于堆栈(stack)的内存分配
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-05 09:40:39 / 修改时间：16:32:04" itemprop="dateCreated datePublished" datetime="2020-06-05T09:40:39+08:00">2020-06-05</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>1.2k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>译者注：国内很多人对这两个词语的翻译总是让人糊涂的，这里译者统一做如下翻译，在讨论内存领域的问题时，stack统一翻译为堆栈，而heap统一翻译为堆。（而在讨论数据结构问题时，倾向于将stack翻译为栈，而heap翻译为堆）</code></p><h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>计算体系结构中的堆栈是内存的区域，在其中以后进先出（LIFO）的方式添加或删除数据。</p><a id="more"></a>
+
+<p>在大多数现代计算机系统中，<strong>每个线程都有一个保留的内存区域</strong>，称为其堆栈。 当函数执行时，它可能会将一些状态数据添加到堆栈的顶部； 当函数退出时，它负责从堆栈中删除该数据。 至少，线程的堆栈用于存储函数调用的位置，以允许return语句返回到正确的位置，但是程序员可以进一步选择显式使用堆栈。 如果内存区域位于线程的堆栈上，则表示该内存已分配在堆栈上，即基于堆栈的内存分配。</p>
+<p>stack会有以下信息</p>
+<ul>
+<li>局部变量</li>
+<li>函数参数</li>
+<li>返回地址</li>
+</ul>
+<p>由于以后进先出的方式添加和删除数据，因此基于堆栈的内存分配非常简单，并且通常比基于堆的内存分配（也称为动态内存分配）快。 另一个功能是，当函数退出时，堆栈上的内存会自动高效地回收，如果不再需要数据，这对程序员来说很方便。（如果longjmp移到了调用alloca之前的某个点，同样适用于longjmp。）但是，如果数据需要以某种形式保存，则必须在函数退出之前从堆栈中复制数据。 因此，基于堆栈的分配适用于临时数据或在创建函数退出后不再需要的数据。</p>
+<p>在某些小型CPU上，线程分配的堆栈大小可能只有几个字节。 在堆栈上分配的内存多于可用内存，可能会由于堆栈溢出而导致崩溃。 这也是为什么通常使用alloca的函数被禁止进行内联的原因：如果将这样的函数(<code>译者注：指使用了alloca的函数</code>)内联到循环中，则调用方将遭受堆栈使用率意外增长的困扰，从而更有可能发生溢出（<code>译者注:stack overflow，堆栈溢出</code>）。</p>
+<p>基于堆栈的分配可能还会导致较小的性能问题：它导致可变大小的堆栈帧，因此需要管理堆栈指针和帧指针（对于固定大小的堆栈帧，其中之一是冗余的）。 通常，这至少比调用malloc和free便宜得多（<code>译者注:这里是说基于stack的内存分配比使用malloc和free在堆上的内存分配便宜很多</code>）。</p>
+<h2 id="操作的系统接口"><a href="#操作的系统接口" class="headerlink" title="操作的系统接口"></a>操作的系统接口</h2><p>许多类似Unix的系统以及Microsoft Windows都实现了一个称为<strong>alloca</strong>的功能，该功能以类似于基于堆的malloc的方式<strong>动态分配堆栈内存</strong>。 编译器通常将其转换为处理堆栈指针的内联指令，类似于如何处理可变长度数组。尽管不需要显式释放内存，但由于堆栈溢出，存在未定义行为的风险。 该功能早在Unix系统上就已存在于32 / V（1978），但它不是标准C或任何POSIX标准的一部分。</p>
+<p>原文地址：<a href="https://en.wikipedia.org/wiki/Stack-based_memory_allocation" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Stack-based_memory_allocation</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/堆栈/" rel="tag"># 堆栈</a>
+            
+              <a href="/tags/堆/" rel="tag"># 堆</a>
+            
+              <a href="/tags/计算机基础/" rel="tag"># 计算机基础</a>
+            
+              <a href="/tags/翻译/" rel="tag"># 翻译</a>
+            
+              <a href="/tags/内存分配/" rel="tag"># 内存分配</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/06/04/translation/【翻译】stack和heap的区别/" rel="next" title="【翻译】stack和heap的区别">
+                  <i class="fa fa-chevron-left"></i> 【翻译】stack和heap的区别
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/06/06/http/【http】关于http长连接，你想要知道的一切/" rel="prev" title="【http】关于http长连接，你想要知道的一切">
+                  【http】关于http长连接，你想要知道的一切 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">49</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基础"><span class="nav-number">1.</span> <span class="nav-text">基础</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#操作的系统接口"><span class="nav-number">2.</span> <span class="nav-text">操作的系统接口</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">97k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:28</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
