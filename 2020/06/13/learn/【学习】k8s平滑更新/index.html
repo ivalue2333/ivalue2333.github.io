@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344/*	客户端会报如下错误	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&amp;gt;127.0.0.1:9991: wsarecv: An existi">
+<meta name="keywords" content="学习,golang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【学习】K8S平滑更新(zero-downtime with Kubernetes)">
+<meta property="og:url" content="http://yoursite.com/2020/06/13/learn/【学习】k8s平滑更新/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344/*	客户端会报如下错误	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&amp;gt;127.0.0.1:9991: wsarecv: An existi">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-14T14:59:32.925Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【学习】K8S平滑更新(zero-downtime with Kubernetes)">
+<meta name="twitter:description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344/*	客户端会报如下错误	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&amp;gt;127.0.0.1:9991: wsarecv: An existi">
+  <link rel="canonical" href="http://yoursite.com/2020/06/13/learn/【学习】k8s平滑更新/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【学习】K8S平滑更新(zero-downtime with Kubernetes) | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/13/learn/【学习】k8s平滑更新/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【学习】K8S平滑更新(zero-downtime with Kubernetes)
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-13 19:08:33" itemprop="dateCreated datePublished" datetime="2020-06-13T19:08:33+08:00">2020-06-13</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-14 22:59:32" itemprop="dateModified" datetime="2020-06-14T22:59:32+08:00">2020-06-14</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>5.1k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>5 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="服务如何优雅退出"><a href="#服务如何优雅退出" class="headerlink" title="服务如何优雅退出"></a>服务如何优雅退出</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	客户端会报如下错误</span></span><br><span class="line"><span class="comment">	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&gt;127.0.0.1:9991: wsarecv: An existing connection was forcibly closed by the remote host.</span></span><br><span class="line"><span class="comment">	这是因为一个正在使用的 tcp 连接被服务端强行关闭了。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BadServer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	engine := gin.Default()</span><br><span class="line">	util.Router(engine)</span><br><span class="line">	srv := &amp;http.Server&#123;Handler: engine, Addr: <span class="string">":9991"</span>&#125;</span><br><span class="line">	err := srv.ListenAndServe()</span><br><span class="line">	_ = srv.Shutdown(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	客户端不会报错</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GraceServer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	engine := gin.Default()</span><br><span class="line">	util.Router(engine)</span><br><span class="line">	srv := &amp;http.Server&#123;Handler: engine, Addr: <span class="string">":9991"</span>&#125;</span><br><span class="line">	channelMark := <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal, <span class="number">2</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		ch := <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal)</span><br><span class="line">		<span class="comment">// k8s 会发 TERM 信号</span></span><br><span class="line">		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGINT)</span><br><span class="line">		tmp := &lt;-ch</span><br><span class="line">		channelMark &lt;- tmp</span><br><span class="line">		_ = srv.Shutdown(context.Background())</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	err := srv.ListenAndServe()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">"ListenAndServe-&gt;"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	err = srv.Shutdown(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">"Shutdown-&gt;"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	tmp := &lt;-channelMark</span><br><span class="line">	fmt.Println(<span class="string">"Notify-&gt;"</span>, tmp, fmt.Sprintf(<span class="string">"%d"</span>, tmp))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+<h2 id="k8s-如何优雅更新"><a href="#k8s-如何优雅更新" class="headerlink" title="k8s 如何优雅更新"></a>k8s 如何优雅更新</h2><p>简单说就是加两个探针并设置 preStop， liveness 用于检测已注册的节点是否可用，readiness 用于检测新创建的节点是否可用。示例如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">grace-shut-example-deploy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      imagePullSecrets:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">all-aliyuncs</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">grace-shut-example</span></span><br><span class="line"><span class="attr">          image:</span> <span class="string">registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4</span></span><br><span class="line"><span class="attr">          imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">          command:</span> <span class="string">["./grace_shut_example",</span> <span class="string">"&gt;&gt;"</span><span class="string">,</span> <span class="string">"/var/log/xiaoduo/grace_shut_example.out"</span><span class="string">]</span></span><br><span class="line"><span class="attr">          ports:</span></span><br><span class="line"><span class="attr">            - name:</span> <span class="string">http</span></span><br><span class="line"><span class="attr">              containerPort:</span> <span class="number">8080</span></span><br><span class="line"><span class="attr">              protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">          volumeMounts:</span></span><br><span class="line"><span class="attr">            - mountPath:</span> <span class="string">/var/log/xiaoduo</span></span><br><span class="line"><span class="attr">              name:</span> <span class="string">log-volume</span></span><br><span class="line"><span class="attr">          readinessProbe:</span></span><br><span class="line"><span class="attr">            tcpSocket:</span></span><br><span class="line"><span class="attr">              port:</span> <span class="number">9991</span></span><br><span class="line"><span class="attr">            initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line"><span class="attr">            periodSeconds:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">            successThreshold:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">            failureThreshold:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">          livenessProbe:</span></span><br><span class="line"><span class="attr">            tcpSocket:</span></span><br><span class="line"><span class="attr">              port:</span> <span class="number">9991</span></span><br><span class="line"><span class="attr">            initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line"><span class="attr">            periodSeconds:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">            failureThreshold:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">          lifecycle:</span></span><br><span class="line"><span class="attr">            preStop:</span></span><br><span class="line"><span class="attr">              exec:</span></span><br><span class="line"><span class="attr">                command:</span> <span class="string">["/bin/sh",</span> <span class="string">"-c"</span><span class="string">,</span> <span class="string">"sleep 10"</span><span class="string">]</span></span><br><span class="line"><span class="attr">      volumes:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">log-volume</span></span><br><span class="line"><span class="attr">          persistentVolumeClaim:</span></span><br><span class="line"><span class="attr">            claimName:</span> <span class="string">log-volume-claim</span></span><br></pre></td></tr></table></figure>
+
+<p>以上示例使用 tcp 探测的方式，并设置探测时间间隔为 1 秒。</p>
+<h3 id="核心配置探针"><a href="#核心配置探针" class="headerlink" title="核心配置探针"></a>核心配置探针</h3><p>主要是设置存活探针和就绪探针。</p>
+<h3 id="核心配置-preStop"><a href="#核心配置-preStop" class="headerlink" title="核心配置 preStop"></a>核心配置 preStop</h3><ul>
+<li>为什么要配置 preStop<ul>
+<li>因为 通知 load balance 将老节点摘除和 向老节点 发送 TERM 信号，是并发的（实际上是先通知load balance 摘掉老节点，然后再异步的发送 TERM 信号），没有保证先后顺序，这就意味着，可能 load balance 还没有将老借点摘除，但是老节点已经接受到了 TERM 信号并且关闭了TCP连接请求，这样部分请求就到了一个已关闭的节点上。</li>
+<li>preStop 是在通知 load balance 摘掉老节点之后的一个操作，这是一个阻塞操作，他会执行指令，直到指令接受，所以，我们在preStop中调用 sleep 函数，给load balance 足够的时间来摘除老节点。然后再‘异步’地发送 TERM 信号。</li>
+</ul>
+</li>
+</ul>
+<p><code>Kubernetes 在容器结束前立即发送 preStop 事件。除非 Pod 宽限期限超时，Kubernetes 的容器管理逻辑 会一直阻塞等待 preStop 处理函数执行完毕。</code></p>
+<p><code>This deployment configuration will perform version updates in the following way: It will create one pod with the new version at a time, wait for the pod to start-up and become ready, trigger the termination of one of the old pods, and continue with the next new pod until all replicas have been transitioned. In order to tell Kubernetes when our pods are running and ready to handle traffic we need to configure liveness and readiness probes.</code></p>
+<p><code>此部署配置将以以下方式执行版本更新：它将一次创建一个具有新版本的Pod，等待Pod启动并准备就绪，触发其中一个旧Pod的终止，然后继续 下一个新的Pod，直到所有副本都已转换。 为了告诉Kubernetes我们的Pod何时运行并准备处理流量，我们需要配置活动和就绪探针。</code></p>
+<p><code>If our client, that is the zero-downtime test, connects to the</code>coffee-shop<code>service directly from inside the cluster, it typically uses the service VIP resolved via Cluster DNS and ends up at a Pod instance. This is realized via the kube-proxy that runs on every Kubernetes node and updates iptables that route to the IP addresses of the pods.</code></p>
+<p><code>如果我们的客户端（即零停机时间测试）直接从群集内部连接到服务，则它通常使用通过群集DNS解析的服务VIP，最终到达Pod实例。 这是通过在每个Kubernetes节点上运行并更新路由到Pod的IP地址的iptables的kube-proxy来实现的。</code></p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>目前是在公司 gitlab 个人目录下实现了一个 k8s 优雅退出的 模板，经过测试。在 qps 为 1000（更高的qps还没有测试） 可以实现<strong>零报错</strong>的更新镜像。</p>
+<p>gitlab地址：<a href="https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example" target="_blank" rel="noopener">https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example</a></p>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><h4 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 项目：https://gitlab.xiaoduoai.com/devops/k8s-app-deploy</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 目录：/ks-prod/ecrobot/grace-shut-example/grace</span><br></pre></td></tr></table></figure>
+
+<h4 id="模拟更新镜像"><a href="#模拟更新镜像" class="headerlink" title="模拟更新镜像"></a>模拟更新镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 如在测试环境</span><br><span class="line"><span class="meta">#</span> 一下两个指令模拟线上更新镜像</span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.7 --namespace=test-ks</span><br><span class="line"></span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4 --namespace=test-ks</span><br></pre></td></tr></table></figure>
+
+<h4 id="并发测试工具"><a href="#并发测试工具" class="headerlink" title="并发测试工具"></a>并发测试工具</h4><ul>
+<li>ab</li>
+<li>wrk</li>
+<li>mock： <a href="https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example/client/mock.go" target="_blank" rel="noopener">https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example/client/mock.go</a></li>
+</ul>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><p>将上线的 http 服务全部替换为平滑更新的方案。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>最佳实践文档：<a href="https://blog.sebastian-daschner.com/entries/zero-downtime-updates-kubernetes" target="_blank" rel="noopener">https://blog.sebastian-daschner.com/entries/zero-downtime-updates-kubernetes</a></p>
+<p>k8s探针：<a href="https://jimmysong.io/kubernetes-handbook/guide/configure-liveness-readiness-probes.html" target="_blank" rel="noopener">https://jimmysong.io/kubernetes-handbook/guide/configure-liveness-readiness-probes.html</a></p>
+<p>k8s preStop：<a href="https://kubernetes.io/zh/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/" target="_blank" rel="noopener">https://kubernetes.io/zh/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/学习/" rel="tag"># 学习</a>
+            
+              <a href="/tags/golang/" rel="tag"># golang</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/06/10/concurrent/【并发】并发基础及锁/" rel="next" title="【并发】并发基础及锁">
+                  <i class="fa fa-chevron-left"></i> 【并发】并发基础及锁
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/06/14/http/【http】关于tcp的三次握手/" rel="prev" title="【http】关于tcp的三次握手">
+                  【http】关于tcp的三次握手 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">41</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#服务如何优雅退出"><span class="nav-number">1.</span> <span class="nav-text">服务如何优雅退出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-如何优雅更新"><span class="nav-number">2.</span> <span class="nav-text">k8s 如何优雅更新</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#核心配置探针"><span class="nav-number">2.1.</span> <span class="nav-text">核心配置探针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#核心配置-preStop"><span class="nav-number">2.2.</span> <span class="nav-text">核心配置 preStop</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用"><span class="nav-number">3.1.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#部署"><span class="nav-number">3.1.1.</span> <span class="nav-text">部署</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#模拟更新镜像"><span class="nav-number">3.1.2.</span> <span class="nav-text">模拟更新镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#并发测试工具"><span class="nav-number">3.1.3.</span> <span class="nav-text">并发测试工具</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TODO"><span class="nav-number">4.</span> <span class="nav-text">TODO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">109k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:39</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

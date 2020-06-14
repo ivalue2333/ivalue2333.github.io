@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="过程1234567# 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位Client --&amp;gt; 置SYN标志 序列号 = J，确认号 = 0 ----&amp;gt; ServerClient &amp;lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &amp;lt;-- ServerClinet --&amp;gt; 置ACK标志 序列号 = J + 1，确认号 = K +">
+<meta name="keywords" content="http,tcp,为什么这样设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【http】关于tcp的三次握手">
+<meta property="og:url" content="http://yoursite.com/2020/06/14/http/【http】关于tcp的三次握手/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="过程1234567# 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位Client --&amp;gt; 置SYN标志 序列号 = J，确认号 = 0 ----&amp;gt; ServerClient &amp;lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &amp;lt;-- ServerClinet --&amp;gt; 置ACK标志 序列号 = J + 1，确认号 = K +">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-14T14:45:14.319Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【http】关于tcp的三次握手">
+<meta name="twitter:description" content="过程1234567# 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位Client --&amp;gt; 置SYN标志 序列号 = J，确认号 = 0 ----&amp;gt; ServerClient &amp;lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &amp;lt;-- ServerClinet --&amp;gt; 置ACK标志 序列号 = J + 1，确认号 = K +">
+  <link rel="canonical" href="http://yoursite.com/2020/06/14/http/【http】关于tcp的三次握手/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【http】关于tcp的三次握手 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/14/http/【http】关于tcp的三次握手/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【http】关于tcp的三次握手
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-14 22:44:12 / 修改时间：22:45:14" itemprop="dateCreated datePublished" datetime="2020-06-14T22:44:12+08:00">2020-06-14</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机网络/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位</span><br><span class="line"></span><br><span class="line">Client --&gt; 置SYN标志 序列号 = J，确认号 = 0 ----&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &lt;-- Server</span><br><span class="line"></span><br><span class="line">Clinet --&gt; 置ACK标志 序列号 = J + 1，确认号 = K + 1 --&gt; Server</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+<p>链接建立后，接下来Client端发送的数据包将从J + 1开始，Server端发送的数据包将从K + 1开始，这里要说明的是：建立链接时，Client端宣称自己的初始序列号是J，Server端宣称自己的初始序列号是K，但是建立连接后的数据包却各自中初始序列号+1开始，这是因为SYN请求本身需要占用一个序列号 </p>
+<h2 id="TCP-的定义"><a href="#TCP-的定义" class="headerlink" title="TCP 的定义"></a>TCP 的定义</h2><p>很多人尝试回答或者思考这个问题的时候其实关注点都放在了三次握手中的三次上面，这确实很重要，但是如果重新审视这个问题，我们对于『什么是连接』真的清楚？只有知道连接的定义，我们才能去尝试回答为什么 TCP 建立连接需要三次握手。</p>
+<p><code>The reliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection.</code></p>
+<p>RFC 793 - Transmission Control Protocol 文档中非常清楚地定义了 TCP 中的连接是什么，我们简单总结一下：用于保证可靠性和流控制机制的信息，包括 <strong>Socket、序列号以及窗口大小叫做连接</strong>。</p>
+<p>所以，建立 TCP 连接就是通信的双方需要对上述的三种信息达成共识，连接中的一对 Socket 是由互联网地址标志符和端口组成的，窗口大小主要用来做流控制，最后的序列号是用来追踪通信发起方发送的数据包序号，接收方可以通过序列号向发送方确认某个数据包的成功接收。</p>
+<h2 id="为什么需要三次握手"><a href="#为什么需要三次握手" class="headerlink" title="为什么需要三次握手"></a>为什么需要三次握手</h2><p>这篇文章主要会从以下几个方面介绍为什么我们需要通过三次握手才可以初始化 Sockets、窗口大小、初始序列号并建立 TCP 连接：</p>
+<ul>
+<li><strong>通过三次握手才能阻止重复历史连接的初始化；</strong></li>
+<li>通过三次握手才能对通信双方的初始序列号进行初始化；</li>
+<li>讨论其他次数握手建立连接的可能性；</li>
+</ul>
+<h3 id="历史连接"><a href="#历史连接" class="headerlink" title="历史连接"></a>历史连接</h3><p>最大的问题是发起创建连接的一方A在发出syn之后没有收到ack（网络原因等），它就会再发出一个syn，那么接受方B其实收到了两个 syn并对两个syn 发出了确认，那么实际上其中一个syn已经是历史连接了。TCP 选择使用三次握手来建立连接并在连接引入了 RST 这一控制消息，接收方当收到请求时会将发送方发来的 SEQ+1 发送给对方，这时<strong>由发送方来判断当前连接是否是历史连接</strong>：</p>
+<ul>
+<li>如果当前连接是历史连接，即 SEQ 过期或者超时，那么发送方就会直接发送 RST 控制消息中止这一次连接；</li>
+<li>如果当前连接不是历史连接，那么发送方就会发送 ACK 控制消息，通信双方就会成功建立连接；</li>
+</ul>
+<h3 id="初始化序列号"><a href="#初始化序列号" class="headerlink" title="初始化序列号"></a>初始化序列号</h3><p>另一个使用三次握手的重要的原因就是通信双方都需要获得一个用于发送信息的初始化序列号，作为一个可靠的传输层协议，<strong>TCP 需要在不稳定的网络环境中构建一个可靠的传输层</strong>，网络的不确定性可能会导致数据包的缺失和顺序颠倒等问题，常见的问题可能包括：</p>
+<ul>
+<li>数据包被发送方多次发送造成数据的重复；</li>
+<li>数据包在传输的过程中被路由或者其他节点丢失；</li>
+<li>数据包到达接收方可能无法按照发送顺序；</li>
+</ul>
+<p>为了解决上述这些可能存在的问题，TCP 协议要求发送方在数据包中加入『序列号』字段，有了数据包对应的序列号，我们就可以：</p>
+<ul>
+<li>接收方可以通过序列号对重复的数据包进行去重；</li>
+<li>发送方会在对应数据包未被 ACK 时进行重复发送；</li>
+<li>接收方可以根据数据包的序列号对它们进行重新排序；</li>
+</ul>
+<p>除此之外，网络作为一个分布式的系统，其中并不存在一个用于计数的全局时钟，而 TCP 可以通过不同的机制来初始化序列号，<strong>作为 TCP 连接的接收方我们无法判断对方传来的初始化序列号是否过期，所以我们需要交由对方来判断</strong>，TCP 连接的发起方可以通过保存发出的序列号判断连接是否过期，如果让接收方来保存并判断序列号却是不现实的，这也再一次强化了我们在上一节中提出的观点 —— 避免历史错连接的初始化。</p>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="控制位"><a href="#控制位" class="headerlink" title="控制位"></a>控制位</h3><p>ACK：确认序号标志，为1时表示确认号有效，为0表示报文中不含确认信息，忽略确认号字段。</p>
+<p>PSH：push标志，为1表示是带有push标志的数据，指示接收方在接收到该报文段以后，应尽快将这个报文段交给应用程序，而不是在缓冲区排队。</p>
+<p>RST：重置连接标志，用于重置由于主机崩溃或其他原因而出现错误的连接。或者用于拒绝非法的报文段和拒绝连接请求。</p>
+<p>SYN：同步序号，用于建立连接过程，在连接请求中，SYN=1和ACK=0表示该数据段没有使用捎带的确认域，而连接应答捎带一个确认，即SYN=1和ACK=1。</p>
+<p>FIN：finish标志，用于释放连接，为1时表示发送方已经没有数据发送了，即关闭本方数据流。</p>
+<h3 id="数据传输中的序列号及确认号"><a href="#数据传输中的序列号及确认号" class="headerlink" title="数据传输中的序列号及确认号"></a>数据传输中的序列号及确认号</h3><ul>
+<li>序号（Sequence Number）<ul>
+<li>也称为序列号，长度为32位，序号用来标识从TCP发送端向接入端发送的数据字节流进行编号，可以理解成对字节流的计数。例如一个报文段的序号为 55555，此报文段数据部分共有 11 字节，则下一个报文段的序号为 55566。</li>
+</ul>
+</li>
+<li>确认号（ack Number）<ul>
+<li>指明下一个期待收到的字节序号，表明该序号之前的所有数据已经正确无误的收到。比如 client 发送的确认号是 22222，那么 server回复的 序号就是 22222。</li>
+<li>确认号还有一个更重要的功能就是对消息的确认，它等于请求的 序列号 + 数据包的长度（表示收到了这个序列号的这么多数据）</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 在 tcp 的数据传输过程中，一次数据请求，至少需要发送三个tcp报文，分别是 请求报文，响应报文，收到响应后的ack报文。</span><br><span class="line"><span class="meta">#</span> TODO 这个还没有抓包确认</span><br><span class="line">Client --&gt; 置PSH标志，置ACK标志 序列号 = 55555, 确认号 = 22222，数据包长度 = 11 ---&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置ACK标志，序列号 = 22222, 确认号 = 55566 (=55555 + 11)，数据包长度 = 22 &lt;--- Server</span><br><span class="line"></span><br><span class="line">Client --&gt; 置ACK标志，序列号 = 55566, 确认号 = 22244(=22222+22)，数据包长度 = 0 ---&gt; Server</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>最重要的参考： <a href="https://draveness.me/whys-the-design-tcp-three-way-handshake/" target="_blank" rel="noopener">为什么 TCP建立连接需要三次握手</a></p>
+<p><a href="https://www.cnblogs.com/chenboo/archive/2011/12/19/2293327.html" target="_blank" rel="noopener">TCP序列号和确认号详解</a></p>
+<p><a href="https://blog.csdn.net/cwg_1992/article/details/17427533" target="_blank" rel="noopener">一次http完整的请求tcp报文分析</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/http/" rel="tag"># http</a>
+            
+              <a href="/tags/tcp/" rel="tag"># tcp</a>
+            
+              <a href="/tags/为什么这样设计/" rel="tag"># 为什么这样设计</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/06/13/learn/【学习】k8s平滑更新/" rel="next" title="【学习】K8S平滑更新(zero-downtime with Kubernetes)">
+                  <i class="fa fa-chevron-left"></i> 【学习】K8S平滑更新(zero-downtime with Kubernetes)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">41</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">52</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#过程"><span class="nav-number">1.</span> <span class="nav-text">过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-的定义"><span class="nav-number">2.</span> <span class="nav-text">TCP 的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要三次握手"><span class="nav-number">3.</span> <span class="nav-text">为什么需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">3.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化序列号"><span class="nav-number">3.2.</span> <span class="nav-text">初始化序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附录"><span class="nav-number">4.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#控制位"><span class="nav-number">4.1.</span> <span class="nav-text">控制位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据传输中的序列号及确认号"><span class="nav-number">4.2.</span> <span class="nav-text">数据传输中的序列号及确认号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">109k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:39</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

@@ -55,33 +55,29 @@
   };
 </script>
 
-  <meta name="description" content="并发并发编程的三要素 原子性 一系列操作要么全部执行要么失败。 有序性  程序按照代码的顺序先后执行 避免指令重排列。 可见性 当多线程访问同一个变量 其中一个线程修改了 其他线程也要读新的值。 并发和并行 并行性是指两个或多个事件在同一时刻发生 并发性是指两个或多个事件在同一时间间隔内发生 并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中每一时刻却仅能有一道程序执行，故在一个">
-<meta name="keywords" content="并发,线程">
-<meta property="og:type" content="article">
-<meta property="og:title" content="【并发】线程基础">
-<meta property="og:url" content="http://yoursite.com/2020/02/03/concurrent/【并发】线程基础/index.html">
+  <meta name="keywords" content="blog, 编程, python, golang">
+<meta property="og:type" content="website">
+<meta property="og:title" content="blog | percy">
+<meta property="og:url" content="http://yoursite.com/page/5/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="并发并发编程的三要素 原子性 一系列操作要么全部执行要么失败。 有序性  程序按照代码的顺序先后执行 避免指令重排列。 可见性 当多线程访问同一个变量 其中一个线程修改了 其他线程也要读新的值。 并发和并行 并行性是指两个或多个事件在同一时刻发生 并发性是指两个或多个事件在同一时间间隔内发生 并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中每一时刻却仅能有一道程序执行，故在一个">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-04-20T03:09:43.471Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【并发】线程基础">
-<meta name="twitter:description" content="并发并发编程的三要素 原子性 一系列操作要么全部执行要么失败。 有序性  程序按照代码的顺序先后执行 避免指令重排列。 可见性 当多线程访问同一个变量 其中一个线程修改了 其他线程也要读新的值。 并发和并行 并行性是指两个或多个事件在同一时刻发生 并发性是指两个或多个事件在同一时间间隔内发生 并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中每一时刻却仅能有一道程序执行，故在一个">
-  <link rel="canonical" href="http://yoursite.com/2020/02/03/concurrent/【并发】线程基础/">
+<meta name="twitter:title" content="blog | percy">
+  <link rel="canonical" href="http://yoursite.com/page/5/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome: false,
-    isPost: true,
+    isHome: true,
+    isPost: false,
     isPage: false,
     isArchive: false
   };
 </script>
 
-  <title>【并发】线程基础 | blog | percy</title>
+  <title>blog | percy</title>
   
 
 
@@ -218,18 +214,17 @@
         <div class="content-wrap">
             
 
-          <div id="content" class="content page-post-detail">
+          <div id="content" class="content page-home">
             
-
-  <div id="posts" class="posts-expand">
-    
+  <section id="posts" class="posts-expand">
+      
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/03/concurrent/【并发】线程基础/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1212/12/12/other/house_knowledeg/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -243,8 +238,9 @@
       <header class="post-header">
 
         
-          <h1 class="post-title" itemprop="name headline">【并发】线程基础
-
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/1212/12/12/other/house_knowledeg/" class="post-title-link" itemprop="url">【other】房子的知识</a>
             
           </h1>
         
@@ -260,7 +256,7 @@
                 
               
 
-              <time title="创建时间：2020-02-03 16:22:56" itemprop="dateCreated datePublished" datetime="2020-02-03T16:22:56+08:00">2020-02-03</time>
+              <time title="创建时间：1212-12-12 12:12:12" itemprop="dateCreated datePublished" datetime="1212-12-12T12:12:12+08:00">1212-12-12</time>
             </span>
           
             
@@ -281,7 +277,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a></span>
 
                 
                 
@@ -298,7 +294,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>495</span>
+              <span>2.6k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -308,7 +304,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>1 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -321,74 +317,79 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h2><h3 id="并发编程的三要素"><a href="#并发编程的三要素" class="headerlink" title="并发编程的三要素"></a>并发编程的三要素</h3><ul>
-<li>原子性 一系列操作要么全部执行要么失败。</li>
-<li>有序性  程序按照代码的顺序先后执行 避免指令重排列。</li>
-<li>可见性 当多线程访问同一个变量 其中一个线程修改了 其他线程也要读新的值。</li>
-</ul><h3 id="并发和并行"><a href="#并发和并行" class="headerlink" title="并发和并行"></a>并发和并行</h3><ul>
-<li>并行性是指两个或多个事件在<strong>同一时刻</strong>发生</li>
-<li>并发性是指两个或多个事件在<strong>同一时间间隔内</strong>发生<ul>
-<li>并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中每一时刻却仅能有一道程序执行，<strong>故在一个处理器上，微观上这些程序只能是分时地交替执行</strong>。倘若在计算机系统中有多个处理机，则这些可以并发执行的程序便可被分配到多个处理机上，实现并行执行，即<strong>利用每个处理机来处理一个可并发执行的程序</strong>，这样，多个程序便可同时执行</li>
-</ul>
-</li>
-</ul><a id="more"></a>
-
-<p><strong>简单说，并发编程指的是赋予程序可以并行运行的能力。并行如上所说，指的是同时执行。</strong></p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>并发不是并行：<a href="https://blog.golang.org/concurrency-is-not-parallelism" target="_blank" rel="noopener">https://blog.golang.org/concurrency-is-not-parallelism</a></p>
-<p>这个实际上是有问题的理解：<a href="https://laike9m.com/blog/huan-zai-yi-huo-bing-fa-he-bing-xing,61/" target="_blank" rel="noopener">https://laike9m.com/blog/huan-zai-yi-huo-bing-fa-he-bing-xing,61/</a></p>
-
+          <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="容积率"><a href="#容积率" class="headerlink" title="容积率"></a>容积率</h3><p>容积率（Plot Ratio/Floor Area Ratio/Volume Fraction）是指一个小区的地上总建筑面积与净用地面积的比率。</p><h3 id="用地性质"><a href="#用地性质" class="headerlink" title="用地性质"></a>用地性质</h3><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R居住用地</td>
+<td>住宅和相应服务设施的用地</td>
+</tr>
+<tr>
+<td>A公共管理与公共服务设施用地</td>
+<td>公共管理与公共服务用地， 行政办公用地</td>
+</tr>
+<tr>
+<td>B商业服务业设施用地</td>
+<td>商业、商务、娱乐康体等设施用地，不包括居住用地中的服务设施用地</td>
+</tr>
+<tr>
+<td>M工业用地</td>
+<td>工矿企业的生产车间、库房及其附属设施等用地，包括专用铁路、码头和辅助道路、停车场等用地，不包括露天矿用地</td>
+</tr>
+<tr>
+<td>W物流仓储用地</td>
+<td>对居住和公共环境基本无干扰、污染和安全隐患的物流仓储用地</td>
+</tr>
+<tr>
+<td>S道路与交通设施用地</td>
+<td>城市道路、交通设施等用地，不包括居住用地、工业用地等内部的道路、停车场等用地</td>
+</tr>
+<tr>
+<td>U公用设施用地</td>
+<td>供应、环境、安全等设施用地</td>
+</tr>
+<tr>
+<td>G绿地与广场用地</td>
+<td>公园绿地、防护绿地、广场等公共开放空间用地</td>
+</tr>
+</tbody></table>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/1212/12/12/other/house_knowledeg/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
     </div>
 
     
     
     
-        
-      
-
       <footer class="post-footer">
-          
-            
-          
-          <div class="post-tags">
-            
-              <a href="/tags/并发/" rel="tag"># 并发</a>
-            
-              <a href="/tags/线程/" rel="tag"># 线程</a>
-            
-          </div>
-        
-
-        
-
-          <div class="post-nav">
-            <div class="post-nav-next post-nav-item">
-              
-                <a href="/2020/02/01/learn/【学习】套接字和文件描述符-下/" rel="next" title="【学习】套接字和文件描述符-下">
-                  <i class="fa fa-chevron-left"></i> 【学习】套接字和文件描述符-下
-                </a>
-              
-            </div>
-
-            <span class="post-nav-divider"></span>
-
-            <div class="post-nav-prev post-nav-item">
-              
-                <a href="/2020/02/04/concurrent/【并发】channel/" rel="prev" title="【并发】channel">
-                  【并发】channel <i class="fa fa-chevron-right"></i>
-                </a>
-              
-            </div>
-          </div>
+          <div class="post-eof"></div>
         
       </footer>
-    
   </div>
   
   
   
   </article>
 
-  </div>
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span>
+  </nav>
 
 
           </div>
@@ -407,17 +408,8 @@
 
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-inner">
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <div class="site-overview-wrap sidebar-panel">
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
 
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -432,7 +424,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-count">41</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -469,7 +461,9 @@
         
           
         
-        <span class="site-state-item-count">11</span>
+          
+        
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -582,7 +576,13 @@
         
           
         
-        <span class="site-state-item-count">49</span>
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">52</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -613,23 +613,6 @@
 
         </div>
       </div>
-      <!--noindex-->
-        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-            
-            
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#并发"><span class="nav-number">1.</span> <span class="nav-text">并发</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并发编程的三要素"><span class="nav-number">1.1.</span> <span class="nav-text">并发编程的三要素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发和并行"><span class="nav-number">1.2.</span> <span class="nav-text">并发和并行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li></ol></div>
-            
-
-          </div>
-        </div>
-      <!--/noindex-->
-      
 
     </div>
   </aside>
@@ -650,12 +633,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">97k</span>
+    <span title="站点总字数">109k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:28</span>
+    <span title="站点阅读时长">1:39</span>
 </div>
 
         
@@ -734,9 +717,5 @@
 
 
   
-  <script src="/js/scrollspy.js?v=7.3.0"></script>
-<script src="/js/post-details.js?v=7.3.0"></script>
-
-
 </body>
 </html>
