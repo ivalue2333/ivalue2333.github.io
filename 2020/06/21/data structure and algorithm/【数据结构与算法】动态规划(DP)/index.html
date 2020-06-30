@@ -55,19 +55,19 @@
   };
 </script>
 
-  <meta name="description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
-<meta name="keywords" content="http,tcp,udp">
+  <meta name="description" content="[TOC]算法框架1234567# 初始化 base casedp[0][0][...] = base# 进行状态转移for 状态1 in 状态1的所有取值：    for 状态2 in 状态2的所有取值：        for ...            dp[状态1][状态2][...] = 求最值(选择1，选择2...)">
+<meta name="keywords" content="框架,DP,动态规划">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【http】关于 tcp &amp; udp 协议">
-<meta property="og:url" content="http://yoursite.com/2020/02/07/http/【http】关于tcp&udp协议/index.html">
+<meta property="og:title" content="【数据结构与算法】动态规划(DP)">
+<meta property="og:url" content="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】动态规划(DP)/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
+<meta property="og:description" content="[TOC]算法框架1234567# 初始化 base casedp[0][0][...] = base# 进行状态转移for 状态1 in 状态1的所有取值：    for 状态2 in 状态2的所有取值：        for ...            dp[状态1][状态2][...] = 求最值(选择1，选择2...)">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-04-20T03:09:43.479Z">
+<meta property="og:updated_time" content="2020-06-26T07:30:21.994Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【http】关于 tcp &amp; udp 协议">
-<meta name="twitter:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
-  <link rel="canonical" href="http://yoursite.com/2020/02/07/http/【http】关于tcp&udp协议/">
+<meta name="twitter:title" content="【数据结构与算法】动态规划(DP)">
+<meta name="twitter:description" content="[TOC]算法框架1234567# 初始化 base casedp[0][0][...] = base# 进行状态转移for 状态1 in 状态1的所有取值：    for 状态2 in 状态2的所有取值：        for ...            dp[状态1][状态2][...] = 求最值(选择1，选择2...)">
+  <link rel="canonical" href="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】动态规划(DP)/">
 
 
 <script id="page-configurations">
@@ -81,7 +81,7 @@
   };
 </script>
 
-  <title>【http】关于 tcp & udp 协议 | blog | percy</title>
+  <title>【数据结构与算法】动态规划(DP) | blog | percy</title>
   
 
 
@@ -229,7 +229,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/07/http/【http】关于tcp&udp协议/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】动态规划(DP)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -243,7 +243,7 @@
       <header class="post-header">
 
         
-          <h1 class="post-title" itemprop="name headline">【http】关于 tcp & udp 协议
+          <h1 class="post-title" itemprop="name headline">【数据结构与算法】动态规划(DP)
 
             
           </h1>
@@ -260,7 +260,7 @@
                 
               
 
-              <time title="创建时间：2020-02-07 17:20:19" itemprop="dateCreated datePublished" datetime="2020-02-07T17:20:19+08:00">2020-02-07</time>
+              <time title="创建时间：2020-06-21 15:47:00" itemprop="dateCreated datePublished" datetime="2020-06-21T15:47:00+08:00">2020-06-21</time>
             </span>
           
             
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+                <time title="修改时间：2020-06-26 15:30:21" itemprop="dateModified" datetime="2020-06-26T15:30:21+08:00">2020-06-26</time>
               </span>
             
           
@@ -281,7 +281,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机网络/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据结构与算法/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a></span>
 
                 
                 
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.5k</span>
+              <span>1.4k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -321,106 +321,36 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="七层模型"><a href="#七层模型" class="headerlink" title="七层模型"></a>七层模型</h2><table>
-<thead>
-<tr>
-<th>层</th>
-<th>功能</th>
-<th>协议</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>应用层</td>
-<td>网络服务与最终用户的一个接口。</td>
-<td>HTTP,  FTP, SMTP</td>
-</tr>
-<tr>
-<td>表示层</td>
-<td>数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）</td>
-<td></td>
-</tr>
-<tr>
-<td>会话层</td>
-<td>建立、管理、终止会话。（在五层模型里面已经合并到了应用层）</td>
-<td></td>
-</tr>
-<tr>
-<td>传输层</td>
-<td>定义传输数据的协议端口号，以及流控和差错校验。</td>
-<td>TCP, UDP</td>
-</tr>
-<tr>
-<td>网络层</td>
-<td>进行逻辑地址寻址，实现不同网络之间的路径选择。</td>
-<td>ICMP, IP</td>
-</tr>
-<tr>
-<td>数据链路层</td>
-<td>建立逻辑连接、进行硬件地址寻址、差错校验等功能。</td>
-<td></td>
-</tr>
-<tr>
-<td>物理层</td>
-<td>建立、维护、断开物理连接。</td>
-<td></td>
-</tr>
-</tbody></table><a id="more"></a>
-<p>数据在网络上传输，通过网络层的IP地址找到目标主机，通过传输层的端口号定位目标主机上的服务(应用程序)。</p>
-<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><p>传输控制协议（TCP，Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。</p>
-<p>可靠性：TCP为了保证报文传输的可靠，就给每个包一个序号，同时序号也保证了传送到接收端实体的包的按序接收。然后接收端实体对已成功收到的字节发回一个<strong>相应的确认（ACK）</strong>；如果发送端实体在合理的往返时延（RTT）内未收到确认，那么对应的数据（假设丢失了）将会被<strong>重传</strong>。</p>
-<h2 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h2><p>用户数据报协议（UDP，User Datagram Protocol）为应用程序提供了一种无需建立连接就可以发送封装的 IP 数据报的方法。</p>
-<p>在选择UDP作为传输协议时必须要谨慎。在网络质量令人十分不满意的环境下，UDP协议数据包丢失会比较严重。但是由于UDP的特性：它不属于连接型协议，因而具有资源消耗小，处理速度快的优点，所以通常音频、视频和普通数据在传送时使用UDP较多，因为它们即使偶尔丢失一两个数据包，也不会对接收结果产生太大影响。</p>
-<h2 id="TCP-和-UDP-对比"><a href="#TCP-和-UDP-对比" class="headerlink" title="TCP 和 UDP 对比"></a>TCP 和 UDP 对比</h2><table>
-<thead>
-<tr>
-<th align="left">功能</th>
-<th align="left">TCP</th>
-<th>UDP</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">连接</td>
-<td align="left">面向连接</td>
-<td>无连接</td>
-</tr>
-<tr>
-<td align="left">传输双方</td>
-<td align="left">一对一，所以必须要提前建立连接，只支持单播</td>
-<td>一对一、一对多、一对全都可以，即支持单播、广播、全播。</td>
-</tr>
-<tr>
-<td align="left">传输可靠性</td>
-<td align="left">可靠</td>
-<td>不可靠</td>
-</tr>
-<tr>
-<td align="left">传输形式</td>
-<td align="left">字节流，仅把应用进程交下来的报文当作一连串的字节流，然后对这些字节流进行分组、编号、发送</td>
-<td>数据报文段（UDP对应用进程交下来的报文既不合并、也不会拆分，而是保留这些报文的边界）</td>
-</tr>
-<tr>
-<td align="left">应用场景</td>
-<td align="left">要求通信数据可靠（比如文件传输、邮件传输）</td>
-<td>要求实时性强，且对丢数据有一定容忍性</td>
-</tr>
-<tr>
-<td align="left">提供服务</td>
-<td align="left">可以向上层提供面向连接可靠服务，不会出现误码、丢失。</td>
-<td>接收方不需要发送ack，发送方也不关系ack</td>
-</tr>
-<tr>
-<td align="left">性能</td>
-<td align="left">传输效率：慢<br>所需资源：多</td>
-<td>传输效率：快<br>所需资源：少</td>
-</tr>
-</tbody></table>
-<ul>
-<li>TCP提供面向连接的服务，在传送数据之前必须先建立连接，数据传输结束之后要释放连接，TCP不提供多播和广播。并且由于TCP提供可靠的（<strong>TCP在数据传输之前有三次握手来建立连接，并且在数据传递时，有确认、窗口、重传、拥塞控制机制，在数据传输完之后，还会断开连接用来节约系统资源</strong>）、面向连接的运输服务，这些难免会增加系统的开销，如确认，流量控制，计时器以及连接管理，使得首部字节增大很多，还需要占用很多的处理机资源。TCP一般用于文件传输、发送和接受邮件、远程登陆等场景。</li>
-<li>UDP传输数据之前不需要先建立连接，<strong>远地主机在收到UDP报文后，不需要给出任何确认</strong>，远地主机假如发现UDP报文段出错，<strong>直接丢弃，也不需要给发送主机返回消息</strong>。</li>
-</ul>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>百度百科</p>
-<p>计算机网络-TCP和UDP的区别： <a href="https://segmentfault.com/a/1190000021688094" target="_blank" rel="noopener">https://segmentfault.com/a/1190000021688094</a></p>
+        <p>[TOC]</p><h2 id="算法框架"><a href="#算法框架" class="headerlink" title="算法框架"></a>算法框架</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 初始化 base case</span><br><span class="line">dp[0][0][...] = base</span><br><span class="line"><span class="meta">#</span> 进行状态转移</span><br><span class="line">for 状态1 in 状态1的所有取值：</span><br><span class="line">    for 状态2 in 状态2的所有取值：</span><br><span class="line">        for ...</span><br><span class="line">            dp[状态1][状态2][...] = 求最值(选择1，选择2...)</span><br></pre></td></tr></table></figure><a id="more"></a>
 
+
+<ol>
+<li>找子问题</li>
+<li>动态规划的核心是状态转换方程</li>
+<li>要写出状态转换方程，就需要先写出状态方程</li>
+<li>状态方程的自变量肯定是状态，因变量一般来说是要求的极值, y = f(i)</li>
+<li>状态就是问题和子问题中的变量（自变量），一般来说都是[0, n)（一维数组）</li>
+<li>状态之所以变化是因为做了选择，在每一个状态都有一个选择列表</li>
+<li>回到第1点，问题一般是多个子问题中的极值（因为要求的就是极值）。问题和子问题的区别一般是数组的长度或字符串的长度有区别（这就是状态，或者说自变量）。</li>
+<li>所以定义子问题很关键</li>
+</ol>
+<p><strong>状态转换方程就是，子问题和问题的关系。由于在一种状态下，可做的选择是有限的，所以对应的子问题个数也是有限的，所以最优子问题（子结构）是可以确定，而问题一般就是等于最优子问题（加上一个常数）</strong></p>
+<p><strong>例子见coin change</strong></p>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><h3 id="斐波那契数列"><a href="#斐波那契数列" class="headerlink" title="斐波那契数列"></a>斐波那契数列</h3><h4 id="方程"><a href="#方程" class="headerlink" title="方程"></a>方程</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">n=1, 2 =&gt; f(n) = 1</span><br><span class="line">n&gt;2    =&gt; f(n) = f(n-1) + f(n-2)</span><br></pre></td></tr></table></figure>
+
+<h4 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 用动态规划做，考虑整数溢出</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">fib</span><span class="params">(self, n: int)</span> -&gt; int:</span></span><br><span class="line">        <span class="keyword">if</span> n &lt;= <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">        <span class="keyword">if</span> n == <span class="number">1</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">        dp = [<span class="number">0</span>] * (n + <span class="number">1</span>)</span><br><span class="line">        dp[<span class="number">1</span>], dp[<span class="number">2</span>] = <span class="number">1</span>, <span class="number">1</span></span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">3</span>, n + <span class="number">1</span>):</span><br><span class="line">            dp[i] = (dp[i - <span class="number">1</span>] + dp[i - <span class="number">2</span>]) % <span class="number">1000000007</span></span><br><span class="line">        <span class="keyword">return</span> dp[n]</span><br></pre></td></tr></table></figure>
+
+<h3 id="coin-change"><a href="#coin-change" class="headerlink" title="coin change"></a>coin change</h3><ol>
+<li>确定「状态」，也就是<strong>原问题和子问题中会变化的变量</strong>。由于硬币数量无限，硬币的面额也是题目给定的，只有目标金额会不断地向 base case 靠近，所以唯一的「状态」就是目标金额 amount。</li>
+<li>确定「选择」，也就是导致「状态」产生变化的行为。目标金额为什么变化呢，因为你在选择硬币，你每选择一枚硬币，就相当于减少了目标金额。所以说所有硬币的面值，就是你的「选择」。</li>
+<li>确定 [基础状态]，当状态对应的值可直接硬编码得出时的状态。</li>
+<li>明确 dp <strong>函数/数组（使用函数一般是自顶向下的递归，使用数组一般是自底向上的递推）</strong> 的定义。我们这里讲的是自顶向下的解法，所以会有一个递归的 dp 函数，一般来说函数的参数就是状态转移中会变化的量，也就是上面说到的「状态」；函数的返回值就是题目要求我们计算的量。</li>
+</ol>
+<p>所以<code>dp(n) 的定义：输入一个目标金额 n，返回凑出目标金额 n 的最少硬币数量。</code> 即 <strong>dp[状态] 映射 计算量。</strong></p>
+<h4 id="方程-1"><a href="#方程-1" class="headerlink" title="方程"></a>方程</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">n &lt; 0   =&gt;  dp[n] = -1</span><br><span class="line">n = 0	=&gt;	dp[n] = 0</span><br><span class="line">n &gt; 1	=&gt;  dp[n] = min(dp[n -coin] + 1) coin in coins, n &gt; 0;</span><br></pre></td></tr></table></figure>
+
+<h4 id="算法-1"><a href="#算法-1" class="headerlink" title="算法"></a>算法</h4><p>省略</p>
+<h2 id="算法思想"><a href="#算法思想" class="headerlink" title="算法思想"></a>算法思想</h2>
     </div>
 
     
@@ -435,11 +365,11 @@
           
           <div class="post-tags">
             
-              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/框架/" rel="tag"># 框架</a>
             
-              <a href="/tags/tcp/" rel="tag"># tcp</a>
+              <a href="/tags/DP/" rel="tag"># DP</a>
             
-              <a href="/tags/udp/" rel="tag"># udp</a>
+              <a href="/tags/动态规划/" rel="tag"># 动态规划</a>
             
           </div>
         
@@ -449,8 +379,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/02/04/concurrent/【并发】channel/" rel="next" title="【并发】channel">
-                  <i class="fa fa-chevron-left"></i> 【并发】channel
+                <a href="/2020/06/21/data structure and algorithm/【数据结构与算法】开篇/" rel="next" title="【数据结构与算法】 开篇">
+                  <i class="fa fa-chevron-left"></i> 【数据结构与算法】 开篇
                 </a>
               
             </div>
@@ -459,8 +389,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2020/03/05/learn/【学习】linux虚拟空间布局/" rel="prev" title="【学习】linux虚拟空间布局">
-                  【学习】linux虚拟空间布局 <i class="fa fa-chevron-right"></i>
+                <a href="/2020/06/26/data structure and algorithm/【数据结构与算法】深度优先（回溯）DFS/" rel="prev" title="【数据结构与算法】深度优先（回溯）DFS">
+                  【数据结构与算法】深度优先（回溯）DFS <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -518,7 +448,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">41</span>
+          <span class="site-state-item-count">48</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -557,7 +487,9 @@
         
           
         
-        <span class="site-state-item-count">12</span>
+          
+        
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -676,7 +608,35 @@
         
           
         
-        <span class="site-state-item-count">52</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">66</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -717,7 +677,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#七层模型"><span class="nav-number">1.</span> <span class="nav-text">七层模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP"><span class="nav-number">2.</span> <span class="nav-text">TCP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP"><span class="nav-number">3.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-和-UDP-对比"><span class="nav-number">4.</span> <span class="nav-text">TCP 和 UDP 对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#算法框架"><span class="nav-number">1.</span> <span class="nav-text">算法框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#例子"><span class="nav-number">2.</span> <span class="nav-text">例子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#斐波那契数列"><span class="nav-number">2.1.</span> <span class="nav-text">斐波那契数列</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方程"><span class="nav-number">2.1.1.</span> <span class="nav-text">方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#算法"><span class="nav-number">2.1.2.</span> <span class="nav-text">算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#coin-change"><span class="nav-number">2.2.</span> <span class="nav-text">coin change</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方程-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">方程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#算法-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">算法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法思想"><span class="nav-number">3.</span> <span class="nav-text">算法思想</span></a></li></ol></div>
             
 
           </div>
@@ -744,12 +704,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">109k</span>
+    <span title="站点总字数">118k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:39</span>
+    <span title="站点阅读时长">1:47</span>
 </div>
 
         

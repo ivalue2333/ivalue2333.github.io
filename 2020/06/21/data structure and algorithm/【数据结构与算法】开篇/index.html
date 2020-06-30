@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="迷思前前后后做了100来道算法题，但是在算法方面总是感觉问题很大。一直在思考如何解决这个问题。后面逐渐明白需要将算法题分类，其实分类后就是那么几类，每一种类型都有个大概的解法。可是还是不够。核心的问题是没有系统性的总结，没有形成可复用的系统性的框架，一些模模糊糊的总结实际上不能帮助我在遇到新的问题的时候，有非常敏捷的反应来处理对应的问题。直到看到了算法小抄，总体的感觉是他把我想做的事情做得很好（我">
+<meta name="keywords" content="框架,迷思,向成功的人学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【数据结构与算法】 开篇">
+<meta property="og:url" content="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】开篇/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="迷思前前后后做了100来道算法题，但是在算法方面总是感觉问题很大。一直在思考如何解决这个问题。后面逐渐明白需要将算法题分类，其实分类后就是那么几类，每一种类型都有个大概的解法。可是还是不够。核心的问题是没有系统性的总结，没有形成可复用的系统性的框架，一些模模糊糊的总结实际上不能帮助我在遇到新的问题的时候，有非常敏捷的反应来处理对应的问题。直到看到了算法小抄，总体的感觉是他把我想做的事情做得很好（我">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-27T11:58:51.554Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【数据结构与算法】 开篇">
+<meta name="twitter:description" content="迷思前前后后做了100来道算法题，但是在算法方面总是感觉问题很大。一直在思考如何解决这个问题。后面逐渐明白需要将算法题分类，其实分类后就是那么几类，每一种类型都有个大概的解法。可是还是不够。核心的问题是没有系统性的总结，没有形成可复用的系统性的框架，一些模模糊糊的总结实际上不能帮助我在遇到新的问题的时候，有非常敏捷的反应来处理对应的问题。直到看到了算法小抄，总体的感觉是他把我想做的事情做得很好（我">
+  <link rel="canonical" href="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】开篇/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【数据结构与算法】 开篇 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/21/data structure and algorithm/【数据结构与算法】开篇/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【数据结构与算法】 开篇
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-21 15:47:00" itemprop="dateCreated datePublished" datetime="2020-06-21T15:47:00+08:00">2020-06-21</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-27 19:58:51" itemprop="dateModified" datetime="2020-06-27T19:58:51+08:00">2020-06-27</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据结构与算法/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>976</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="迷思"><a href="#迷思" class="headerlink" title="迷思"></a>迷思</h2><p>前前后后做了100来道算法题，但是在算法方面总是感觉问题很大。一直在思考如何解决这个问题。后面逐渐明白需要将算法题分类，其实分类后就是那么几类，每一种类型都有个大概的解法。可是还是不够。<strong>核心的问题是没有系统性的总结，没有形成可复用的系统性的框架</strong>，一些模模糊糊的总结实际上不能帮助我在遇到新的问题的时候，有非常敏捷的反应来处理对应的问题。直到看到了算法小抄，总体的感觉是他把我想做的事情做得很好（我想很多人也有这种经历吧，别人将自己想做的事做了出来，而且做得更完善，更易用，更被接受）。</p><a id="more"></a>
+<p>不过，站在别人的肩膀上，总能走得更远，找到了更为<strong>科学</strong>的道路，那么剩下的事情就是将这条路走通就可以了。</p>
+<p>还是有几点可以总结的。</p>
+<ul>
+<li>站在别人的肩膀上：其实做一件事最好的方式，<strong>不是自己想出解决办法，而是用别人实践出来的已经成功的方法。这就需要足够广泛地搜索已经成功的方法，并选择或者综合其中的几种，使其成为自己的方法，这应该是学习的极佳的方法吧。</strong><ul>
+<li>向成功的人学习</li>
+</ul>
+</li>
+<li>足够的抽象（或者叫套路）：当一个模式需要广泛的使用时，需要像病毒一样的复制时，他需要足够的抽象，<strong>抽象式的框架便可以确保足够的复用度</strong>。</li>
+<li>不要盲目拔高：感觉我之前就有不好的心理，一说算法，那肯定就是要看《算法之美》。盲目的拔高就意味着没有足够的基础，就像是让一个小学生学习微分方程一样，不是该干那个事情的时候。所以，书是一页一页的看的，能力是一点一点地提高的。<strong>当你有了基础，那么再去拔高才是合适的时候。</strong></li>
+</ul>
+<h3 id="再论如何学习"><a href="#再论如何学习" class="headerlink" title="再论如何学习"></a>再论如何学习</h3><p>我，或许很多其他的人也是一样，认为知道一个问题的解法不重要，一定要自己想出来才是最厉害的。这是一种典型的错误（当然这句话不一定全对）。<strong>不管是高中的数学物理，还是大学的高数离散，还是程序中的算法，其实都是一样的。当一个问题作为题来用时，首先不应该是自己去想如何解决，首先应该看以前的人是如何解决这个问题，当然问题和解答方法肯定会被分类然后形成所谓的套路。当你站在了以前的人的肩膀上时（这是在极其有限的时间里极其有效率的方法），你才能更系统，更全面，最重要的，最快速的掌握这些问题的解决方法，并以这些方法和框架为基础，解决更多的问题。</strong></p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>算法的入门是什么，其实很简单，就是你就按 if + while 来穷举，穷举法是所有的算法思想的基础，在这之上的各种算法都是在想办法优化时间复杂度。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/框架/" rel="tag"># 框架</a>
+            
+              <a href="/tags/迷思/" rel="tag"># 迷思</a>
+            
+              <a href="/tags/向成功的人学习/" rel="tag"># 向成功的人学习</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/06/14/http/【tcp】关于tcp的三次握手/" rel="next" title="【http】关于tcp的三次握手">
+                  <i class="fa fa-chevron-left"></i> 【http】关于tcp的三次握手
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/06/21/data structure and algorithm/【数据结构与算法】动态规划(DP)/" rel="prev" title="【数据结构与算法】动态规划(DP)">
+                  【数据结构与算法】动态规划(DP) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">66</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#迷思"><span class="nav-number">1.</span> <span class="nav-text">迷思</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#再论如何学习"><span class="nav-number">1.1.</span> <span class="nav-text">再论如何学习</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法"><span class="nav-number">2.</span> <span class="nav-text">算法</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">118k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:47</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
