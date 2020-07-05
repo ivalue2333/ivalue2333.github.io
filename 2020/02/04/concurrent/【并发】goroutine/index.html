@@ -55,18 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="TODO…goroutine参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_medium=studygolang.com&amp;amp;utm_source=studygolang.com">
+  <meta name="description" content="TODO…goroutine抢占式调度，协程不适合cpu密集， 因为协程是遇到io等阻塞时主动让出，如果是cpu密集型，这将导致协程长期占有cpu，导致其他任务无法执行，但是最新的 goroutine 有实现协商退出。参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_">
 <meta name="keywords" content="并发,线程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【并发】goroutine">
 <meta property="og:url" content="http://yoursite.com/2020/02/04/concurrent/【并发】goroutine/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="TODO…goroutine参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_medium=studygolang.com&amp;amp;utm_source=studygolang.com">
+<meta property="og:description" content="TODO…goroutine抢占式调度，协程不适合cpu密集， 因为协程是遇到io等阻塞时主动让出，如果是cpu密集型，这将导致协程长期占有cpu，导致其他任务无法执行，但是最新的 goroutine 有实现协商退出。参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-14T15:00:46.617Z">
+<meta property="og:updated_time" content="2020-07-02T12:29:41.509Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【并发】goroutine">
-<meta name="twitter:description" content="TODO…goroutine参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_medium=studygolang.com&amp;amp;utm_source=studygolang.com">
+<meta name="twitter:description" content="TODO…goroutine抢占式调度，协程不适合cpu密集， 因为协程是遇到io等阻塞时主动让出，如果是cpu密集型，这将导致协程长期占有cpu，导致其他任务无法执行，但是最新的 goroutine 有实现协商退出。参考高手的GPM：http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;amp;utm_">
   <link rel="canonical" href="http://yoursite.com/2020/02/04/concurrent/【并发】goroutine/">
 
 
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-14 23:00:46" itemprop="dateModified" datetime="2020-06-14T23:00:46+08:00">2020-06-14</time>
+                <time title="修改时间：2020-07-02 20:29:41" itemprop="dateModified" datetime="2020-07-02T20:29:41+08:00">2020-07-02</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>701</span>
+              <span>798</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -321,7 +321,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>TODO…</p><h2 id="goroutine"><a href="#goroutine" class="headerlink" title="goroutine"></a>goroutine</h2><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>高手的GPM：<a href="http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;utm_medium=studygolang.com&amp;utm_source=studygolang.com" target="_blank" rel="noopener">http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;utm_medium=studygolang.com&amp;utm_source=studygolang.com</a></p><a id="more"></a>
+        <p>TODO…</p><h2 id="goroutine"><a href="#goroutine" class="headerlink" title="goroutine"></a>goroutine</h2><p>抢占式调度，</p><p><strong>协程</strong>不适合cpu密集， 因为协程是遇到io等阻塞时主动让出，如果是cpu密集型，这将导致协程长期占有cpu，导致其他任务无法执行，但是最新的 <strong>goroutine</strong> 有实现协商退出。</p><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>高手的GPM：<a href="http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;utm_medium=studygolang.com&amp;utm_source=studygolang.com" target="_blank" rel="noopener">http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&amp;utm_medium=studygolang.com&amp;utm_source=studygolang.com</a></p><a id="more"></a>
+
+
 
 <p>go-scheduler：<a href="http://morsmachine.dk/go-scheduler" target="_blank" rel="noopener">http://morsmachine.dk/go-scheduler</a></p>
 <p>go-scheduler译文：<a href="https://www.douban.com/note/300631999/" target="_blank" rel="noopener">https://www.douban.com/note/300631999/</a></p>
@@ -427,7 +429,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -466,9 +468,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -615,7 +615,17 @@
         
           
         
-        <span class="site-state-item-count">66</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">71</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -683,12 +693,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">118k</span>
+    <span title="站点总字数">125k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:47</span>
+    <span title="站点阅读时长">1:53</span>
 </div>
 
         

@@ -224,7 +224,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/08/reflection/【迷思】golang命名返回值/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -240,7 +240,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2019/08/30/translation/【翻译】理解pulsar如何工作/" class="post-title-link" itemprop="url">【翻译】理解pulsar如何工作</a>
+              <a href="/2019/10/08/reflection/【迷思】golang命名返回值/" class="post-title-link" itemprop="url">【迷思】golang命名返回值</a>
             
           </h1>
         
@@ -256,7 +256,7 @@
                 
               
 
-              <time title="创建时间：2019-08-30 17:43:42" itemprop="dateCreated datePublished" datetime="2019-08-30T17:43:42+08:00">2019-08-30</time>
+              <time title="创建时间：2019-10-08 16:14:42" itemprop="dateCreated datePublished" datetime="2019-10-08T16:14:42+08:00">2019-10-08</time>
             </span>
           
             
@@ -277,7 +277,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
 
                 
                 
@@ -294,7 +294,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>11k</span>
+              <span>1.9k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -304,7 +304,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>10 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -317,11 +317,419 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>译者注：</p><p>翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试</p><p>原文：<a href="https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works" target="_blank" rel="noopener">https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works</a></p>
+          <h2 id="返回值是一种声明"><a href="#返回值是一种声明" class="headerlink" title="返回值是一种声明"></a>返回值是一种声明</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> TestModel <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">	Age <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	golang 在返回值中声明返回对象需要注意的点，实际上和var声明是一样的</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 返回值声明就是相当于使用var申明了，这在map和指针的情况下回产生空指针异常。</span></span><br><span class="line"><span class="comment">// 请理解一下空指针取址能取到，这其实很简单。</span></span><br><span class="line"><span class="comment">// 指针对象指的是这个符号的内存存的是指针，空指针是说他的内存存的内存是nil。</span></span><br><span class="line"><span class="comment">// 而这个对象肯定是有一个内存地址来保存它的，想想吧，任意一个能看见的编码符号，都是有地址在存储的。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test1</span><span class="params">()</span> <span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">	model TestModel, modelPtr, testModel *TestModel, modelList []TestModel, modelPtrList []*TestModel,</span></span></span><br><span class="line"><span class="function"><span class="params">	modelListPtr *[]TestModel, mapData <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 能取址说明是有地址的</span></span><br><span class="line"></span><br><span class="line">	fmt.Println(&amp;model, model)</span><br><span class="line">	fmt.Println(&amp;modelPtr, modelPtr)</span><br><span class="line">	fmt.Println(&amp;modelList, modelList)</span><br><span class="line">	fmt.Println(&amp;modelPtrList, modelPtrList)</span><br><span class="line">	<span class="comment">// 空指针</span></span><br><span class="line">	fmt.Println(&amp;modelListPtr, modelListPtr)</span><br><span class="line">	fmt.Println(&amp;mapData, mapData)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// map 是空的如果要使用，需要先make: mapData = make(map[string]bool)注意不是 ":="</span></span><br><span class="line">	<span class="comment">//list := []string&#123;"abc", "def"&#125;</span></span><br><span class="line">	<span class="comment">//for _, data := range list &#123;</span></span><br><span class="line">	<span class="comment">//	mapData[data] = true</span></span><br><span class="line">	<span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 其实和上面一样</span></span><br><span class="line">	<span class="comment">//var modelListIn []TestModel</span></span><br><span class="line">	<span class="comment">//var modelPtrListIn []*TestModel</span></span><br><span class="line">	<span class="comment">//var modelListPtrIn *[]TestModel</span></span><br><span class="line">	<span class="comment">//fmt.Println(&amp;modelListIn)</span></span><br><span class="line">	<span class="comment">//fmt.Println(&amp;modelPtrListIn)</span></span><br><span class="line">	<span class="comment">//fmt.Println(modelListPtrIn)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// list 可以直接用</span></span><br><span class="line">	<span class="comment">//var list []string</span></span><br><span class="line">	<span class="comment">//list = append(list, "abc")</span></span><br><span class="line">	<span class="comment">//fmt.Println(list)</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">	test1()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/08/30/translation/【翻译】理解pulsar如何工作/#more" rel="contents">
+              <a class="btn" href="/2019/10/08/reflection/【迷思】golang命名返回值/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/19/reflection/【迷思】为什么要使用联合索引/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/09/19/reflection/【迷思】为什么要使用联合索引/" class="post-title-link" itemprop="url">【迷思】为什么要使用联合索引</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-19 20:53:42" itemprop="dateCreated datePublished" datetime="2019-09-19T20:53:42+08:00">2019-09-19</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.2k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="mysql中的一些查询规则"><a href="#mysql中的一些查询规则" class="headerlink" title="mysql中的一些查询规则"></a>mysql中的一些查询规则</h3><ol>
+<li>在一次查询中，MySQL只能使用一个索引。</li>
+<li>在真实项目中，SQL语句中的WHERE子句里通常会包含多个查询条件还会有排序、分组等。</li>
+<li>若表中索引过多，会影响INSERT及UPDATE性能，简单说就是会影响数据写入性能。因为更新数据的同时，也要同时更新索引。</li>
+</ol><h2 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h2><h3 id="原因零：在and的查询语句中，一次查询只会走一个索引"><a href="#原因零：在and的查询语句中，一次查询只会走一个索引" class="headerlink" title="原因零：在and的查询语句中，一次查询只会走一个索引"></a>原因零：在and的查询语句中，一次查询只会走一个索引</h3>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/09/19/reflection/【迷思】为什么要使用联合索引/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/learn/【学习】微信开发踩坑记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/09/16/learn/【学习】微信开发踩坑记/" class="post-title-link" itemprop="url">【学习】微信开发采坑记</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-16 21:33:42" itemprop="dateCreated datePublished" datetime="2019-09-16T21:33:42+08:00">2019-09-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>197</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+            <h2 id="踩坑点"><a href="#踩坑点" class="headerlink" title="踩坑点"></a>踩坑点</h2><h3 id="消息不可达服务"><a href="#消息不可达服务" class="headerlink" title="消息不可达服务"></a>消息不可达服务</h3><ul>
+<li>问题<ul>
+<li>用户A先关注了微信订阅号，然后订阅号启动了服务，让后用户A发送消息，服务接受不到用户的A的消息。</li>
+</ul>
+</li>
+<li>解决<ul>
+<li>取消关注，并重新关注</li>
+</ul>
+</li>
+</ul>
+<h3 id="python3下文档中代码不可用"><a href="#python3下文档中代码不可用" class="headerlink" title="python3下文档中代码不可用"></a>python3下文档中代码不可用</h3><ul>
+<li>问题<ul>
+<li>使用python官方demo，在python3下使用sha1对相关数据进行文摘，文摘和signature不一致</li>
+</ul>
+</li>
+<li>解决<ul>
+<li>不要使用map()函数，使用正常的迭代，不要用自己不懂的代码</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/09/learn/【学习】git不同阶段撤回/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/09/09/learn/【学习】git不同阶段撤回/" class="post-title-link" itemprop="url">【学习】git不同阶段撤回</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-09 20:40:33" itemprop="dateCreated datePublished" datetime="2019-09-09T20:40:33+08:00">2019-09-09</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.6k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>2 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>通过这篇文章，你会知道：</p><ul>
+<li><p>git有四个区：工作区，暂存区，本地仓库，远程仓库</p>
+</li>
+<li><p>文件有5个状态：origin， modified，staged，committed，pushed</p>
+</li>
+<li><p>如何撤销工作区的修改，如何撤销暂存区的修改，如何撤销本地的提交，如何撤销远程仓库的修改</p>
+</li>
+</ul><p>[TOC]</p><h2 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h2><p>大家都知道 Git 是一个分布式版本控制，所以 Git 会有一个本地库，和一个远端库，而平时提交代码的时候，一般也都是先从本地工作区提交代码</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/09/09/learn/【学习】git不同阶段撤回/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -450,6 +858,134 @@
           
             <div class="post-button text-center">
               <a class="btn" href="/2019/08/30/reflection/【迷思】golang垃圾回收/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/08/30/translation/【翻译】理解pulsar如何工作/" class="post-title-link" itemprop="url">【翻译】理解pulsar如何工作</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-30 17:43:42" itemprop="dateCreated datePublished" datetime="2019-08-30T17:43:42+08:00">2019-08-30</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>11k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>10 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>译者注：</p><p>翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试</p><p>原文：<a href="https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works" target="_blank" rel="noopener">https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works</a></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/08/30/translation/【翻译】理解pulsar如何工作/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -974,322 +1510,11 @@
   </article>
 
     
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/principle/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1970/01/01/principle/" class="post-title-link" itemprop="url">原则</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-30 19:29:11" itemprop="dateModified" datetime="2020-06-30T19:29:11+08:00">2020-06-30</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/原则/" itemprop="url" rel="index"><span itemprop="name">原则</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>226</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-            <p>翻译-对应翻译的文章</p>
-<p>迷思-有迷惑，查阅资料并思考</p>
-<p>学习-一些需要了解的操作</p>
-<p>异常-一些错误的编码或使用</p>
-<p>http-http单独拎出来</p>
-<p>redis-redis单独拎出来</p>
-<p>tag：多个，像搜索引擎一样的关键词</p>
-<p>分类：一个，在计算机科学，这个属于哪个类型</p>
-<p>目前分类有</p>
-<ul>
-<li>计算机基础（包括各种编程语言）</li>
-<li>并发</li>
-<li>数据库</li>
-<li>消息队列</li>
-<li>k8s</li>
-<li>原则</li>
-<li>redis</li>
-<li>http</li>
-<li>计算机网络， 除 http 之外的的网络协议</li>
-<li>数据结构与算法</li>
-<li>think in</li>
-<li>other</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1212/12/12/other/house_knowledeg/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1212/12/12/other/house_knowledeg/" class="post-title-link" itemprop="url">【other】房子的知识</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1212-12-12 12:12:12" itemprop="dateCreated datePublished" datetime="1212-12-12T12:12:12+08:00">1212-12-12</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>2.6k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>2 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="容积率"><a href="#容积率" class="headerlink" title="容积率"></a>容积率</h3><p>容积率（Plot Ratio/Floor Area Ratio/Volume Fraction）是指一个小区的地上总建筑面积与净用地面积的比率。</p><h3 id="用地性质"><a href="#用地性质" class="headerlink" title="用地性质"></a>用地性质</h3><table>
-<thead>
-<tr>
-<th>类别</th>
-<th>内容</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>R居住用地</td>
-<td>住宅和相应服务设施的用地</td>
-</tr>
-<tr>
-<td>A公共管理与公共服务设施用地</td>
-<td>公共管理与公共服务用地， 行政办公用地</td>
-</tr>
-<tr>
-<td>B商业服务业设施用地</td>
-<td>商业、商务、娱乐康体等设施用地，不包括居住用地中的服务设施用地</td>
-</tr>
-<tr>
-<td>M工业用地</td>
-<td>工矿企业的生产车间、库房及其附属设施等用地，包括专用铁路、码头和辅助道路、停车场等用地，不包括露天矿用地</td>
-</tr>
-<tr>
-<td>W物流仓储用地</td>
-<td>对居住和公共环境基本无干扰、污染和安全隐患的物流仓储用地</td>
-</tr>
-<tr>
-<td>S道路与交通设施用地</td>
-<td>城市道路、交通设施等用地，不包括居住用地、工业用地等内部的道路、停车场等用地</td>
-</tr>
-<tr>
-<td>U公用设施用地</td>
-<td>供应、环境、安全等设施用地</td>
-</tr>
-<tr>
-<td>G绿地与广场用地</td>
-<td>公园绿地、防护绿地、广场等公共开放空间用地</td>
-</tr>
-</tbody></table>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/1212/12/12/other/house_knowledeg/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1325,7 +1550,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1364,9 +1589,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -1513,7 +1736,17 @@
         
           
         
-        <span class="site-state-item-count">66</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">71</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -1564,12 +1797,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">118k</span>
+    <span title="站点总字数">125k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:47</span>
+    <span title="站点阅读时长">1:53</span>
 </div>
 
         

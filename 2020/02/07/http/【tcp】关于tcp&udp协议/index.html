@@ -55,18 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
+  <meta name="description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
 <meta name="keywords" content="http,tcp,udp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【http】关于 tcp &amp; udp 协议">
 <meta property="og:url" content="http://yoursite.com/2020/02/07/http/【tcp】关于tcp&udp协议/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
+<meta property="og:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-04-20T03:09:43.479Z">
+<meta property="og:updated_time" content="2020-07-01T02:03:43.007Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于 tcp &amp; udp 协议">
-<meta name="twitter:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网络之间的路径选择。 I">
+<meta name="twitter:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
   <link rel="canonical" href="http://yoursite.com/2020/02/07/http/【tcp】关于tcp&udp协议/">
 
 
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+                <time title="修改时间：2020-07-01 10:03:43" itemprop="dateModified" datetime="2020-07-01T10:03:43+08:00">2020-07-01</time>
               </span>
             
           
@@ -332,7 +332,7 @@
 <tbody><tr>
 <td>应用层</td>
 <td>网络服务与最终用户的一个接口。</td>
-<td>HTTP,  FTP, SMTP</td>
+<td>HTTP,  FTP, SMTP, websocket</td>
 </tr>
 <tr>
 <td>表示层</td>
@@ -518,7 +518,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -557,9 +557,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -706,7 +704,17 @@
         
           
         
-        <span class="site-state-item-count">66</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">71</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -774,12 +782,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">118k</span>
+    <span title="站点总字数">125k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:47</span>
+    <span title="站点阅读时长">1:53</span>
 </div>
 
         
