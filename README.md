@@ -1,14 +1,4 @@
----
-title: 关于
-date: 1970-01-01 00:00:00
-tags:
-	- 你如何知道我
-	- 我在看什么
-categories:
-	- 个人
----
-
-
+[TOC]
 
 ## 网址
 
@@ -113,5 +103,5 @@ golang中容易出错的地方：https://www.bangbangde.com/post/10_mistake_in_g
 
 ## Aount
 
-
-
+- 我在学习什么：golang 及计算机基础
+- 我在做什么工作：golang 开发，业务是电商问答机器人
