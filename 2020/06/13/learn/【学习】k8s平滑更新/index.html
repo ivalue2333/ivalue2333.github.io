@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344/*	客户端会报如下错误	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&amp;gt;127.0.0.1:9991: wsarecv: An existi">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-30T11:35:26.807Z">
+<meta property="og:updated_time" content="2020-07-28T09:00:23.386Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【学习】K8S平滑更新(zero-downtime with Kubernetes)">
 <meta name="twitter:description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344/*	客户端会报如下错误	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&amp;gt;127.0.0.1:9991: wsarecv: An existi">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-30 19:35:26" itemprop="dateModified" datetime="2020-06-30T19:35:26+08:00">2020-06-30</time>
+                <time title="修改时间：2020-07-28 17:00:23" itemprop="dateModified" datetime="2020-07-28T17:00:23+08:00">2020-07-28</time>
               </span>
             
           
@@ -344,7 +344,7 @@
 <p>gitlab地址：<a href="https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example" target="_blank" rel="noopener">https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example</a></p>
 <h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><h4 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 项目：https://gitlab.xiaoduoai.com/devops/k8s-app-deploy</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 目录：/ks-prod/ecrobot/grace-shut-example/grace</span><br></pre></td></tr></table></figure>
 
-<h4 id="模拟更新镜像"><a href="#模拟更新镜像" class="headerlink" title="模拟更新镜像"></a>模拟更新镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 如在测试环境</span><br><span class="line"><span class="meta">#</span> 一下两个指令模拟线上更新镜像</span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.7 --namespace=test-ks</span><br><span class="line"></span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4 --namespace=test-ks</span><br></pre></td></tr></table></figure>
+<h4 id="模拟更新镜像"><a href="#模拟更新镜像" class="headerlink" title="模拟更新镜像"></a>模拟更新镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 如在测试环境</span><br><span class="line"><span class="meta">#</span> 以下两个指令模拟线上更新镜像</span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.7 --namespace=test-ks</span><br><span class="line"></span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4 --namespace=test-ks</span><br></pre></td></tr></table></figure>
 
 <h4 id="并发测试工具"><a href="#并发测试工具" class="headerlink" title="并发测试工具"></a>并发测试工具</h4><ul>
 <li>ab</li>
@@ -453,7 +453,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -649,7 +649,17 @@
         
           
         
-        <span class="site-state-item-count">71</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">76</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -717,12 +727,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">125k</span>
+    <span title="站点总字数">149k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:53</span>
+    <span title="站点阅读时长">2:16</span>
 </div>
 
         

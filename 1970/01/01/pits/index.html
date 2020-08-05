@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="Makefile中的tab123456789101112131415# 报错makefile:4: *** missing separator. Stop# 原因makefile中的tab就是tab不能使用空格来替代# 检查cat -e -t -v Makefile^I开头^M$结尾就是正确的# 解决错误的那一行是因为缺少^I，加上就可以了# 参考https://stackoverflow.com">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-04-20T03:09:43.495Z">
+<meta property="og:updated_time" content="2020-07-22T06:39:31.831Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一些小坑">
 <meta name="twitter:description" content="Makefile中的tab123456789101112131415# 报错makefile:4: *** missing separator. Stop# 原因makefile中的tab就是tab不能使用空格来替代# 检查cat -e -t -v Makefile^I开头^M$结尾就是正确的# 解决错误的那一行是因为缺少^I，加上就可以了# 参考https://stackoverflow.com">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+                <time title="修改时间：2020-07-22 14:39:31" itemprop="dateModified" datetime="2020-07-22T14:39:31+08:00">2020-07-22</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>233</span>
+              <span>387</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -321,8 +321,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="Makefile中的tab"><a href="#Makefile中的tab" class="headerlink" title="Makefile中的tab"></a>Makefile中的tab</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 报错</span><br><span class="line">makefile:4: *** missing separator. Stop</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 原因</span><br><span class="line">makefile中的tab就是tab不能使用空格来替代</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 检查</span><br><span class="line">cat -e -t -v Makefile</span><br><span class="line">^I开头^M$结尾就是正确的</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 解决</span><br><span class="line">错误的那一行是因为缺少^I，加上就可以了</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 参考</span><br><span class="line">https://stackoverflow.com/questions/16931770/makefile4-missing-separator-stop</span><br></pre></td></tr></table></figure>
+        <h2 id="Makefile中的tab"><a href="#Makefile中的tab" class="headerlink" title="Makefile中的tab"></a>Makefile中的tab</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 报错</span><br><span class="line">makefile:4: *** missing separator. Stop</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 原因</span><br><span class="line">makefile中的tab就是tab不能使用空格来替代</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 检查</span><br><span class="line">cat -e -t -v Makefile</span><br><span class="line">^I开头^M$结尾就是正确的</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 解决</span><br><span class="line">错误的那一行是因为缺少^I，加上就可以了</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 参考</span><br><span class="line">https://stackoverflow.com/questions/16931770/makefile4-missing-separator-stop</span><br></pre></td></tr></table></figure><a id="more"></a>
 
+<h2 id="k8s-pod的Evicted状态"><a href="#k8s-pod的Evicted状态" class="headerlink" title="k8s-pod的Evicted状态"></a>k8s-pod的Evicted状态</h2><p>eviction，即驱赶的意思，意思是当节点出现异常时，kubernetes将有相应的机制驱赶该节点上的Pod。多见于资源不足时导致的驱赶，本次问题为磁盘不足导致。</p>
+<p>解决方法是找到占用磁盘过多的文件，如本次是有个traefix 日志文件占用超过了40G， 导致了磁盘不足。</p>
 
     </div>
 
@@ -348,8 +350,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/1970/01/01/principle/" rel="next" title="原则">
-                  <i class="fa fa-chevron-left"></i> 原则
+                <a href="/1212/12/12/other/house_knowledeg/" rel="next" title="【other】房子的知识">
+                  <i class="fa fa-chevron-left"></i> 【other】房子的知识
                 </a>
               
             </div>
@@ -358,8 +360,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/1970/01/01/think in/算法与这个世界的基本原则-分类/" rel="prev" title="算法与这个世界的基本原则-分类">
-                  算法与这个世界的基本原则-分类 <i class="fa fa-chevron-right"></i>
+                <a href="/1970/01/01/data structure and algorithm/【数据结构与算法】开篇/" rel="prev" title="【数据结构与算法】 开篇">
+                  【数据结构与算法】 开篇 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -417,7 +419,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -613,7 +615,17 @@
         
           
         
-        <span class="site-state-item-count">71</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">76</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -654,7 +666,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Makefile中的tab"><span class="nav-number">1.</span> <span class="nav-text">Makefile中的tab</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Makefile中的tab"><span class="nav-number">1.</span> <span class="nav-text">Makefile中的tab</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-pod的Evicted状态"><span class="nav-number">2.</span> <span class="nav-text">k8s-pod的Evicted状态</span></a></li></ol></div>
             
 
           </div>
@@ -681,12 +693,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">125k</span>
+    <span title="站点总字数">149k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:53</span>
+    <span title="站点阅读时长">2:16</span>
 </div>
 
         

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]摸鱼鱼塘热榜：https://mo.fish/V站：https://www.v2ex.com/GOCN：https://gocn.vip/ 独立开发者：https://indiehackers.net/topics网址go语言设计与实现v2ex：https://www.v2ex.com/思否：https://segmentfault.com/">
+<meta name="keywords" content="blog, 编程, python, golang">
+<meta property="og:type" content="website">
+<meta property="og:title" content="blog | percy">
+<meta property="og:url" content="http://yoursite.com/percy/README.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]摸鱼鱼塘热榜：https://mo.fish/V站：https://www.v2ex.com/GOCN：https://gocn.vip/ 独立开发者：https://indiehackers.net/topics网址go语言设计与实现v2ex：https://www.v2ex.com/思否：https://segmentfault.com/">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-05T12:46:36.853Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="blog | percy">
+<meta name="twitter:description" content="[TOC]摸鱼鱼塘热榜：https://mo.fish/V站：https://www.v2ex.com/GOCN：https://gocn.vip/ 独立开发者：https://indiehackers.net/topics网址go语言设计与实现v2ex：https://www.v2ex.com/思否：https://segmentfault.com/">
+  <link rel="canonical" href="http://yoursite.com/percy/README">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: false,
+    isPage: true,
+    isArchive: false
+  };
+</script>
+
+  <title> | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+    
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+      
+      
+    
+    
+
+  
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+    
+    
+    <div class="post-block page">
+      <header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">
+
+</h1>
+
+<div class="post-meta">
+  
+
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+        
+          <p>[TOC]</p><h2 id="摸鱼"><a href="#摸鱼" class="headerlink" title="摸鱼"></a>摸鱼</h2><p>鱼塘热榜：<a href="https://mo.fish/" target="_blank" rel="noopener">https://mo.fish/</a></p><p>V站：<a href="https://www.v2ex.com/" target="_blank" rel="noopener">https://www.v2ex.com/</a></p><p>GOCN：<a href="https://gocn.vip/" target="_blank" rel="noopener">https://gocn.vip/</a></p><p> 独立开发者：<a href="https://indiehackers.net/topics" target="_blank" rel="noopener">https://indiehackers.net/topics</a></p><h2 id="网址"><a href="#网址" class="headerlink" title="网址"></a>网址</h2><p><a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-channel/" target="_blank" rel="noopener">go语言设计与实现</a></p><p>v2ex：<a href="https://www.v2ex.com/" target="_blank" rel="noopener">https://www.v2ex.com/</a></p><p>思否：<a href="https://segmentfault.com/" target="_blank" rel="noopener">https://segmentfault.com/</a></p><a id="more"></a>
+
+
+
+
+
+
+
+<p>infoq：<a href="https://www.infoq.cn/" target="_blank" rel="noopener">https://www.infoq.cn/</a></p>
+<p>鱼塘：<a href="https://mo.fish/main/home/hot" target="_blank" rel="noopener">https://mo.fish/main/home/hot</a></p>
+<p>36kr：<a href="https://36kr.com/" target="_blank" rel="noopener">https://36kr.com/</a></p>
+<p>开源中国：<a href="https://www.oschina.net/" target="_blank" rel="noopener">https://www.oschina.net/</a></p>
+<p>GOCN：<a href="https://gocn.vip/topics" target="_blank" rel="noopener">https://gocn.vip/topics</a></p>
+<p>打咯啊：<a href="https://home.cnblogs.com/blog/" target="_blank" rel="noopener">https://home.cnblogs.com/blog/</a></p>
+<p>kubernetes大佬：<a href="https://draveness.me/" target="_blank" rel="noopener">https://draveness.me/</a></p>
+<p>石杉的架构笔记：<a href="https://juejin.im/user/5be0588ae51d452b0255727d" target="_blank" rel="noopener">https://juejin.im/user/5be0588ae51d452b0255727d</a></p>
+<p>老赵点滴 - 追求编程之美：<a href="http://blog.zhaojie.me/" target="_blank" rel="noopener">http://blog.zhaojie.me/</a></p>
+<p>阮一峰：<a href="http://www.ruanyifeng.com/blog/" target="_blank" rel="noopener">http://www.ruanyifeng.com/blog/</a></p>
+<p>木白的技术私厨：<a href="http://cbsheng.github.io/" target="_blank" rel="noopener">http://cbsheng.github.io/</a></p>
+<p>Axb的自我修养：<a href="http://blog.2baxb.me/" target="_blank" rel="noopener">http://blog.2baxb.me/</a></p>
+<p>并发编程网：<a href="http://ifeve.com/" target="_blank" rel="noopener">http://ifeve.com/</a></p>
+<p>少数派：<a href="https://go.sspai.com/matrix" target="_blank" rel="noopener">https://go.sspai.com/matrix</a></p>
+<h2 id="杂"><a href="#杂" class="headerlink" title="杂"></a>杂</h2><p>科学上网地址：<a href="https://portal.shadowsocks.nl/" target="_blank" rel="noopener">https://portal.shadowsocks.nl/</a></p>
+<p>kcp：<a href="https://github.com/xtaci/kcp-go" target="_blank" rel="noopener">https://github.com/xtaci/kcp-go</a></p>
+<p>linux子系统使用官方文档：<a href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/windows/wsl/install-win10</a><br>build-web-application-with-golang：<a href="https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/preface.md" target="_blank" rel="noopener">https://github.com/astaxie/build-web-application-with-golang/blob/master/zh/preface.md</a></p>
+<h3 id="java-文档"><a href="#java-文档" class="headerlink" title="java 文档"></a>java 文档</h3><p>纯洁的微笑：<a href="https://www.cnblogs.com/ityouknow/p/5662753.html" target="_blank" rel="noopener">https://www.cnblogs.com/ityouknow/p/5662753.html</a></p>
+<p>芋道源码：<a href="http://www.iocoder.cn/Spring-Boot/good-collection/" target="_blank" rel="noopener">http://www.iocoder.cn/Spring-Boot/good-collection/</a></p>
+<p><a href="https://github.com/Snailclimb/JavaGuide" target="_blank" rel="noopener">https://github.com/Snailclimb/JavaGuide</a></p>
+<h3 id="go文档查询"><a href="#go文档查询" class="headerlink" title="go文档查询"></a>go文档查询</h3><p>go中国：<a href="https://books.studygolang.com/The-Golang-Standard-Library-by-Example/" target="_blank" rel="noopener">https://books.studygolang.com/The-Golang-Standard-Library-by-Example/</a></p>
+<p>go示例学：<a href="https://www.kancloud.cn/itfanr/go-by-example/81667" target="_blank" rel="noopener">https://www.kancloud.cn/itfanr/go-by-example/81667</a></p>
+<h2 id="需要再看的文章"><a href="#需要再看的文章" class="headerlink" title="需要再看的文章"></a>需要再看的文章</h2><p>pulsar：<a href="https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug，" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug，</a> <a href="https://mp.weixin.qq.com/s/zcole6BuAzP9durwAbrUpg" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/zcole6BuAzP9durwAbrUpg</a></p>
+<p>看golang源码：<a href="https://juejin.im/post/5d661014f265da03f04cdddc" target="_blank" rel="noopener">https://juejin.im/post/5d661014f265da03f04cdddc</a></p>
+<p>一个技术总监的忠告：精通那么多技术为何还是做不好一个项目？<a href="https://cloud.tencent.com/developer/article/1587691" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1587691</a></p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzU5NTAzNjc3Mg==&mid=2247484249&idx=1&sn=72b97a3ad5ca8f8cdd5b3220bd1433aa&chksm=fe795c52c90ed54411ab519fb12587274bba6dd9d46c1e53fe3d79d482fb291667395920ff2a&mpshare=1&scene=1&srcid=&sharer_sharetime=1585483552520&sharer_shareid=2728d3a0eb6a32c660939921ae4b72ce&key=988d6e79394f42a039c8f9534f88cee3d79a37948900dbe9b5a3dbb15a860d0babfb4919a43a5454c46ce2a39eb9031f987f8237d966a4e04cc72eb285f180affc327ac347e104fa341382b00892a40f&ascene=1&uin=MjQ3MzQ1MDUyNQ%3D%3D&devicetype=Windows+10&version=62080079&lang=zh_CN&exportkey=A2RhoYmKDQLFFpoYB7%2BBRi0%3D&pass_ticket=nSE6kaCX2m9v5YWbsi%2FRiDwIDsXWBkuPhZt0T9dvAxbXYFwdmTBk9AukVMXXIMh2" target="_blank" rel="noopener">Go 内存分配器的设计与实现</a></p>
+<p><a href="https://mp.weixin.qq.com/s/zWaDVuNFfclx_sx_EuX63Q" target="_blank" rel="noopener">从源代码角度看 epoll 在 Go 中的使用（一）</a></p>
+<p>理解TCP/IP网络栈&amp;编写网络应用：</p>
+<p><a href="http://blog.2baxb.me/archives/1174，" target="_blank" rel="noopener">http://blog.2baxb.me/archives/1174，</a></p>
+<p><a href="http://blog.2baxb.me/archives/1190" target="_blank" rel="noopener">http://blog.2baxb.me/archives/1190</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1587691" target="_blank" rel="noopener">https://cloud.tencent.com/developer/article/1587691</a></p>
+<p>golang json ：<a href="https://colobu.com/2020/03/19/Custom-JSON-Marshalling-in-Go/" target="_blank" rel="noopener">https://colobu.com/2020/03/19/Custom-JSON-Marshalling-in-Go/</a></p>
+<p>cpu cache：<a href="https://www.jianshu.com/p/dc4b5562aad2" target="_blank" rel="noopener">https://www.jianshu.com/p/dc4b5562aad2</a></p>
+<p>b站后台：<a href="https://studygolang.com/articles/19995" target="_blank" rel="noopener">https://studygolang.com/articles/19995</a></p>
+<p>反转比特位：<a href="https://www.cnblogs.com/xueda120/p/3151354.html" target="_blank" rel="noopener">https://www.cnblogs.com/xueda120/p/3151354.html</a></p>
+<p>golang堆栈的理解：<a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/，https://segmentfault.com/a/1190000017498101" target="_blank" rel="noopener">https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-stack-management/，https://segmentfault.com/a/1190000017498101</a></p>
+<p>golang sync.map：<a href="https://juejin.im/post/5d36a7cbf265da1bb47da444#heading-11" target="_blank" rel="noopener">https://juejin.im/post/5d36a7cbf265da1bb47da444#heading-11</a></p>
+<p>Java：<a href="https://github.com/YunaiV/SpringBoot-Labs" target="_blank" rel="noopener">https://github.com/YunaiV/SpringBoot-Labs</a></p>
+<p>配置文件和环境变量：<a href="https://12factor.net/zh_cn/config" target="_blank" rel="noopener">https://12factor.net/zh_cn/config</a></p>
+<p>百万socket 连接：<a href="https://colobu.com/2019/02/23/1m-go-tcp-connection/" target="_blank" rel="noopener">https://colobu.com/2019/02/23/1m-go-tcp-connection/</a></p>
+<p>golang中有用的设计模式：<a href="https://colobu.com/2019/02/25/some-useful-patterns-in-go/" target="_blank" rel="noopener">https://colobu.com/2019/02/25/some-useful-patterns-in-go/</a></p>
+<p>golang中容易出错的地方：<a href="https://www.bangbangde.com/post/10_mistake_in_go_project.html" target="_blank" rel="noopener">https://www.bangbangde.com/post/10_mistake_in_go_project.html</a></p>
+<p>分布式系统：<a href="https://iswade.github.io/translate/distsys/" target="_blank" rel="noopener">https://iswade.github.io/translate/distsys/</a></p>
+<h2 id="Aount"><a href="#Aount" class="headerlink" title="Aount"></a>Aount</h2><ul>
+<li>我在学习什么：golang 及计算机基础</li>
+<li>我在做什么工作：golang 开发，业务是电商问答机器人</li>
+</ul>
+
+        
+      </div>
+      
+      
+      
+    </div>
+    
+
+    
+    
+    
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">76</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#摸鱼"><span class="nav-number">1.</span> <span class="nav-text">摸鱼</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网址"><span class="nav-number">2.</span> <span class="nav-text">网址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#杂"><span class="nav-number">3.</span> <span class="nav-text">杂</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#java-文档"><span class="nav-number">3.1.</span> <span class="nav-text">java 文档</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go文档查询"><span class="nav-number">3.2.</span> <span class="nav-text">go文档查询</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需要再看的文章"><span class="nav-number">4.</span> <span class="nav-text">需要再看的文章</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Aount"><span class="nav-number">5.</span> <span class="nav-text">Aount</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">149k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:16</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+    <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+  
+
+</body>
+</html>

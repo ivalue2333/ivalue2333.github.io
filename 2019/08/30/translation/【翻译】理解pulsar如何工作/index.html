@@ -55,13 +55,13 @@
   };
 </script>
 
-  <meta name="description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
+  <meta name="description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
 <meta name="keywords" content="翻译,消息队列,Apache Pulsar">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【翻译】理解pulsar如何工作">
 <meta property="og:url" content="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
+<meta property="og:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538490975658-WSDKSTF2F07QFPMCPJ5H/ke17ZwdGBToddI8pDm48kJV1jAkwtpW9vkLNCzSf2apZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpytRA8_xlmUAUvzOGbUpaLvE7_WuxAn6m-fbd5YwLMJktLDmY5AqKXXDP2XJA3wYEg/TopicsSubscriptions.png">
@@ -74,10 +74,10 @@
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538560169571-MKFXQQ8FJ6MMJH4V59EO/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerReads.png">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538601042753-J8IXQ06HUPV1R7PEAPFE/ke17ZwdGBToddI8pDm48kGp6mpaF6fRR69MhdwssQUgUqsxRUqqbr1mOJYKfIPR7LoDQ9mXPOjoJoqy81S2I8N_N4V1vUb5AoIIIbLZhVYxCRW4BPu10St3TBAUQYVKcUp2nWII0JUNTlurDWjlSqtH1pYxrnuysKJX4SS0MkLn8sIGgGTuW_pGj0nnlCENC/image-asset.png">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538583413563-QVJ2MWQQK1B10NIP45NZ/ke17ZwdGBToddI8pDm48kF9K_vvjtFzVXH1W4f_DQEpZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyf1S8Qn827K1psbrnM8HhCaEP0bNw_lw7ho1MuAex3PfHhIYVgeZkiJDc-4VfhUAY/RoundUp.png">
-<meta property="og:updated_time" content="2020-04-20T03:09:43.495Z">
+<meta property="og:updated_time" content="2020-07-22T02:13:54.813Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【翻译】理解pulsar如何工作">
-<meta name="twitter:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
+<meta name="twitter:description" content="译者注：翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试原文：https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-wo">
 <meta name="twitter:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png">
   <link rel="canonical" href="http://yoursite.com/2019/08/30/translation/【翻译】理解pulsar如何工作/">
 
@@ -283,7 +283,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-04-20 11:09:43" itemprop="dateModified" datetime="2020-04-20T11:09:43+08:00">2020-04-20</time>
+                <time title="修改时间：2020-07-22 10:13:54" itemprop="dateModified" datetime="2020-07-22T10:13:54+08:00">2020-07-22</time>
               </span>
             
           
@@ -333,7 +333,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>译者注：</p><p>翻译：pulsar broker：pulsar经纪人（代理）。fragment：片段。Ledger：分类账。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试</p><p>原文：<a href="https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works" target="_blank" rel="noopener">https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works</a></p><a id="more"></a>
+        <p>译者注：</p><p>翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试</p><p>原文：<a href="https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works" target="_blank" rel="noopener">https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works</a></p><a id="more"></a>
 
 
 <h2 id="消息系统"><a href="#消息系统" class="headerlink" title="消息系统"></a>消息系统</h2><p>我将撰写一系列关于Apache Pulsar的博客文章，包括一些Kafka vs Pulsar的帖子。 首先，我将在Pulsar集群上运行一些极端情况测试（原文为：chaos tests，译者注），就像我使用RabbitMQ和Kafka一样，看看它有什么故障模式及其消息丢失情况。</p>
@@ -386,7 +386,7 @@
 <p>这些配置应用于主题级别，然后Pulsar在主题的BookKeeper Ledgers / Fragments上设置。</p>
 <p>注意：“Ensemble”表示将写入的实际Bookies列表。 集合大小是指Pulsar说它应该创造多大的集合。 请注意，您至少需要E个Bookies才能进行写入。 默认情况下，Bookies被从可用Bookies列表中随机选取（每个Bookies在Zookeeper中注册自己）。</p>
 <p>通过将Bookies标记为属于特定机架，还可以选择配置机架感知。 机架可以是逻辑构造（例如：云环境中的可用区域）。 通过机架感知策略，Pulsar客户端的BookKeeper客户端将尝试从不同的机架中选择Bookies。 也可以插入自定义策略以执行不同类型的选择。</p>
-<p>集合大小（E）控制Pulsar写入的Ledger可用的Bookies池的大小。 每个片段可能有不同的集合，经纪人将在创建片段时选择一组Bookies（broker是选取一组bookies作为存储体，这一组存储体就存储这个片段（fragment），译者注），但整体将始终是由E指示的大小。必须有足够的Bookies可用于覆盖E。</p>
+<p>集合大小（E）控制Pulsar写入的Ledger可用的Bookies池的大小。 每个片段可能有不同的集合，经纪人（pulsar broker）将在创建片段时选择一组Bookies（broker是选取一组bookies作为存储体，这一组存储体就存储这个片段（fragment），译者注），但整体将始终是由E指示的大小。必须有足够的Bookies可用于覆盖E。</p>
 <p>Write Quorum（Qw）是Pulsar写入条目的实际Bookies数。 它可以等于或小于E。A fragment of 8 entries stored across an ensemble of 3 with each entry written to 3 bookies.</p>
 <p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538556992096-2Y1LIUC0GI3XKGGM064I/ke17ZwdGBToddI8pDm48kMhWbqEOzLM2QU2fvTknMAlZw-zPPgdn4jUwVcJE1ZvWhcwhEtWJXoshNdA9f1qD7YIE3ZwwVlGd312yABb759F_qgn4yC8n-gJY79c93t1ZXZ9isb_v9u5N1MTxi-8cgA/FragmentEnsemble.png" alt></p>
 <p>当Qw小于E时，我们得到条带化，它以这样的方式分配读/写，即每个Bookie只需要提供读/写请求的子集。 条带化可以提高总吞吐量并降低延迟。</p>
@@ -396,7 +396,7 @@
 <li>(Qa == Qw) or</li>
 <li>(Qa == Qw -1) —&gt; This will improve latency by ignoring the slowest bookie.</li>
 </ul>
-<p>最终，每个预订者都必须收到写确认。 但是，如果我们总是等待所有的Bookies做出回应，我们就会得到波动的延迟（原文为：spiky latency意为搞定不平的延时，且作者有拼写错误，译者注）和没有吸引力的尾部延迟。 Pulsar毕竟承诺可预测的延迟。</p>
+<p>最终，每个预订者都必须收到写确认。 但是，如果我们总是等待所有的Bookies做出回应，我们就会得到波动的延迟（原文为：spiky latency意为高低不平的延时，且作者有拼写错误，译者注）和没有吸引力的尾部延迟。 Pulsar毕竟承诺可预测的延迟。</p>
 <p>（译者注：topic被分为多个Ledger分类账，而一个分类账需要多个bookie来做记录（高可读和容灾），这多个bookie就为了方便描述就被描述为fragment，但是ledger和fragment并不等价，一个Ledger有多个fragment。<strong>topic和Ledger的关系有点像fragment和bookie的关系</strong>）</p>
 <p>当创建新主题或发生翻转（Roll-over）时，会创建分类帐。 翻转是在以下任何一种情况下创建新Ledger的概念：</p>
 <ul>
@@ -419,7 +419,7 @@
 <p>回到Pulsar + BookKeeper模型。 给定主题的数据分布在多个Bookies中。 该主题已分为Ledgers， 而Ledgers分为片段，并带有条带化，成为可计算的片段集合子集。 当您需要扩展集群时，只需添加更多Bookies，它们就会在创建新片段时开始写入。 不再需要卡夫卡式的再平衡。 但是，读取和写入现在必须在Bookies之间跳跃一点。 我们将在这篇文章看到Pulsar如何管理并高速处理。</p>
 <p>但现在每个Pulsar经纪人都需要跟踪每个主题所包含的Ledgers和Fragments。 这个元数据存储在ZooKeeper中，如果你丢失了，那么你就会陷入严重的困境。</p>
 <p>在存储层中，我们编写的主题均匀的分布到BookKeeper集群。 我们避免了将Topic副本耦合到特定节点的陷阱。 卡夫卡主题就像Toblerone（一种巧克力冰激凌，用中文可以说为老冰棍的棍子，译者注）的棒子一样，我们的Pulsar主题就像一个气体膨胀来填补可用空间。 这避免了痛苦的再平衡。</p>
-<h3 id="第二层-pulsar的broker和topic所有权"><a href="#第二层-pulsar的broker和topic所有权" class="headerlink" title="第二层-pulsar的broker和topic所有权"></a>第二层-pulsar的broker和topic所有权</h3><p>同样在我的抽象层的第2层，我们有Pulsar Brokers。 Pulsar Brokers（经纪人）没有会丢失的持久状态。 它们与存储层分开。 BookKeeper集群本身并不执行复制，每个Bookie只是一个跟随者，被领导者告知应该做什么 - 领导者是Pulsar经纪人。 每个主题都只由单独一个Pulsar经纪人拥有。 该经纪服务于该主题的所有读写操作。</p>
+<h3 id="第二层-pulsar的broker和topic所有权"><a href="#第二层-pulsar的broker和topic所有权" class="headerlink" title="第二层-pulsar的broker和topic所有权"></a>第二层-pulsar的broker和topic所有权</h3><p>同样在我的抽象层的第2层，我们有Pulsar Brokers。 Pulsar Brokers（经纪人）没有会丢失的持久状态。 它们与存储层分开。 BookKeeper集群本身并不执行复制，每个Bookie只是一个跟随者，被领导者告知应该做什么 - 领导者是Pulsar经纪人。 <strong>每个主题都只由单独一个Pulsar经纪人拥有。 该经纪服务于该主题的所有读写操作。</strong></p>
 <p>当Pulsar经纪人接收到写入时，它将针对该主题的当前片段的集合执行该写入。 请记住，如果没有条带化，则每个条目（<strong>Entity，条目可以认为是一条记录，类似sql中的一行记录</strong>，译者注）的集合与片段集合相同。 如果发生条带化，那么每个条目都有自己的集合，这是片段集合的一个子集。</p>
 <p>在一般情况下，当前的Ledger中将有一个Fragment。 一旦Qa个经纪人承认写入，Pulsar经纪人将向生产者客户发送确认。</p>
 <p>只有在所有先前消息都已通过Qa个确认时，才能发送确认。 如果对于给定的消息，Bookie响应错误或根本没有响应，则经纪人将在新的Bookies集合上创建新的片段（不包括问题Bookie）。</p>
@@ -538,8 +538,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/08/15/reflection/【迷思】IO多路复用/" rel="next" title="【迷思】IO多路复用">
-                  <i class="fa fa-chevron-left"></i> 【迷思】IO多路复用
+                <a href="/2019/08/30/reflection/【迷思】golang垃圾回收/" rel="next" title="【迷思】golang垃圾回收">
+                  <i class="fa fa-chevron-left"></i> 【迷思】golang垃圾回收
                 </a>
               
             </div>
@@ -548,8 +548,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/08/30/reflection/【迷思】golang垃圾回收/" rel="prev" title="【迷思】golang垃圾回收">
-                  【迷思】golang垃圾回收 <i class="fa fa-chevron-right"></i>
+                <a href="/2019/09/09/learn/【学习】git不同阶段撤回/" rel="prev" title="【学习】git不同阶段撤回">
+                  【学习】git不同阶段撤回 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -607,7 +607,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -803,7 +803,17 @@
         
           
         
-        <span class="site-state-item-count">71</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">76</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -871,12 +881,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">125k</span>
+    <span title="站点总字数">149k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">1:53</span>
+    <span title="站点阅读时长">2:16</span>
 </div>
 
         

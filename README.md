@@ -1,8 +1,18 @@
 [TOC]
 
+## 摸鱼
+
+鱼塘热榜：https://mo.fish/
+
+V站：https://www.v2ex.com/
+
+GOCN：https://gocn.vip/
+
+ 独立开发者：https://indiehackers.net/topics
+
 ## 网址
 
-go语言设计与实现：https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-channel/
+[go语言设计与实现](https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-channel/)
 
 v2ex：https://www.v2ex.com/
 
@@ -100,6 +110,8 @@ Java：https://github.com/YunaiV/SpringBoot-Labs
 golang中有用的设计模式：https://colobu.com/2019/02/25/some-useful-patterns-in-go/
 
 golang中容易出错的地方：https://www.bangbangde.com/post/10_mistake_in_go_project.html
+
+分布式系统：https://iswade.github.io/translate/distsys/
 
 ## Aount
 
