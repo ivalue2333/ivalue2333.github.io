@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="基本概念字符各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。 也就是说，它是一个信息单位，一个数字是一个字符，一个文字是一个字符，一个标点符号也是一个字符。字节字节是一个8bit的存储单元，取值范围是0x00~0xFF。 根据字符编码的不同，一个字符可以是单个字节的，也可以是多个字节的。">
+<meta name="keywords" content="字符,编码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【学习】字符编码与显示">
+<meta property="og:url" content="http://yoursite.com/2020/06/03/learn/【学习】字符编码/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="基本概念字符各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。 也就是说，它是一个信息单位，一个数字是一个字符，一个文字是一个字符，一个标点符号也是一个字符。字节字节是一个8bit的存储单元，取值范围是0x00~0xFF。 根据字符编码的不同，一个字符可以是单个字节的，也可以是多个字节的。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-13T06:33:36.372Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【学习】字符编码与显示">
+<meta name="twitter:description" content="基本概念字符各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。 也就是说，它是一个信息单位，一个数字是一个字符，一个文字是一个字符，一个标点符号也是一个字符。字节字节是一个8bit的存储单元，取值范围是0x00~0xFF。 根据字符编码的不同，一个字符可以是单个字节的，也可以是多个字节的。">
+  <link rel="canonical" href="http://yoursite.com/2020/06/03/learn/【学习】字符编码/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【学习】字符编码与显示 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/03/learn/【学习】字符编码/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【学习】字符编码与显示
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-03 19:42:18" itemprop="dateCreated datePublished" datetime="2020-06-03T19:42:18+08:00">2020-06-03</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-13 14:33:36" itemprop="dateModified" datetime="2020-08-13T14:33:36+08:00">2020-08-13</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.4k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="字符"><a href="#字符" class="headerlink" title="字符"></a>字符</h3><p>各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。 也就是说，它是一个信息单位，一个数字是一个字符，一个文字是一个字符，一个标点符号也是一个字符。</p><h3 id="字节"><a href="#字节" class="headerlink" title="字节"></a>字节</h3><p>字节是一个8bit的存储单元，取值范围是0x00~0xFF。 根据字符编码的不同，一个字符可以是单个字节的，也可以是多个字节的。</p><a id="more"></a>
+
+<h3 id="字符集"><a href="#字符集" class="headerlink" title="字符集"></a>字符集</h3><p>字符的集合就叫字符集。不同集合支持的字符范围自然也不一样，譬如ASCII只支持英文，GB18030支持中文等等</p>
+<p>在字符集中，有一个<strong>码表</strong>的存在，每一个字符在各自的字符集中对应着一个唯一的码。但是同一个字符在不同字符集中的码是不一样的，譬如字符“中”在Unicode和GB18030中就分别对应着不同的码(<code>20013</code>与<code>54992</code>)。</p>
+<h3 id="字符编码"><a href="#字符编码" class="headerlink" title="字符编码"></a>字符编码</h3><p>定义字符集中的字符如何编码为特定的二进制数，以便在计算机中存储。 字符集和字符编码一般一一对应(有例外)</p>
+<p>譬如GB18030既可以代表字符集，也可以代表对应的字符编码，它为了兼容<code>ASCII码</code>，编码方式为code大于<code>255</code>的采用两位字节(或4字节)来代表一个字符，否则就是兼容模式，一个字节代表一个字符。(简单一点理解，将它认为是现在用的的中文编码就行了)</p>
+<p>字符集与字符编码的一个例外就是Unicode字符集，它有多种编码实现(UTF-8,UTF-16,UTF-32等)</p>
+<h2 id="字符集与字符编码的快速区分"><a href="#字符集与字符编码的快速区分" class="headerlink" title="字符集与字符编码的快速区分"></a>字符集与字符编码的快速区分</h2><ul>
+<li>ASCII码是一个字符集，同时它的实现也只有一种，因此它也可以指代这个字符集对应的字符编码</li>
+<li>GB18030是一个字符集，主要是中国人为了解决中文而发明制定的，由于它的实现也只有一种，所以它也可以指代这个字符集对应的字符编码</li>
+<li>Unicode是一个字符集，为了解决不同字符集码表不一致而推出的，统一了所有字符对应的码，因此在这个规范下，所有字符对应的码都是一致的(统一码)，但是统一码只规定了字符与码表的一一对应关系，却没有规定该如何实现，因此这个字符集有多种实现方式(UTF-8,UTF-18,UTF-32)，因此这些实现就是对应的字符编码。 也就是说，Unicode统一约定了字符与码表直接一一对应的关系，而UTF-8是Unicode字符集的一种字符编码实现方式，它规定了字符该如何编码成二进制，存储在计算机中。</li>
+</ul>
+<h2 id="不同字符编码的字符是如何进行转换的"><a href="#不同字符编码的字符是如何进行转换的" class="headerlink" title="不同字符编码的字符是如何进行转换的"></a>不同字符编码的字符是如何进行转换的</h2><ul>
+<li>如果是相同字符集，由于相同字符集中的码都是一样的，所以只需要针对不同的编码方式转变而已。譬如UTF-16转UTF-8，首先会取到当前需要转换的字符的Unicode码，然后将当前的编码方式由双字节(有4字节的拓展就不赘述了)，变为变长的1，2，3等字节</li>
+<li>如果是不同的字符集，由于不同字符集的码是不一样的，所以需要各自的码表才能进行转换。譬如UTF-16转GBK，首先需要取到当前需要转换的字符的Unicode码，然后根据Unicode和GBK码表一一对应的关系(只有部分共同都有的字符才能在码表中查到)，找到它对应的GBK码，然后用GBK的编码方式(双字节)进行编码</li>
+</ul>
+<h2 id="Unicode"><a href="#Unicode" class="headerlink" title="Unicode"></a>Unicode</h2><ul>
+<li>Unicode：万国码，通常用两个字节表示一个字符，原有的英文编码从单字节变成双字节，只需要把高字节全部填为0就可以</li>
+<li>UTF-8：本着节约的精神，又出现了把Unicode编码转化为“可变长编码”的UTF-8编码。UTF-8编码把一个Unicode字符根据不同的数字大小编码成1-6个字节，常用的英文字母被编码成1个字节，汉字通常是3个字节，只有很生僻的字符才会被编码成4-6个字节。如果你要传输的文本包含大量英文字符，用UTF-8编码就能节省空间。</li>
+<li>对于一个操作系统或一个程序软件来说，其内部一般固定使用一种编码，如Java程序使用Unicode 字符集 UTF-16 BE 字符编码，在涉及到输入输出时就会存在一个编码转换问题，如读取文件，文件是以二进制的形式存在于硬盘上的，如何读取，必须假定一种字符编码来读取，如假定为GB2312编码，<strong>Java就会以GB2312编码的形式开始读取这个文件，转换为Java内部的编码形式 UTF-16 BE。所以并不是需要扫描多少遍，而是只需要在设计输入输出的时候转换一遍即可。</strong>读取到内存中的必然是系统内部使用的编码，想要显示这些文本，只需要根据编码换算出字符编号，然后调用字体文件信息即可。<ul>
+<li>golang内部的编码形式UTF-8。python：比Unicode早出现，所以python计算机内存中最早只支持ASCII码。</li>
+</ul>
+</li>
+</ul>
+<h2 id="如何显示字符"><a href="#如何显示字符" class="headerlink" title="如何显示字符"></a>如何显示字符</h2><h3 id="引入"><a href="#引入" class="headerlink" title="引入"></a>引入</h3><p>问：我知道ascii码2c 是“，”逗号，但是计算机是怎么知道它是“逗号”的？</p>
+<p><strong>简答：有时候不是会安装字体font么，里面就有对应的字型。要显卡渲染形成的。</strong><br>大体过程是：字符编码（Unicode）→字体的形索引（Glyph ID）→字形轮廓→点阵图字形</p>
+<h3 id="屏幕是如何显示的"><a href="#屏幕是如何显示的" class="headerlink" title="屏幕是如何显示的"></a>屏幕是如何显示的</h3><p>可以简单理解屏幕是由极多个像素点组成的，并简单理解一个像素点是由一个<strong>发光二极管</strong>来显示的。那么问题就回到了如何控制一个发光二极管的亮暗。作为上层应用，实际上不用太关心如何控制像素点的亮暗，因为这是由显示<strong>驱动电路</strong>来控制。而显示驱动电路的控制是由<strong>显示适配器（显卡）</strong>控制。</p>
+<p>显卡的职能是将要显示的图形或文本转换成可以驱动显示器的电信号，它有三个重要的组成部分：</p>
+<ul>
+<li>显存：存储即将显示的数据，程序员将要显示的字符或图片送到缓存，后面的就是GPU和外围电路的工作了。</li>
+<li>显卡BIOS</li>
+<li>GPU</li>
+</ul>
+<h4 id="字符显示"><a href="#字符显示" class="headerlink" title="字符显示"></a>字符显示</h4><p>图形操作系统使用自己的字符呈现引擎（rendering engine），可以支持多个不同的字符集编码，这类代码页被称作ANSI代码页。</p>
+<h5 id="TrueType字体-及-FreeType软件开发库"><a href="#TrueType字体-及-FreeType软件开发库" class="headerlink" title="TrueType字体 及 FreeType软件开发库"></a>TrueType字体 及 FreeType软件开发库</h5><p><strong>TrueType字体</strong>不采用像素或其他不可缩放的方式来定义，而是一些通过数学公式(曲线的组合)。这些字形，类似于矢量图像，可以根据你需要的字体大小来生成像素图像。通过使用TrueType字体可以轻易呈现不同大小的字符符号并且没有任何质量损失。</p>
+<p>FreeType是一个能够用于加载字体并将他们渲染到位图以及提供多种字体相关的操作的软件开发库。<strong>FreeType的真正吸引力在于它能够加载TrueType字体</strong>。</p>
+<p>那么字体是怎么被渲染的呢？从根本上来说，（除掉点阵字体）都是一些矢量图的集合。渲染字体，只是把矢量图画出来而已——说的轻松！</p>
+<h5 id="代码页CodePage"><a href="#代码页CodePage" class="headerlink" title="代码页CodePage"></a>代码页CodePage</h5><p>代码页是字符编码的别名，也称内码表，是特定语言的字符集的一张表。</p>
+<h5 id="内码"><a href="#内码" class="headerlink" title="内码"></a>内码</h5><p>在计算机科学及相关领域当中，内码指的是“将信息编码后，透过某种方式存储在特定记忆设备时，设备内部的编码形式”。在不同的系统中，会有不同的内码。</p>
+<p>在以往的英文系统中，内码为ASCII。 在繁体中文系统中，目前常用的内码为大五码。<strong>在简体中文系统中，内码则为国标码。</strong></p>
+<h5 id="字符显示-1"><a href="#字符显示-1" class="headerlink" title="字符显示"></a>字符显示</h5><p>首先是经过字符编解码，将硬盘中存储的有对应编码的文本文件进行加载，例如Java的文件IO，变成内存中的字符串对象，也就是符合本语言字符串存储特性的数据，（当然如果你愿意，也可以当做二进制读入，然后再手段转换编码，也是可以的），绘制时则首先调用对应的CodePage进行编码的索引查找，找到对应的字体字形索引，然后根据字形索引获取到字库中的数据，<strong>根据系统提供的绘制曲线绘制样条线的方法进行图形渲染，这样就能得到显示器上的图像了， 这里其实就是图形渲染。</strong></p>
+<h4 id="图像的显示"><a href="#图像的显示" class="headerlink" title="图像的显示"></a>图像的显示</h4><p>例如照片，图片的每一个像素都可以理解成为三种不同颜色的组合。你只需要将每一个像素的RGB值送入显存，GPU会负责将其转换成电信号并输出给显示器。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>字符集：<a href="https://dailc.github.io/2017/05/03/char_charset_charEncoding.html" target="_blank" rel="noopener">https://dailc.github.io/2017/05/03/char_charset_charEncoding.html</a></p>
+<p>知乎：<a href="https://www.zhihu.com/question/296297701/answer/565941564" target="_blank" rel="noopener">https://www.zhihu.com/question/296297701/answer/565941564</a></p>
+<p><a href="https://www.zhihu.com/question/24340504" target="_blank" rel="noopener">https://www.zhihu.com/question/24340504</a></p>
+<p>how character display on screen：<a href="https://www.mmmmmcclxxvii.cn/2015/11/12/how-character-display-on-screen/" target="_blank" rel="noopener">https://www.mmmmmcclxxvii.cn/2015/11/12/how-character-display-on-screen/</a></p>
+<p>wiki：<a href="https://zh.wikipedia.org/wiki/" target="_blank" rel="noopener">https://zh.wikipedia.org/wiki/</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/字符/" rel="tag"># 字符</a>
+            
+              <a href="/tags/编码/" rel="tag"># 编码</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/05/23/redis/【redis】redis集群概述/" rel="next" title="【redis】redis集群概述">
+                  <i class="fa fa-chevron-left"></i> 【redis】redis集群概述
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/06/04/translation/【翻译】stack和heap的区别/" rel="prev" title="【翻译】stack和heap的区别">
+                  【翻译】stack和heap的区别 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#字符"><span class="nav-number">1.1.</span> <span class="nav-text">字符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字节"><span class="nav-number">1.2.</span> <span class="nav-text">字节</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字符集"><span class="nav-number">1.3.</span> <span class="nav-text">字符集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字符编码"><span class="nav-number">1.4.</span> <span class="nav-text">字符编码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符集与字符编码的快速区分"><span class="nav-number">2.</span> <span class="nav-text">字符集与字符编码的快速区分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不同字符编码的字符是如何进行转换的"><span class="nav-number">3.</span> <span class="nav-text">不同字符编码的字符是如何进行转换的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unicode"><span class="nav-number">4.</span> <span class="nav-text">Unicode</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何显示字符"><span class="nav-number">5.</span> <span class="nav-text">如何显示字符</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#引入"><span class="nav-number">5.1.</span> <span class="nav-text">引入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#屏幕是如何显示的"><span class="nav-number">5.2.</span> <span class="nav-text">屏幕是如何显示的</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#字符显示"><span class="nav-number">5.2.1.</span> <span class="nav-text">字符显示</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#TrueType字体-及-FreeType软件开发库"><span class="nav-number">5.2.1.1.</span> <span class="nav-text">TrueType字体 及 FreeType软件开发库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#代码页CodePage"><span class="nav-number">5.2.1.2.</span> <span class="nav-text">代码页CodePage</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#内码"><span class="nav-number">5.2.1.3.</span> <span class="nav-text">内码</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#字符显示-1"><span class="nav-number">5.2.1.4.</span> <span class="nav-text">字符显示</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#图像的显示"><span class="nav-number">5.2.2.</span> <span class="nav-text">图像的显示</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">159k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:24</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

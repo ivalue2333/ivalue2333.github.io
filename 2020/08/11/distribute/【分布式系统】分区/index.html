@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+<meta name="keywords" content="分布式系统,分区,分片,一致性哈希">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【分布式系统】数据分区">
+<meta property="og:url" content="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c6b39ef728bd44f4aec762368f5317e2.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a7d3c50372804fbeaa0c25fe637c714c.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/70c69b2a3a7f484db5f67b0ff2e79336.jpg">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/2ad8893a4d704f3b9f43f50900f9fe5c.png">
+<meta property="og:updated_time" content="2020-08-11T03:11:35.516Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【分布式系统】数据分区">
+<meta name="twitter:description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c6b39ef728bd44f4aec762368f5317e2.png">
+  <link rel="canonical" href="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【分布式系统】数据分区 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【分布式系统】数据分区
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-08-11 10:49:39 / 修改时间：11:11:35" itemprop="dateCreated datePublished" datetime="2020-08-11T10:49:39+08:00">2020-08-11</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.7k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 <strong>分区（partition）</strong>。</p><p>不同数据库中对分区的名称定义有所差异，<strong>有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Region）</strong>，但是其含义都是基本相同的。需要注意的是，这里的分区跟 CAP 中的网络分区和单机的单机分区表没有关系。</p><a id="more"></a>
+
+<p>分区<code>partition</code>在不同数据库有不同的称谓</p>
+<ul>
+<li><code>Shard</code> [分片] <code>MongoDB</code>,<code>Elasticsearch</code></li>
+<li><code>Region</code>[区域] <code>HBase</code></li>
+<li><code>tablet</code>[表块] <code>BigTable</code></li>
+<li><code>vnode</code> [虚节点] <code>Cassandra</code>,<code>Riak</code></li>
+</ul>
+<p>对于大部分实现方案，数据被分区后，各个分区由不同的独立、完整的数据库进行保存和处理，然后由一个或多个协调节点进行请求的路由处理。</p>
+<ul>
+<li><strong>CN</strong>: 协调节点（coordinator node），根据分区策略对数据做分区处理。</li>
+<li><strong>DN</strong>: 数据节点（data node），用于保存数据，独立维护自己的元数据，通常都是完整的数据库，每个 DN 保存一个数据子集，每个数据子集都是一个分区。</li>
+</ul>
+<h2 id="分区需要考虑的问题"><a href="#分区需要考虑的问题" class="headerlink" title="分区需要考虑的问题"></a>分区需要考虑的问题</h2><ol>
+<li>具体如何划分原始数据集？</li>
+<li>当原问题的规模变大的时候，能否通过增加节点来动态适应？</li>
+<li>当某个节点故障的时候，能否将该节点上的任务均衡的分摊到其他节点？</li>
+<li>对于可修改的数据（比如数据库数据），如果某节点数据量变大，能否以及如何将部分数据迁移到其他负载较小的节点，及达到动态均衡的效果？</li>
+<li>元数据的管理（即数据与物理节点的对应关系）规模？元数据更新的频率以及复杂度？</li>
+</ol>
+<h2 id="分区策略"><a href="#分区策略" class="headerlink" title="分区策略"></a>分区策略</h2><p>对于一个分布式数据处理系统，将数据分布到多个分区有两种比较典型的方案：</p>
+<ol>
+<li>一种是根据键做哈希，根据哈希值选择对应的数据节点。</li>
+<li>另一种是范围分区，某一段连续的键都保存在一个数据节点上。</li>
+<li>还有一种是一致性哈希， 加机器计算哈希值映射到一个[0, 2^32-1]的环上，数据键也做哈希映射</li>
+</ol>
+<h3 id="哈希分区-partition-hashing"><a href="#哈希分区-partition-hashing" class="headerlink" title="哈希分区 (partition hashing)"></a>哈希分区 (partition hashing)</h3><p>哈希分区是最常见的数据分区方式，通过按照数据的key、或者用户指定的一个或者多个字段计算哈希，然后将计算后的哈希与计算节点进行映射，从而将不同哈希值的数据分布到不同节点上。</p>
+<p>例如，有3条记录<code>(key1, value1), (key2, value2), (key3, value3)</code> 通过对键进行计算哈希（对 key 进行 md5哈希，然后取前两个字符作为哈希值），哈希桶个数255个，当前有两个分区，偶数哈希值放到分区0，奇数哈希值放到分区1，计算后的数据分布如下图所示。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c6b39ef728bd44f4aec762368f5317e2.png" alt></p>
+<h4 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h4><p>哈希分区的一个优点是，<strong>保存的元数据很简单，只需要保存桶与分区的映射关系即可</strong>。但是缺点也很明显，可扩展性差，如果增加一个节点进行扩容，<strong>则需要对所有数据进行重新计算哈希</strong>，然后对数据进行重新分布，对于均匀分布的哈希函数而言，一般而言，在扩容时每个分区都需要扩容，通过成倍增加节点，然后通过调整映射关系，重新分布一半的数据到新分区。另一个缺点是，如果哈希函数选择不合理，则<strong>很容易出现数据倾斜</strong>，导致某个分区数据量很大。</p>
+<h3 id="范围分区-（partition-range）"><a href="#范围分区-（partition-range）" class="headerlink" title="范围分区 （partition range）"></a>范围分区 （partition range）</h3><p>按数据范围分区是另一个常见的分布方式，通过按照数据的key、或者用户指定的一个或者多个字段计算所在的分区范围，从而确定数据所在的分区。</p>
+<p>例如，一个简单的例子：key 小于等于 r 的分布到分区0，key 小于等于 z 的数据分布到分区1，三条记录<code>(a, value1), (r, value2), (x, value3)</code>则分别分布到了分区0，分区0，分区1中。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a7d3c50372804fbeaa0c25fe637c714c.png" alt></p>
+<p>与哈希分布不一样的是，<strong>范围分区需要记录所有的数据分布情况</strong>，可能会有大量元数据。范围分区还有一个问题是，对于特定的数据处理请求可能会造成<strong>热点访问</strong>，例如我们按时间进行范围分区，每天的数据保存在一个分区上，则对某一天的数据查询处理，只能在这一个分区上进行，无法利用多分区的并行处理能力，这时就要求应用开发人员定义分片特征时，仔细选择特征字段进行范围分区。</p>
+<h3 id="一致性哈希分区-consistent-hashing"><a href="#一致性哈希分区-consistent-hashing" class="headerlink" title="一致性哈希分区(consistent hashing)"></a>一致性哈希分区(consistent hashing)</h3><p>一致性哈希要解决的问题是集群的动态扩容问题。如哈希分区， 当集群增加节点时，最多可能所有的节点都需要迁移，这么大量的数据迁移是很难在工程上被接受的。所以有了一致性哈希算法。</p>
+<p>一致性Hash的基本思想就是分两步走：</p>
+<ul>
+<li>把object求hash（这一步和之前相同）；</li>
+<li>把cache也求hash，然后把object和cache的hash值放入一个<strong>环形hash空间</strong>，通过一定的规则决定每个object落在哪一个cache中。</li>
+</ul>
+<p>一致性哈希算法的基本实现原理是将机器节点和key值都按照一样的hash算法映射到一个0~2^32的圆环上。当有一个写入缓存的请求到来时，计算Key值k对应的哈希值Hash(k)，如果该值正好对应之前某个机器节点的Hash值，则直接写入该机器节点，如果没有对应的机器节点，则顺时针查找下一个节点，进行写入，如果超过2^32还没找到对应节点，则从0开始查找(因为是环状结构)。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/70c69b2a3a7f484db5f67b0ff2e79336.jpg" alt></p>
+<h4 id="机器伸缩"><a href="#机器伸缩" class="headerlink" title="机器伸缩"></a>机器伸缩</h4><p>经过一致性哈希算法散列之后，当有新的机器加入时，将只影响一台机器的存储情况，例如新加入的节点H的散列在B与C之间，则原先由C处理的一些数据可能将移至H处理，而其他所有节点的处理情况都将保持不变，因此表现出很好的单调性。而如果删除一台机器，例如删除C节点，此时原来由C处理的数据将移至D节点，而其它节点的处理情况仍然不变。而由于在机器节点散列和缓冲内容散列时都采用了同一种散列算法，因此也很好得降低了分散性和负载。而通过引入虚拟节点的方式，也大大提高了平衡性。</p>
+<h4 id="虚拟节点"><a href="#虚拟节点" class="headerlink" title="虚拟节点"></a>虚拟节点</h4><p>另外具体机器映射时，还可以根据处理能力不同，<strong>将一个实体节点映射到多个虚拟节点， 实际上很像加权负载</strong>。</p>
+<p>“虚拟节点”的hash计算可以采用对应节点的IP地址加数字后缀的方式。例如假设NODE1的IP地址为192.168.1.100。引入“虚拟节点”前，计算 cache A 的 hash 值：</p>
+<blockquote>
+<p>Hash(“192.168.1.100”);</p>
+</blockquote>
+<p>引入“虚拟节点”后，计算“虚拟节”点NODE1-1和NODE1-2的hash值：</p>
+<blockquote>
+<p>Hash(“192.168.1.100#1”); // NODE1-1</p>
+<p>Hash(“192.168.1.100#2”); // NODE1-2</p>
+</blockquote>
+<h4 id="Java-实现"><a href="#Java-实现" class="headerlink" title="Java 实现"></a>Java 实现</h4><p><a href="https://github.com/ivalue2333/java-framework" target="_blank" rel="noopener">https://github.com/ivalue2333/java-framework</a></p>
+<h3 id="其他策略"><a href="#其他策略" class="headerlink" title="其他策略"></a>其他策略</h3><ul>
+<li>轮询：新增数据循环插入到不同的分区，每个分区数据均匀，但是对于数据请求路由，并不能根据请求的条件获取到所在的分区，查询或者更新时需要将请求发送给所有分区节点。</li>
+<li>列表：指定数据分布方式，对于某个值指定所在的分区，例如，<code>(1, 2, 4) in P0</code>，<code>(3, 5) in P1</code>。</li>
+<li>动态分区：单独的定位器服务跟踪节点之间的分区，动态分区对数据分布不均匀的数据更适用。</li>
+</ul>
+<h2 id="分区的问题"><a href="#分区的问题" class="headerlink" title="分区的问题"></a>分区的问题</h2><p>对于选择通过多个分区做扩展的分布式数据库而言，有几个通用的问题需要解决，首先就是<strong>跨分区的一致性保证</strong>，大部分常用系统是通过 2PC 来解决分布式事务一致性问题，但是 2PC 在一些故障场景下，可能需要人工干涉才能解决，有些数据库甚至不提供一致性保证。其次就是跨分区的连接、聚合等操作等，有些数据库则提供了对部分算子的优化，其它算子则通过较低性能的解决方案用于解决多分区的连接，在这种情况下，需要应用侧权衡是否适用于当前业务。</p>
+<h2 id="数据路由"><a href="#数据路由" class="headerlink" title="数据路由"></a>数据路由</h2><p>上面我们介绍了将大数据集拆分到不同分区的策略，但是如何将用户的数据操作请求发送到对应分区呢？随着数据的重新分布，分区对应的节点也会随之发生变化。一般情况下，分区的路由信息需要由某个组件进行维护，根据不同维护路由信息组件不同，我们可以将常见的路由方式分成如下四种：</p>
+<ol>
+<li><strong>协调节点路由</strong>：协调组件维护路由信息，如果有多个协调组件，每个组件都需要保存相同的分区信息，保证客户端连接到任意协调组件时都可以正确进行请求的路由。对于 SQL 分区数据库，可能需要在执行 DDL 操作时，需要将DDL 操作信息发送到其它所有的协调节点，客户端连接到其它 CN 时也可以正确对数据进行路由。</li>
+<li><strong>协调节点+源数据节点路由</strong>：元数据服务器保存路由信息，每次客户端从元数据服务器获取分区信息，或者订阅元数据信息，只要路由信息发生变化，则通知协调节点。</li>
+<li><strong>客户端路由</strong>：客户端直接访问分区数据，客户端保存了分区信息，客户端直接进行路由计算。</li>
+<li><strong>数据节点路由</strong>：分区节点直接提供路由支持，允许客户端连接任何分区。如果该节点恰巧拥有请求的分区，则它可以直接处理该请求；否则，它将请求转发到适当的节点，接收回复并传递给客户端。</li>
+</ol>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/2ad8893a4d704f3b9f43f50900f9fe5c.png" alt></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://iswade.github.io/articles/partition/" target="_blank" rel="noopener">分区基础</a></p>
+<p><a href="http://blog.huanghao.me/?p=14" target="_blank" rel="noopener">一致性哈希</a></p>
+<p><a href="http://afghl.github.io/2016/11/19/implement-consistent-hashing.html" target="_blank" rel="noopener">一致性哈希的 Java 实现</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+            
+              <a href="/tags/分区/" rel="tag"># 分区</a>
+            
+              <a href="/tags/分片/" rel="tag"># 分片</a>
+            
+              <a href="/tags/一致性哈希/" rel="tag"># 一致性哈希</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/08/10/distribute/【分布式系统】负载均衡/" rel="next" title="【分布式系统】负载均衡">
+                  <i class="fa fa-chevron-left"></i> 【分布式系统】负载均衡
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分区需要考虑的问题"><span class="nav-number">2.</span> <span class="nav-text">分区需要考虑的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分区策略"><span class="nav-number">3.</span> <span class="nav-text">分区策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#哈希分区-partition-hashing"><span class="nav-number">3.1.</span> <span class="nav-text">哈希分区 (partition hashing)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优缺点"><span class="nav-number">3.1.1.</span> <span class="nav-text">优缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#范围分区-（partition-range）"><span class="nav-number">3.2.</span> <span class="nav-text">范围分区 （partition range）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一致性哈希分区-consistent-hashing"><span class="nav-number">3.3.</span> <span class="nav-text">一致性哈希分区(consistent hashing)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#机器伸缩"><span class="nav-number">3.3.1.</span> <span class="nav-text">机器伸缩</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟节点"><span class="nav-number">3.3.2.</span> <span class="nav-text">虚拟节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Java-实现"><span class="nav-number">3.3.3.</span> <span class="nav-text">Java 实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他策略"><span class="nav-number">3.4.</span> <span class="nav-text">其他策略</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分区的问题"><span class="nav-number">4.</span> <span class="nav-text">分区的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据路由"><span class="nav-number">5.</span> <span class="nav-text">数据路由</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">159k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:24</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

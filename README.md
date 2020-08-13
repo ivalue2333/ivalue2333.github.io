@@ -14,7 +14,9 @@ GOCN：https://gocn.vip/
 
 [go语言设计与实现](https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-channel/)
 
-v2ex：https://www.v2ex.com/
+[golang学习](https://studygolang.com/)
+
+v2ex：[https://www.v2ex.com/](https://www.v2ex.com/)
 
 思否：https://segmentfault.com/
 

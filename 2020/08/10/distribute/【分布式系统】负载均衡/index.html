@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="负载均衡 (load balance)「负载均衡」是指，通过一定的算法使请求可以均匀的宠幸服务提供方，做到雨露均沾。市面上，软件硬件产品一大把，解决的最最核心的问题都是选谁。按实现方式，可以分为硬件负载均衡（如 F5 、A10）、软件负载均衡（如 LVS、Nginx、HAProxy）、DNS 负载均衡。硬件负载均衡和 DNS 负载均衡我们不过多关注，重点看一下软件负载均衡。">
+<meta name="keywords" content="负载均衡,nginx,分布式系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【分布式系统】负载均衡">
+<meta property="og:url" content="http://yoursite.com/2020/08/10/distribute/【分布式系统】负载均衡/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="负载均衡 (load balance)「负载均衡」是指，通过一定的算法使请求可以均匀的宠幸服务提供方，做到雨露均沾。市面上，软件硬件产品一大把，解决的最最核心的问题都是选谁。按实现方式，可以分为硬件负载均衡（如 F5 、A10）、软件负载均衡（如 LVS、Nginx、HAProxy）、DNS 负载均衡。硬件负载均衡和 DNS 负载均衡我们不过多关注，重点看一下软件负载均衡。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-11T02:52:40.245Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【分布式系统】负载均衡">
+<meta name="twitter:description" content="负载均衡 (load balance)「负载均衡」是指，通过一定的算法使请求可以均匀的宠幸服务提供方，做到雨露均沾。市面上，软件硬件产品一大把，解决的最最核心的问题都是选谁。按实现方式，可以分为硬件负载均衡（如 F5 、A10）、软件负载均衡（如 LVS、Nginx、HAProxy）、DNS 负载均衡。硬件负载均衡和 DNS 负载均衡我们不过多关注，重点看一下软件负载均衡。">
+  <link rel="canonical" href="http://yoursite.com/2020/08/10/distribute/【分布式系统】负载均衡/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【分布式系统】负载均衡 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/10/distribute/【分布式系统】负载均衡/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【分布式系统】负载均衡
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-08-10 20:23:12" itemprop="dateCreated datePublished" datetime="2020-08-10T20:23:12+08:00">2020-08-10</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-11 10:52:40" itemprop="dateModified" datetime="2020-08-11T10:52:40+08:00">2020-08-11</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="负载均衡-load-balance"><a href="#负载均衡-load-balance" class="headerlink" title="负载均衡 (load balance)"></a>负载均衡 (load balance)</h2><p>「负载均衡」是指，通过一定的算法使请求可以均匀的宠幸服务提供方，做到雨露均沾。市面上，软件硬件产品一大把，解决的最最核心的问题都是<strong>选谁</strong>。</p><p>按实现方式，可以分为硬件负载均衡（如 F5 、A10）、软件负载均衡（如 <strong>LVS、Nginx、HAProxy</strong>）、DNS 负载均衡。硬件负载均衡和 DNS 负载均衡我们不过多关注，重点看一下软件负载均衡。</p><a id="more"></a>
+
+<p>软件负载均衡又分四层和七层负载均衡，四层负载均衡就是在网络层利用 IP 地址端口进行请求的转发，基本上就是起个转发分配作用。而七层负载均衡就是可以根据访问用户的 HTTP 请求头、URL 信息将请求转发到特定的主机。LVS 为四层负载均衡。Nginx、HAProxy 可四可七。</p>
+<p>除了专用硬件和 Nginx 这种专业软件提供负载均衡外，在代码中直接实现也是种常见的方式。比如 Spring Cloud 体系中的 Ribbon 组件提供了轮询、随机、根据响应时间加权几种负载策略，比如使用 Memcached 集群时通常会在 client 中采用 hash 取模或者一致性哈希来使数据均匀分布。</p>
+<h2 id="常见算法"><a href="#常见算法" class="headerlink" title="常见算法"></a>常见算法</h2><p>常见的有：随机，轮询，最小链接数，一致性哈希</p>
+<h3 id="随机（Random）"><a href="#随机（Random）" class="headerlink" title="随机（Random）"></a>随机（Random）</h3><p>根据后端服务器列表的大小值来随机选择其中一台进行访问，代码如下：</p>
+<p><strong>优点</strong>：实现简单，通过系统随机函数随机选择其中一台进行访问</p>
+<p><strong>缺点</strong>：不适用后端机器承载能力不一致的情况</p>
+<h3 id="权重随机（Weighted-Random）"><a href="#权重随机（Weighted-Random）" class="headerlink" title="权重随机（Weighted Random）"></a>权重随机（Weighted Random）</h3><p>各个节点带有不同的权重，虽然随机选择但是期望不同权重的节点被选择的几率不一样， 权重高的被选中的几率大，权重低的被选中的几率小。</p>
+<p><strong>优点</strong>：实现简单，采用权重改变了被选中的概率；</p>
+<p><strong>缺点</strong>：不适用后端机器承载能力不一致的情况。</p>
+<h3 id="轮询（Round-Robin）"><a href="#轮询（Round-Robin）" class="headerlink" title="轮询（Round Robin）"></a>轮询（Round Robin）</h3><p>把所有待选择的机器看做是一个个的点，所有点串起来一个圆。想象一下，轮询就是对圆上的每一个点，顺时针遍历，在每个节点上停留一下。我们通过请求的次数 pos ，来实现顺时针选择。需要修改 pos 的线程，只有获取到锁才能对该值做修改，当该值大于等于服务器列表长度时，重新从 0 开始遍历，达到循环一周的目的。</p>
+<p><strong>优点</strong>：相对来说请求可以做到绝对平衡；</p>
+<p><strong>缺点</strong>：为了绝对平衡，需要保证 pos 修改时的互斥性，引入了同步锁会带来性能下降。</p>
+<h3 id="权重轮训（Weighted-Round-Robin）"><a href="#权重轮训（Weighted-Round-Robin）" class="headerlink" title="权重轮训（Weighted Round Robin）"></a>权重轮训（Weighted Round Robin）</h3><p>不同的后端服务器可能机器的配置和当前系统的负载并不相同，因此它们的抗压能力也不相同。给配置高、负载低的机器配置更高的权重，让其处理更多的请；而配置低、负载高的机器，给其分配较低的权重，降低其系统负载，加权轮询能很好地处理这一问题，并将请求顺序且按照权重分配到后端。</p>
+<h3 id="最小连接数（Least-Connections）"><a href="#最小连接数（Least-Connections）" class="headerlink" title="最小连接数（Least Connections）"></a>最小连接数（Least Connections）</h3><p>从已有的后端列表中，选择正在处理的连接数 / 请求数最少的节点出来提供服务。既然要判断连接数 / 请求数，<strong>那么每个节点都需要保存一个正在处理的连接数 / 请求数的信息，然后选取节点的时候判断一下， 选择连接数最少的那个节点。</strong></p>
+<p>首先找到服务提供者当前最小的活跃连接数，如果一个服务提供者的服务连接数比其他的都要小，则选择这个活跃连接数最小的服务提供者发起调用，如果存在多个服务提供者的活跃连接数，并且是最小的，则在这些服务提供者之间选择加权随机算法选择一个服务提供者。</p>
+<p><strong>优点</strong>：根据服务器当前的请求处理情况，动态分配；</p>
+<p><strong>缺点</strong>：算法实现相对复杂，需要监控服务器请求连接数。</p>
+<h3 id="一致性哈希（Consistent-Hash）"><a href="#一致性哈希（Consistent-Hash）" class="headerlink" title="一致性哈希（Consistent Hash）"></a>一致性哈希（Consistent Hash）</h3><p>根据后端节点的某个固定属性计算 hash 值，然后把所有节点计算出来的 hash 值组成一个 hash 环。请求过来的时候根据请求的特征计算该特征的 hash 值（使用跟计算后端节点 hash 值相同的 hash 函数进行计算）， 然后顺时针查找 hash 环上的 hash 值，第一个比请求特征的 hash 值大的 hash 值所对应的节点即为被选中的节点。</p>
+<p>某一部分节点发生故障时，或者新的节点动态的增加进来时都只需重定位环空间中的一小部分数据，具有较好的容错性和可扩展性。</p>
+<h4 id="虚拟哈希节点"><a href="#虚拟哈希节点" class="headerlink" title="虚拟哈希节点"></a>虚拟哈希节点</h4><p>上面的 hash 环有一个问题，就是节点的 hash 值不一定是均匀的分布在 hash 环上的，这样就会导致部分节点上承受太多的请求。解决办法是引入虚拟节点：每个节点重复 n 次，把这些虚拟节点的 hash 值（跟实际节点的 hash 值不一样，也就是说需要在节点属性中加点东西保证每个虚拟节点跟实际节点的 hash 值不一样，互相之间也要不一样）也加入到 hash 环中以此来保证分布更均匀。</p>
+<p><strong>优点</strong>：具有较好的容错性和可扩展性，节点加入或者去除，只有少量数据需要迁移；</p>
+<p><strong>缺点</strong>：没有解决热点问题，会出现部分节点需要处理大量请求。</p>
+<h3 id="IP地址散列"><a href="#IP地址散列" class="headerlink" title="IP地址散列"></a>IP地址散列</h3><p>通过管理发送方IP和目的地IP地址的散列，将来自同一发送方的分组(或发送至同一目的地的分组)统一转发到相同服务器的算法。当客户端有一系列业务需要处理而必须和一个服务器反复通信时，该算法能够以流(会话)为单位，保证来自相同客户端的通信能够一直在同一服务器中进行处理。</p>
+<p><strong>优点</strong>：xxx</p>
+<p><strong>缺点</strong>：xxx</p>
+<h3 id="URL散列"><a href="#URL散列" class="headerlink" title="URL散列"></a>URL散列</h3><p>过管理客户端请求URL信息的散列，将发送至相同URL的请求转发至同一服务器的算法。\</p>
+<h2 id="Nginx-使用的负载均衡算法"><a href="#Nginx-使用的负载均衡算法" class="headerlink" title="Nginx 使用的负载均衡算法"></a>Nginx 使用的负载均衡算法</h2><h3 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h3><p> 默认就是</p>
+<h3 id="加权轮询"><a href="#加权轮询" class="headerlink" title="加权轮询"></a>加权轮询</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">upstream</span> linuxidc&#123;       </span><br><span class="line">   <span class="attribute">server</span> <span class="number">10.0.0.77</span> weight=<span class="number">5</span>;       </span><br><span class="line">   <span class="attribute">server</span> <span class="number">10.0.0.88</span> weight=<span class="number">10</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="ip-hash"><a href="#ip-hash" class="headerlink" title="ip_hash"></a>ip_hash</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">upstream</span> favresin&#123;      </span><br><span class="line">    ip_hash;      </span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.10:8080</span>;       </span><br><span class="line">    <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="fair（第三方）"><a href="#fair（第三方）" class="headerlink" title="fair（第三方）"></a>fair（第三方）</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 按照后端服务器的响应时间来分配请求，响应时间短的优先分配。 </span></span><br><span class="line"><span class="attribute">upstream</span> favresin&#123;            </span><br><span class="line">      <span class="attribute">server</span> <span class="number">10.0.0.10:8080</span>;       </span><br><span class="line">      <span class="attribute">server</span> <span class="number">10.0.0.11:8080</span>;       </span><br><span class="line">      fair; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="url-hash（第三方）"><a href="#url-hash（第三方）" class="headerlink" title="url_hash（第三方）"></a>url_hash（第三方）</h3><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 按照访问url的hash结果来分配请求，每个固定的url访问同一个后端服务器。如果后端服务器是缓存时效率高。 </span></span><br><span class="line"><span class="attribute">upstream</span> resinserver&#123;       </span><br><span class="line">      <span class="attribute">server</span> <span class="number">10.0.0.10:7777</span>;       </span><br><span class="line">      <span class="attribute">server</span> <span class="number">10.0.0.11:8888</span>;       </span><br><span class="line">      <span class="attribute">hash</span> <span class="variable">$request_uri</span>;       </span><br><span class="line">      <span class="attribute">hash_method</span> crc32; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=MjM5NzMyMjAwMA==&mid=2651488837&idx=1&sn=40a59c9ed17dbe8dff945145190e5020&chksm=bd25ee3a8a52672c164956f296a781cbf0a3f5e0445d36fa640e9366de108ddda3320bd9e030&mpshare=1&scene=1&srcid=0810mYAgX9cUzEDIleni9TOl&sharer_sharetime=1597061897192&sharer_shareid=2728d3a0eb6a32c660939921ae4b72ce&key=1686459e41463dc8d209c25cf1a445095c4ce95c1fa42a17dc9f01210fc2755e0ce975901d943b0ff66d4c8185f2e8b102837e5e546e3b01ac8eadf142d2d75206ac7136adeeba117341c5e3f374cdfd&ascene=1&uin=MjQ3MzQ1MDUyNQ%3D%3D&devicetype=Windows+10+x64&version=62090529&lang=zh_CN&exportkey=A%2BtT%2BvNTuN7Sdv8ljYPRPRU%3D&pass_ticket=Wk%2BnpL0XlWEzSNt4gx2v4ustYJ3f8P1kgwjrld97j7%2FyLcJxWjwcdIys%2BTt63ikm" target="_blank" rel="noopener">微信文章</a></p>
+<p><a href="https://juejin.im/post/6844903926731374599" target="_blank" rel="noopener">掘金文章</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/负载均衡/" rel="tag"># 负载均衡</a>
+            
+              <a href="/tags/nginx/" rel="tag"># nginx</a>
+            
+              <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/08/09/redis/【redis】redis缓存常见概念/" rel="next" title="【redis】redis缓存常见概念">
+                  <i class="fa fa-chevron-left"></i> 【redis】redis缓存常见概念
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/08/11/distribute/【分布式系统】分区/" rel="prev" title="【分布式系统】数据分区">
+                  【分布式系统】数据分区 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#负载均衡-load-balance"><span class="nav-number">1.</span> <span class="nav-text">负载均衡 (load balance)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见算法"><span class="nav-number">2.</span> <span class="nav-text">常见算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#随机（Random）"><span class="nav-number">2.1.</span> <span class="nav-text">随机（Random）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#权重随机（Weighted-Random）"><span class="nav-number">2.2.</span> <span class="nav-text">权重随机（Weighted Random）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询（Round-Robin）"><span class="nav-number">2.3.</span> <span class="nav-text">轮询（Round Robin）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#权重轮训（Weighted-Round-Robin）"><span class="nav-number">2.4.</span> <span class="nav-text">权重轮训（Weighted Round Robin）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最小连接数（Least-Connections）"><span class="nav-number">2.5.</span> <span class="nav-text">最小连接数（Least Connections）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一致性哈希（Consistent-Hash）"><span class="nav-number">2.6.</span> <span class="nav-text">一致性哈希（Consistent Hash）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟哈希节点"><span class="nav-number">2.6.1.</span> <span class="nav-text">虚拟哈希节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IP地址散列"><span class="nav-number">2.7.</span> <span class="nav-text">IP地址散列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#URL散列"><span class="nav-number">2.8.</span> <span class="nav-text">URL散列</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx-使用的负载均衡算法"><span class="nav-number">3.</span> <span class="nav-text">Nginx 使用的负载均衡算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询"><span class="nav-number">3.1.</span> <span class="nav-text">轮询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加权轮询"><span class="nav-number">3.2.</span> <span class="nav-text">加权轮询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ip-hash"><span class="nav-number">3.3.</span> <span class="nav-text">ip_hash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fair（第三方）"><span class="nav-number">3.4.</span> <span class="nav-text">fair（第三方）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#url-hash（第三方）"><span class="nav-number">3.5.</span> <span class="nav-text">url_hash（第三方）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">159k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">2:24</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
