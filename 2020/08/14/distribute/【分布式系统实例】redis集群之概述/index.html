@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]关系cluster&amp;gt;node(ip:port)&amp;gt;slot(ip:port:slot)&amp;gt;key如何搭建redis集群省略redis集群slotRedis 集群使用数据分片（sharding）而非一致性哈希（consistency hashing）来实现： 一个 Redis 集群包含 16384 个哈希槽（hash slot）， 数据库中的每个键都属于这 16384 个哈希">
+<meta name="keywords" content="分布式系统,实例,redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【分布式系统实例】redis 集群之概述">
+<meta property="og:url" content="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】redis集群之概述/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]关系cluster&amp;gt;node(ip:port)&amp;gt;slot(ip:port:slot)&amp;gt;key如何搭建redis集群省略redis集群slotRedis 集群使用数据分片（sharding）而非一致性哈希（consistency hashing）来实现： 一个 Redis 集群包含 16384 个哈希槽（hash slot）， 数据库中的每个键都属于这 16384 个哈希">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-29T14:16:00.346Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【分布式系统实例】redis 集群之概述">
+<meta name="twitter:description" content="[TOC]关系cluster&amp;gt;node(ip:port)&amp;gt;slot(ip:port:slot)&amp;gt;key如何搭建redis集群省略redis集群slotRedis 集群使用数据分片（sharding）而非一致性哈希（consistency hashing）来实现： 一个 Redis 集群包含 16384 个哈希槽（hash slot）， 数据库中的每个键都属于这 16384 个哈希">
+  <link rel="canonical" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】redis集群之概述/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【分布式系统实例】redis 集群之概述 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】redis集群之概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【分布式系统实例】redis 集群之概述
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-08-14 19:59:01" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:01+08:00">2020-08-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="关系"><a href="#关系" class="headerlink" title="关系"></a>关系</h2><p>cluster&gt;node(ip:port)&gt;slot(ip:port:slot)&gt;key</p><h2 id="如何搭建redis集群"><a href="#如何搭建redis集群" class="headerlink" title="如何搭建redis集群"></a>如何搭建redis集群</h2><p>省略</p><h2 id="redis集群slot"><a href="#redis集群slot" class="headerlink" title="redis集群slot"></a>redis集群slot</h2><p>Redis 集群使用数据分片（sharding）而非一致性哈希（consistency hashing）来实现： 一个 Redis 集群包含 16384 个哈希槽（hash slot）， 数据库中的每个键都属于这 16384 个哈希槽的其中一个， 集群使用公式 CRC16(key) % 16384 来计算键 key 属于哪个槽， 其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 。</p><a id="more"></a>
+
+
+
+<p><strong>如下可以看到，当执行指令 <code>set name percy</code>时，6381服务器返回了 MOVED 错误，并返回正确的机器地址</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">root@redis-cluster-0:/data# redis-cli -p 6381</span><br><span class="line">127.0.0.1:6381&gt; set name percy</span><br><span class="line">(error) MOVED 5798 10.244.14.157:6380</span><br><span class="line">127.0.0.1:6381&gt; get name percy</span><br><span class="line">(error) ERR wrong number of arguments for 'get' command</span><br><span class="line">127.0.0.1:6381&gt; get name</span><br><span class="line">(error) MOVED 5798 10.244.14.157:6380</span><br><span class="line">127.0.0.1:6381&gt; exit</span><br><span class="line">root@redis-cluster-0:/data# redis-cli -p 6380</span><br><span class="line">127.0.0.1:6380&gt; get name</span><br><span class="line">(nil)</span><br><span class="line">127.0.0.1:6380&gt; exit</span><br><span class="line">root@redis-cluster-0:/data# redis-cli -p 6380</span><br><span class="line">127.0.0.1:6380&gt; set name percy</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+
+<h2 id="主从复制"><a href="#主从复制" class="headerlink" title="主从复制"></a>主从复制</h2><p>Redis 集群对节点使用了主从复制功能： 集群中的每个节点都有 1 个至 N 个复制品（replica）， 其中一个复制品为主节点（master）， 而其余的 N-1 个复制品为从节点（slave）。</p>
+<h2 id="Redis一致性保证"><a href="#Redis一致性保证" class="headerlink" title="Redis一致性保证"></a>Redis一致性保证</h2><p>Redis 并不能保证数据的强一致性. 这意味这在实际中集群在特定的条件下可能会丢失写操作：一个原因是因为集群是用了异步复制. 写操作过程:</p>
+<ol>
+<li>客户端向主节点B写入一条命令.</li>
+<li>主节点B向客户端回复命令状态.</li>
+<li>主节点将写操作复制给他得从节点 B1, B2 和 B3</li>
+</ol>
+<p>可以看到是异步的主从同步。</p>
+<h2 id="集群加入新节点"><a href="#集群加入新节点" class="headerlink" title="集群加入新节点"></a>集群加入新节点</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 集群中加节点， 节点被加入集群后不会自动分配 slot， 需要手动执行指令</span></span><br><span class="line">bin/redis-trib add-node 127.0.0.1:7006 127.0.0.1:7000</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 分配slot</span></span><br><span class="line">/bin/redis-trib reshard 127.0.0.1:7000</span><br><span class="line"><span class="meta">#</span><span class="bash"> 分配 slot 时，可以选择该节点分配多少slot, 从哪里分配(all 表示全部)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="MIGRATE"><a href="#MIGRATE" class="headerlink" title="MIGRATE"></a>MIGRATE</h3><p>因为 Redis 集群目前在进行重分片的时候， 会使用 <a href="http://redisdoc.com/internal/migrate.html" target="_blank" rel="noopener">MIGRATE</a> 命令， 将被迁移的槽包含的每个键从原节点移动到新节点， 就像这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for key in all_keys_in_target_slot:</span><br><span class="line">    使用 MIGRATE 将键 key 从当前节点（原节点）移动到新节点</span><br></pre></td></tr></table></figure>
+
+<p>并且在每个 <code>MIGRATE</code> 命令执行的过程中， 原节点和新节点都会被阻塞（因为原子操作）， 直到命令执行完毕为止。 因此如果你直接对生产环境中的集群执行重分片操作， 而涉及该操作的两个节点正好又是被频繁访问的节点的话， 那么访问这两个节点的其他客户端就很可能会出现大量的超时错误。</p>
+<h2 id="客户端路由"><a href="#客户端路由" class="headerlink" title="客户端路由"></a>客户端路由</h2><p>所以，综合上述情况，客户端命令执行流程如下所示：</p>
+<p>客户端根据本地 slot 缓存发送命令到源节点，如果存在键对应则直接执行并返回结果给客户端。<br>如果节点返回 MOVED 错误，更新本地的 slot 到 Redis 节点的映射关系，然后重新发起请求。<br>如果数据正在迁移中，节点会回复 ASK 重定向异常。格式如下: ( error ) ASK { slot } { targetIP } : { targetPort }</p>
+<p>客户端从 ASK 重定向异常提取出目标节点信息，发送 asking 命令到目标节点打开客户端连接标识，再执行键命令。<br>ASK 和 MOVED 虽然都是对客户端的重定向控制，但是有着本质区别。ASK 重定向说明集群正在进行 slot 数据迁移，客户端无法知道什么时候迁移完成，因此只能是临时性的重定向，客户端不会更新 slot 到 Redis 节点的映射缓存。但是 MOVED 重定向说明键对应的槽已经明确指定到新的节点，因此需要更新 slot 到 Redis 节点的映射缓存。</p>
+<h3 id="P2P路由"><a href="#P2P路由" class="headerlink" title="P2P路由"></a>P2P路由</h3><p>现在我们考虑如何实现去中心化的访问，也就是说无论访问集群中的哪个节点，你都能够拿到想要的数据。其实这有点类似于路由器的路由表，具体说来就是：</p>
+<ul>
+<li><p>每个节点都保存有完整的HashSlot - 节点映射表，也就是说，每个节点都知道自己拥有哪些Slot，以及某个确定的Slot究竟对应着哪个节点。</p>
+</li>
+<li><p>无论向哪个节点发出寻找Key的请求，该节点都会通过CRC(Key) % 16384计算该Key究竟存在于哪个Slot，并将请求转发至该Slot所在的节点（实际上不是转发，是返回error Moved）。</p>
+</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>最佳的， redis命令参考：<a href="http://redisdoc.com/index.html" target="_blank" rel="noopener">http://redisdoc.com/index.html</a></p>
+<p>整体还是可以的：<a href="https://juejin.im/entry/596343056fb9a06bc340ac15" target="_blank" rel="noopener">https://juejin.im/entry/596343056fb9a06bc340ac15</a></p>
+<p>为什么是16384：<a href="https://www.cnblogs.com/rjzheng/p/11430592.html" target="_blank" rel="noopener">https://www.cnblogs.com/rjzheng/p/11430592.html</a></p>
+<p><a href="https://github.com/antirez/redis/issues/2576" target="_blank" rel="noopener">https://github.com/antirez/redis/issues/2576</a></p>
+<p>挺好的：<a href="https://juejin.im/post/5cf7c811f265da1b7a4b6368#heading-4" target="_blank" rel="noopener">https://juejin.im/post/5cf7c811f265da1b7a4b6368#heading-4</a></p>
+<p>重分片对 Redis 集群的性能影响分析：很不错的一篇文章：<a href="https://blog.huangz.me/2017/redis-reshard-performance-issue.html" target="_blank" rel="noopener">https://blog.huangz.me/2017/redis-reshard-performance-issue.html</a></p>
+<p>单节点数据扩容：<a href="https://my.oschina.net/u/4399312/blog/4127334" target="_blank" rel="noopener">https://my.oschina.net/u/4399312/blog/4127334</a></p>
+<p>高级开发不得不懂的Redis Cluster数据分片机制：<a href="https://www.cnblogs.com/lowmanisbusy/p/10993748.html" target="_blank" rel="noopener">https://www.cnblogs.com/lowmanisbusy/p/10993748.html</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+            
+              <a href="/tags/实例/" rel="tag"># 实例</a>
+            
+              <a href="/tags/redis/" rel="tag"># redis</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/08/11/distribute/【分布式系统】分区/" rel="next" title="【分布式系统】数据分区">
+                  <i class="fa fa-chevron-left"></i> 【分布式系统】数据分区
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/08/14/distribute/【分布式系统实例】redis集群之集群搭建/" rel="prev" title="【分布式系统实例】redis集群之集群搭建">
+                  【分布式系统实例】redis集群之集群搭建 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">80</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#关系"><span class="nav-number">1.</span> <span class="nav-text">关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何搭建redis集群"><span class="nav-number">2.</span> <span class="nav-text">如何搭建redis集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis集群slot"><span class="nav-number">3.</span> <span class="nav-text">redis集群slot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主从复制"><span class="nav-number">4.</span> <span class="nav-text">主从复制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis一致性保证"><span class="nav-number">5.</span> <span class="nav-text">Redis一致性保证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#集群加入新节点"><span class="nav-number">6.</span> <span class="nav-text">集群加入新节点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MIGRATE"><span class="nav-number">6.1.</span> <span class="nav-text">MIGRATE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端路由"><span class="nav-number">7.</span> <span class="nav-text">客户端路由</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#P2P路由"><span class="nav-number">7.1.</span> <span class="nav-text">P2P路由</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">206k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

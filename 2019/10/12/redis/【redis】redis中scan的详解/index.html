@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-13T06:34:55.735Z">
+<meta property="og:updated_time" content="2020-08-29T14:16:00.369Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【redis】redis中scan的详解">
 <meta name="twitter:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-13 14:34:55" itemprop="dateModified" datetime="2020-08-13T14:34:55+08:00">2020-08-13</time>
+                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
               </span>
             
           
@@ -321,7 +321,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"> #</span> 从开始开始遍历</span><br><span class="line"> scan 0 MATCH key* COUNT 10</span><br><span class="line"><span class="meta"> #</span> 或者</span><br><span class="line"> scan 0 MATCH "key* COUNT 10</span><br><span class="line"> </span><br><span class="line"><span class="meta"> #</span> 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是"0"时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果集是否为空判断迭代结束。）</span><br><span class="line">1) "76"</span><br><span class="line">2)  1) "key56"</span><br><span class="line">    2) "key91"</span><br><span class="line">    3) "key17"</span><br><span class="line">    4) "key51"</span><br><span class="line">    5) "key54"</span><br><span class="line">    6) "key86"</span><br><span class="line">    7) "key98"</span><br><span class="line">    8) "key0"</span><br><span class="line">    9) "key41"</span><br><span class="line">   10) "key97"</span><br><span class="line">   11) "key82"</span><br><span class="line">   </span><br><span class="line"><span class="meta">#</span> 例如，下一次迭代</span><br><span class="line">scan 76 MATCH "key*" COUNT 10</span><br></pre></td></tr></table></figure><a id="more"></a>
+        <h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"> #</span><span class="bash"> 从开始开始遍历</span></span><br><span class="line"> scan 0 MATCH key* COUNT 10</span><br><span class="line"><span class="meta"> #</span><span class="bash"> 或者</span></span><br><span class="line"> scan 0 MATCH "key* COUNT 10</span><br><span class="line"> </span><br><span class="line"><span class="meta"> #</span><span class="bash"> 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是<span class="string">"0"</span>时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果集是否为空判断迭代结束。）</span></span><br><span class="line">1) "76"</span><br><span class="line">2)  1) "key56"</span><br><span class="line">    2) "key91"</span><br><span class="line">    3) "key17"</span><br><span class="line">    4) "key51"</span><br><span class="line">    5) "key54"</span><br><span class="line">    6) "key86"</span><br><span class="line">    7) "key98"</span><br><span class="line">    8) "key0"</span><br><span class="line">    9) "key41"</span><br><span class="line">   10) "key97"</span><br><span class="line">   11) "key82"</span><br><span class="line">   </span><br><span class="line"><span class="meta">#</span><span class="bash"> 例如，下一次迭代</span></span><br><span class="line">scan 76 MATCH "key*" COUNT 10</span><br></pre></td></tr></table></figure><a id="more"></a>
 
 <h3 id="和keys对比"><a href="#和keys对比" class="headerlink" title="和keys对比"></a>和keys对比</h3><p>keys *的缺点</p>
 <ul>
@@ -334,7 +334,7 @@
 <h3 id="大key扫描"><a href="#大key扫描" class="headerlink" title="大key扫描"></a>大key扫描</h3><p>有时候会因为业务人员使用不当，在 Redis 实例中会形成很大的对象，比如一个很大的 hash，一个很大的 zset 这都是经常出现的。这样的问题是在内存分配上，如果一个 key 太大，那么当它需要扩容时，会一次性申请更大的一块内存，这也会导致卡顿。如果这个大 key 被删除，内存会一次性回收，卡顿现象会再一次产生。</p>
 <h4 id="如何定位大key"><a href="#如何定位大key" class="headerlink" title="如何定位大key"></a>如何定位大key</h4><p>用 <code>scan</code> 指令，对于扫描出来的每一个 key，使用 type 指令获得 key 的类型，然后使用相应数据结构的 size 或者 len 方法来得到它的大小，对于每一种类型，保留大小的前 N 名作为扫描结果展示出来。</p>
 <p>上面这样的过程需要编写脚本，比较繁琐，不过 Redis 官方已经在 redis-cli 指令中提供了这样的扫描功能，我们可以直接拿来即用。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli  --bigkeys</span><br><span class="line"><span class="meta">#</span> 如果你担心这个指令会大幅抬升 Redis 的 ops 导致线上报警，还可以增加一个休眠参数。</span><br><span class="line">redis-cli --bigkeys -i 0.1</span><br><span class="line"><span class="meta">#</span> 上面这个指令每隔 100 条 scan 指令就会休眠 0.1s，ops 就不会剧烈抬升，但是扫描的时间会变长。</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis-cli  --bigkeys</span><br><span class="line"><span class="meta">#</span><span class="bash"> 如果你担心这个指令会大幅抬升 Redis 的 ops 导致线上报警，还可以增加一个休眠参数。</span></span><br><span class="line">redis-cli --bigkeys -i 0.1</span><br><span class="line"><span class="meta">#</span><span class="bash"> 上面这个指令每隔 100 条 scan 指令就会休眠 0.1s，ops 就不会剧烈抬升，但是扫描的时间会变长。</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="需要注意的点"><a href="#需要注意的点" class="headerlink" title="需要注意的点"></a>需要注意的点</h2><h3 id="count选项"><a href="#count选项" class="headerlink" title="count选项"></a>count选项</h3><p>虽然增量式迭代命令不保证每次迭代所返回的元素数量， 但我们可以使用 COUNT 选项， 对命令的行为进行一定程度上的调整。</p>
 <p>基本上， COUNT 选项的作用就是让用户告知迭代命令， 在每次迭代中应该从数据集里返回多少元素。</p>
@@ -441,7 +441,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -482,9 +482,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -659,19 +657,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -739,12 +725,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

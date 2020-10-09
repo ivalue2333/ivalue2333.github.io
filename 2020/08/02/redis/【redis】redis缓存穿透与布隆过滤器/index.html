@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="布隆过滤器从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？">
-<meta name="keywords" content="redis,布隆过滤器,缓存,缓存穿透">
+<meta name="keywords" content="redis,缓存,布隆过滤器,缓存穿透">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【redis】redis缓存穿透与布隆过滤器">
 <meta property="og:url" content="http://yoursite.com/2020/08/02/redis/【redis】redis缓存穿透与布隆过滤器/index.html">
@@ -64,7 +64,7 @@
 <meta property="og:description" content="布隆过滤器从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://s1.ax1x.com/2020/08/05/ayS2md.png">
-<meta property="og:updated_time" content="2020-08-13T06:38:22.138Z">
+<meta property="og:updated_time" content="2020-08-29T14:16:00.370Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【redis】redis缓存穿透与布隆过滤器">
 <meta name="twitter:description" content="布隆过滤器从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？">
@@ -273,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-13 14:38:22" itemprop="dateModified" datetime="2020-08-13T14:38:22+08:00">2020-08-13</time>
+                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
               </span>
             
           
@@ -368,7 +368,7 @@
 <li><code>误判率会随元素的增加而增加</code></li>
 <li><code>不能从布隆过滤器中删除元素</code></li>
 </ul>
-<h2 id="redis中的布隆过滤器"><a href="#redis中的布隆过滤器" class="headerlink" title="redis中的布隆过滤器"></a>redis中的布隆过滤器</h2><h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 基于官方的 docker 镜像来的</span><br><span class="line"></span><br><span class="line">docker run -p 6379:6379 --name redis-redisbloom redislabs/rebloom:latest</span><br><span class="line"></span><br><span class="line">docker exec -it redis-redisbloom bash</span><br><span class="line"></span><br><span class="line">redis-cli</span><br></pre></td></tr></table></figure>
+<h2 id="redis中的布隆过滤器"><a href="#redis中的布隆过滤器" class="headerlink" title="redis中的布隆过滤器"></a>redis中的布隆过滤器</h2><h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 基于官方的 docker 镜像来的</span></span><br><span class="line"></span><br><span class="line">docker run -p 6379:6379 --name redis-redisbloom redislabs/rebloom:latest</span><br><span class="line"></span><br><span class="line">docker exec -it redis-redisbloom bash</span><br><span class="line"></span><br><span class="line">redis-cli</span><br></pre></td></tr></table></figure>
 
 <h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; bf.add newFilter abc</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter abc</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.add newFilter def</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter def</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter hij</span><br><span class="line">(integer) 0</span><br></pre></td></tr></table></figure>
 
@@ -398,9 +398,9 @@
             
               <a href="/tags/redis/" rel="tag"># redis</a>
             
-              <a href="/tags/布隆过滤器/" rel="tag"># 布隆过滤器</a>
-            
               <a href="/tags/缓存/" rel="tag"># 缓存</a>
+            
+              <a href="/tags/布隆过滤器/" rel="tag"># 布隆过滤器</a>
             
               <a href="/tags/缓存穿透/" rel="tag"># 缓存穿透</a>
             
@@ -412,8 +412,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/07/20/data structure and algorithm/【数据结构与算法】BFS/" rel="next" title="【数据结构与算法】BFS">
-                  <i class="fa fa-chevron-left"></i> 【数据结构与算法】BFS
+                <a href="/2020/07/05/http/【http】http2入门/" rel="next" title="【http】http2入门">
+                  <i class="fa fa-chevron-left"></i> 【http】http2入门
                 </a>
               
             </div>
@@ -481,7 +481,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -522,9 +522,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -699,19 +697,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -779,12 +765,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

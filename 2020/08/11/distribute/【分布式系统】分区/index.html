@@ -55,22 +55,22 @@
   };
 </script>
 
-  <meta name="description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+  <meta name="description" content="[toc]概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为">
 <meta name="keywords" content="分布式系统,分区,分片,一致性哈希">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【分布式系统】数据分区">
 <meta property="og:url" content="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+<meta property="og:description" content="[toc]概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c6b39ef728bd44f4aec762368f5317e2.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a7d3c50372804fbeaa0c25fe637c714c.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/70c69b2a3a7f484db5f67b0ff2e79336.jpg">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/2ad8893a4d704f3b9f43f50900f9fe5c.png">
-<meta property="og:updated_time" content="2020-08-11T03:11:35.516Z">
+<meta property="og:updated_time" content="2020-09-30T06:12:49.994Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【分布式系统】数据分区">
-<meta name="twitter:description" content="概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Re">
+<meta name="twitter:description" content="[toc]概述分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 分区（partition）。不同数据库中对分区的名称定义有所差异，有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为">
 <meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c6b39ef728bd44f4aec762368f5317e2.png">
   <link rel="canonical" href="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/">
 
@@ -265,11 +265,19 @@
                 
               
 
-              <time title="创建时间：2020-08-11 10:49:39 / 修改时间：11:11:35" itemprop="dateCreated datePublished" datetime="2020-08-11T10:49:39+08:00">2020-08-11</time>
+              <time title="创建时间：2020-08-11 10:49:39" itemprop="dateCreated datePublished" datetime="2020-08-11T10:49:39+08:00">2020-08-11</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-30 14:12:49" itemprop="dateModified" datetime="2020-09-30T14:12:49+08:00">2020-09-30</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -318,7 +326,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 <strong>分区（partition）</strong>。</p><p>不同数据库中对分区的名称定义有所差异，<strong>有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Region）</strong>，但是其含义都是基本相同的。需要注意的是，这里的分区跟 CAP 中的网络分区和单机的单机分区表没有关系。</p><a id="more"></a>
+        <p>[toc]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 <strong>分区（partition）</strong>。</p><p>不同数据库中对分区的名称定义有所差异，<strong>有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Region）</strong>，但是其含义都是基本相同的。需要注意的是，这里的分区跟 CAP 中的网络分区和单机的单机分区表没有关系。</p><a id="more"></a>
+
 
 <p>分区<code>partition</code>在不同数据库有不同的称谓</p>
 <ul>
@@ -431,6 +440,10 @@
 
             <div class="post-nav-prev post-nav-item">
               
+                <a href="/2020/08/14/distribute/【分布式系统实例】redis集群之概述/" rel="prev" title="【分布式系统实例】redis 集群之概述">
+                  【分布式系统实例】redis 集群之概述 <i class="fa fa-chevron-right"></i>
+                </a>
+              
             </div>
           </div>
         
@@ -486,7 +499,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -527,9 +540,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -704,19 +715,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -784,12 +783,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

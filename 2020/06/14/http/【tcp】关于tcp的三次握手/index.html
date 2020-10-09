@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="过程1234567# 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位Client --&amp;gt; 置SYN标志 序列号 = J，确认号 = 0 ----&amp;gt; ServerClient &amp;lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &amp;lt;-- ServerClinet --&amp;gt; 置ACK标志 序列号 = J + 1，确认号 = K +">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-14T14:45:14.319Z">
+<meta property="og:updated_time" content="2020-08-29T14:16:00.357Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于tcp的三次握手">
 <meta name="twitter:description" content="过程1234567# 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位Client --&amp;gt; 置SYN标志 序列号 = J，确认号 = 0 ----&amp;gt; ServerClient &amp;lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &amp;lt;-- ServerClinet --&amp;gt; 置ACK标志 序列号 = J + 1，确认号 = K +">
@@ -260,11 +260,19 @@
                 
               
 
-              <time title="创建时间：2020-06-14 22:44:12 / 修改时间：22:45:14" itemprop="dateCreated datePublished" datetime="2020-06-14T22:44:12+08:00">2020-06-14</time>
+              <time title="创建时间：2020-06-14 22:44:12" itemprop="dateCreated datePublished" datetime="2020-06-14T22:44:12+08:00">2020-06-14</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -313,7 +321,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位</span><br><span class="line"></span><br><span class="line">Client --&gt; 置SYN标志 序列号 = J，确认号 = 0 ----&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &lt;-- Server</span><br><span class="line"></span><br><span class="line">Clinet --&gt; 置ACK标志 序列号 = J + 1，确认号 = K + 1 --&gt; Server</span><br></pre></td></tr></table></figure><a id="more"></a>
+        <h2 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 以下的分别使用 tcp 报文帧中的 标志位， 序列号位， 确认号位</span></span><br><span class="line"></span><br><span class="line">Client --&gt; 置SYN标志 序列号 = J，确认号 = 0 ----&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置SYN标志 置ACK标志 序列号 = K, 确认号 = J + 1 &lt;-- Server</span><br><span class="line"></span><br><span class="line">Clinet --&gt; 置ACK标志 序列号 = J + 1，确认号 = K + 1 --&gt; Server</span><br></pre></td></tr></table></figure><a id="more"></a>
 
 <p>链接建立后，接下来Client端发送的数据包将从J + 1开始，Server端发送的数据包将从K + 1开始，这里要说明的是：建立链接时，Client端宣称自己的初始序列号是J，Server端宣称自己的初始序列号是K，但是建立连接后的数据包却各自中初始序列号+1开始，这是因为SYN请求本身需要占用一个序列号 </p>
 <h2 id="TCP-的定义"><a href="#TCP-的定义" class="headerlink" title="TCP 的定义"></a>TCP 的定义</h2><p>很多人尝试回答或者思考这个问题的时候其实关注点都放在了三次握手中的三次上面，这确实很重要，但是如果重新审视这个问题，我们对于『什么是连接』真的清楚？只有知道连接的定义，我们才能去尝试回答为什么 TCP 建立连接需要三次握手。</p>
@@ -360,7 +368,7 @@
 </ul>
 </li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 在 tcp 的数据传输过程中，一次数据请求，至少需要发送三个tcp报文，分别是 请求报文，响应报文，收到响应后的ack报文。</span><br><span class="line"><span class="meta">#</span> TODO 这个还没有抓包确认</span><br><span class="line">Client --&gt; 置PSH标志，置ACK标志 序列号 = 55555, 确认号 = 22222，数据包长度 = 11 ---&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置ACK标志，序列号 = 22222, 确认号 = 55566 (=55555 + 11)，数据包长度 = 22 &lt;--- Server</span><br><span class="line"></span><br><span class="line">Client --&gt; 置ACK标志，序列号 = 55566, 确认号 = 22244(=22222+22)，数据包长度 = 0 ---&gt; Server</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在 tcp 的数据传输过程中，一次数据请求，至少需要发送三个tcp报文，分别是 请求报文，响应报文，收到响应后的ack报文。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> TODO 这个还没有抓包确认</span></span><br><span class="line">Client --&gt; 置PSH标志，置ACK标志 序列号 = 55555, 确认号 = 22222，数据包长度 = 11 ---&gt; Server</span><br><span class="line"></span><br><span class="line">Client &lt;-- 置ACK标志，序列号 = 22222, 确认号 = 55566 (=55555 + 11)，数据包长度 = 22 &lt;--- Server</span><br><span class="line"></span><br><span class="line">Client --&gt; 置ACK标志，序列号 = 55566, 确认号 = 22244(=22222+22)，数据包长度 = 0 ---&gt; Server</span><br></pre></td></tr></table></figure>
 
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>最重要的参考： <a href="https://draveness.me/whys-the-design-tcp-three-way-handshake/" target="_blank" rel="noopener">为什么 TCP建立连接需要三次握手</a></p>
 <p><a href="https://www.cnblogs.com/chenboo/archive/2011/12/19/2293327.html" target="_blank" rel="noopener">TCP序列号和确认号详解</a></p>
@@ -404,8 +412,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2020/06/21/data structure and algorithm/【数据结构与算法】动态规划(DP)/" rel="prev" title="【数据结构与算法】动态规划(DP)">
-                  【数据结构与算法】动态规划(DP) <i class="fa fa-chevron-right"></i>
+                <a href="/2020/06/30/http/【websocket】websocket入门/" rel="prev" title="【websocket】websocket入门">
+                  【websocket】websocket入门 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -463,7 +471,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -504,9 +512,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -681,19 +687,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -761,12 +755,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

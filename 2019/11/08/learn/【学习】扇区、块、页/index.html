@@ -63,10 +63,12 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="扇区（sector）硬盘的读写以扇区为基本单位。磁盘上的每个磁道被等分为若干个弧段，这些弧段称之为扇区。硬盘的物理读写以扇区为基本单位。通常情况下每个扇区的大小是 512 字节。linux 下可以使用 fdisk -l 了解扇区大小：1234567891011➜  ~ fdisk -lDisk /dev/vda: 536.9 GB, 536870912000 bytes, 1048576000 s">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-13T06:33:53.691Z">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/870fb90ae71c420894b5572a630b0b20.png">
+<meta property="og:updated_time" content="2020-09-27T13:13:32.442Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【学习】扇区、块、页">
 <meta name="twitter:description" content="扇区（sector）硬盘的读写以扇区为基本单位。磁盘上的每个磁道被等分为若干个弧段，这些弧段称之为扇区。硬盘的物理读写以扇区为基本单位。通常情况下每个扇区的大小是 512 字节。linux 下可以使用 fdisk -l 了解扇区大小：1234567891011➜  ~ fdisk -lDisk /dev/vda: 536.9 GB, 536870912000 bytes, 1048576000 s">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/870fb90ae71c420894b5572a630b0b20.png">
   <link rel="canonical" href="http://yoursite.com/2019/11/08/learn/【学习】扇区、块、页/">
 
 
@@ -271,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-13 14:33:53" itemprop="dateModified" datetime="2020-08-13T14:33:53+08:00">2020-08-13</time>
+                <time title="修改时间：2020-09-27 21:13:32" itemprop="dateModified" datetime="2020-09-27T21:13:32+08:00">2020-09-27</time>
               </span>
             
           
@@ -298,7 +300,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.5k</span>
+              <span>1.6k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -331,13 +333,15 @@
 
 <p>其中 IO Block 就是磁盘块大小，本例中是 4096 Bytes，一般也是 4K。</p>
 <p>为了更好地管理磁盘空间和更高效地从硬盘读取数据，操作系统规定一个磁盘块中只能放置一个文件，因此文件所占用的空间，只能是磁盘块的整数倍，那就意味着会出现文件的实际大小，会小于其所占用的磁盘空间的情况。</p>
-<h3 id="例如"><a href="#例如" class="headerlink" title="例如"></a>例如</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 如果有个文件是 data.txt，这个文件内容只有 1k 大小，但是它所占用的磁盘空间肯定是 4k。</span><br></pre></td></tr></table></figure>
+<h3 id="例如"><a href="#例如" class="headerlink" title="例如"></a>例如</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 如果有个文件是 data.txt，这个文件内容只有 1k 大小，但是它所占用的磁盘空间肯定是 4k。</span></span><br></pre></td></tr></table></figure>
 
 <p>操作系统不能对磁盘扇区直接寻址操写，主要原因是扇区数量庞大，因此才将多个连续扇区组合一起操作。</p>
 <h2 id="页（page）"><a href="#页（page）" class="headerlink" title="页（page）"></a>页（page）</h2><p>内存的最小存储单位。页的大小通常为磁盘块大小的 2^n 倍，可以通过命令 getconf PAGE_SIZE 来获取页的大小：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ getconf PAGE_SIZE</span><br><span class="line">4096</span><br></pre></td></tr></table></figure>
 
-<h2 id="命令索引"><a href="#命令索引" class="headerlink" title="命令索引"></a>命令索引</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 扇区大小，</span><br><span class="line"></span><br><span class="line">fdisk -l</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 磁盘块大小，</span><br><span class="line"></span><br><span class="line">stat /boot</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 内存页大小，</span><br><span class="line">getconf PAGE_SIZE</span><br></pre></td></tr></table></figure>
+<h2 id="InnoDB数据页"><a href="#InnoDB数据页" class="headerlink" title="InnoDB数据页"></a>InnoDB数据页</h2><p>InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/870fb90ae71c420894b5572a630b0b20.png" alt></p>
+<h2 id="命令索引"><a href="#命令索引" class="headerlink" title="命令索引"></a>命令索引</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 扇区大小，</span></span><br><span class="line"></span><br><span class="line">fdisk -l</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 磁盘块大小，</span></span><br><span class="line"></span><br><span class="line">stat /boot</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 内存页大小，</span></span><br><span class="line">getconf PAGE_SIZE</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> mysql 页大小</span></span><br><span class="line">show variables like 'innodb_page_size';</span><br></pre></td></tr></table></figure>
 
 
     </div>
@@ -374,8 +378,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2019/11/08/data structure and algorithm/【数据结构与算法】LRU && LFU/" rel="prev" title="【数据结构与算法】LRU && LFU">
-                  【数据结构与算法】LRU && LFU <i class="fa fa-chevron-right"></i>
+                <a href="/2019/11/08/learn/【学习】tp99/" rel="prev" title="【学习】tp99">
+                  【学习】tp99 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -433,7 +437,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -474,9 +478,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -651,19 +653,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -704,7 +694,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#扇区（sector）"><span class="nav-number">1.</span> <span class="nav-text">扇区（sector）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘块（IO-Block）"><span class="nav-number">2.</span> <span class="nav-text">磁盘块（IO Block）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#例如"><span class="nav-number">2.1.</span> <span class="nav-text">例如</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页（page）"><span class="nav-number">3.</span> <span class="nav-text">页（page）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#命令索引"><span class="nav-number">4.</span> <span class="nav-text">命令索引</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#扇区（sector）"><span class="nav-number">1.</span> <span class="nav-text">扇区（sector）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘块（IO-Block）"><span class="nav-number">2.</span> <span class="nav-text">磁盘块（IO Block）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#例如"><span class="nav-number">2.1.</span> <span class="nav-text">例如</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页（page）"><span class="nav-number">3.</span> <span class="nav-text">页（page）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InnoDB数据页"><span class="nav-number">4.</span> <span class="nav-text">InnoDB数据页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#命令索引"><span class="nav-number">5.</span> <span class="nav-text">命令索引</span></a></li></ol></div>
             
 
           </div>
@@ -731,12 +721,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

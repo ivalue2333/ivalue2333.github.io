@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="并发当并发的访问某个类或者方法时，主调代码中不需要额外的同步或协同，类或者方法都能表现出正确的行为，这就是线程安全的。并发安全必须保证以下三要素。并发编程的三要素（并发安全性） 原子性： 一系列操作要么全部执行要么失败（一些cpu指令全部执行成功，或全部失败。最好就是只有一条cpu指令）或者也叫互斥性，互斥性有两种实现方式，锁或原子操作。 有序性  程序按照代码的顺序先后执行 避免指令重排列。 可">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-14T15:00:44.283Z">
+<meta property="og:updated_time" content="2020-09-25T08:49:53.272Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【并发】并发基础及锁">
 <meta name="twitter:description" content="并发当并发的访问某个类或者方法时，主调代码中不需要额外的同步或协同，类或者方法都能表现出正确的行为，这就是线程安全的。并发安全必须保证以下三要素。并发编程的三要素（并发安全性） 原子性： 一系列操作要么全部执行要么失败（一些cpu指令全部执行成功，或全部失败。最好就是只有一条cpu指令）或者也叫互斥性，互斥性有两种实现方式，锁或原子操作。 有序性  程序按照代码的顺序先后执行 避免指令重排列。 可">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-14 23:00:44" itemprop="dateModified" datetime="2020-06-14T23:00:44+08:00">2020-06-14</time>
+                <time title="修改时间：2020-09-25 16:49:53" itemprop="dateModified" datetime="2020-09-25T16:49:53+08:00">2020-09-25</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>3.1k</span>
+              <span>3.4k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -327,7 +327,12 @@
 <li>可见性 当多线程访问同一个变量 其中一个线程修改了 其他线程也要读新的值（这其实）。</li>
 </ul><a id="more"></a>
 
-<h2 id="悲观锁和乐观锁"><a href="#悲观锁和乐观锁" class="headerlink" title="悲观锁和乐观锁"></a>悲观锁和乐观锁</h2><h3 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h3><p>是认为别的线程<strong>总是会修改值</strong>。不加锁就没机会正确的执行。</p>
+<h2 id="悲观锁和乐观锁"><a href="#悲观锁和乐观锁" class="headerlink" title="悲观锁和乐观锁"></a>悲观锁和乐观锁</h2><p>这里不够完善， 需要再结合这篇文章</p>
+<p><a href="https://mp.weixin.qq.com/s?__biz=MzAxODQxMDM0Mw==&mid=2247487240&idx=2&sn=25fdae5012fb7ba770e24e62714ecf31&chksm=9bd7f100aca078162f7e1294569813c62cfa5b19e5b29aab1f60bfe76c6c9cec3031314852b0&mpshare=1&scene=1&srcid=0925RDDLTK3gDtxNTZzjWjyc&sharer_sharetime=1601023476586&sharer_shareid=2728d3a0eb6a32c660939921ae4b72ce&key=694ad12351d974dc45b90826ab1c614dcee1f677a127e61aae3e0d3fe0101b5ea0d67b302df11031dc023117364132756710dc67ed0d11c6f9fd5a6ed6e307905e00c9066b024c192906cdf2e099105a00e59b6b94900655f71d3a1976e18bf089bd25a2212d9bc592c179a7d6b0bb92068787f035a87e7fd46684edf000dc9e&ascene=1&uin=MjQ3MzQ1MDUyNQ%3D%3D&devicetype=Windows+10+x64&version=62090529&lang=zh_CN&exportkey=A4QiMYCHaTTdAcLCbSxd1cI%3D&pass_ticket=gwJaC4N7GbKCpQ%2F1%2FlreGQc%2Bb%2BF42SheQssstuGFn4FRL4foj8UEGgYPkirkQGYl&wx_header=0" target="_blank" rel="noopener">互斥锁，自旋锁，悲观锁，乐观锁</a></p>
+<p>当加锁失败时，互斥锁用「线程切换」来应对，自旋锁则用「忙等待」来应对。</p>
+<p>互斥锁是一种「独占锁」，比如当线程 A 加锁成功后，此时互斥锁已经被线程 A 独占了，只要线程 A 没有释放手中的锁，线程 B 加锁就会失败，于是就会释放 CPU 让给其他线程，既然线程 B 释放掉了 CPU，自然线程 B 加锁的代码就会被阻塞。<strong>阻塞</strong></p>
+<p>自旋锁是通过 CPU 提供的 CAS 函数（Compare And Swap），在「用户态」完成加锁和解锁操作，不会主动产生线程上下文切换，所以相比互斥锁来说，会快一些，开销也小一些。 <strong>忙等待</strong></p>
+<h3 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h3><p>是认为别的线程<strong>总是会修改值</strong>。不加锁就没机会正确的执行。</p>
 <ul>
 <li>独占锁是一种悲观锁，如golang 中的 lock</li>
 </ul>
@@ -454,7 +459,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -495,9 +500,7 @@
         
           
         
-          
-        
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -672,19 +675,7 @@
         
           
         
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">80</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -752,12 +743,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">159k</span>
+    <span title="站点总字数">206k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:24</span>
+    <span title="站点阅读时长">3:07</span>
 </div>
 
         

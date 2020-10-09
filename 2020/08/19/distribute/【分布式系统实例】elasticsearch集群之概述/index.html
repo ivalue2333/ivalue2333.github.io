@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]概述基本概念elasticsearch是什么官网：Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合： 使用 java 语言开发的一套开源的全文搜索引擎 用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域 底层基于 Lucene 开源库开发，提供 res">
+<meta name="keywords" content="分布式系统,实例,集群搭建,elasticsearch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【分布式系统实例】elasticsearch集群之概述">
+<meta property="og:url" content="http://yoursite.com/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]概述基本概念elasticsearch是什么官网：Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合： 使用 java 语言开发的一套开源的全文搜索引擎 用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域 底层基于 Lucene 开源库开发，提供 res">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/eaa66da6fe7e41c191dede268873192a.jpg">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/ac61d59cc952484a9609f685bd48cd38.jpg">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/04c02a0d8fab47fca87ccbe4a8980797.jpg">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/b674a4895ca54eb7a1dd1c53ca68fc2b.jpg">
+<meta property="og:updated_time" content="2020-08-29T14:16:00.343Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【分布式系统实例】elasticsearch集群之概述">
+<meta name="twitter:description" content="[TOC]概述基本概念elasticsearch是什么官网：Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合： 使用 java 语言开发的一套开源的全文搜索引擎 用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域 底层基于 Lucene 开源库开发，提供 res">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/eaa66da6fe7e41c191dede268873192a.jpg">
+  <link rel="canonical" href="http://yoursite.com/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【分布式系统实例】elasticsearch集群之概述 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【分布式系统实例】elasticsearch集群之概述
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-08-19 20:45:09" itemprop="dateCreated datePublished" datetime="2020-08-19T20:45:09+08:00">2020-08-19</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>24k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>21 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="elasticsearch是什么"><a href="#elasticsearch是什么" class="headerlink" title="elasticsearch是什么"></a>elasticsearch是什么</h3><p>官网：<code>Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合：</code></p><ul>
+<li>使用 java 语言开发的一套开源的全文搜索引擎</li>
+<li>用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域</li>
+<li>底层基于 <a href="https://link.zhihu.com/?target=https%3A//lucene.apache.org/" target="_blank" rel="noopener">Lucene</a> 开源库开发，提供 restAPI，可以被任何语言调用</li>
+<li>支持分布式部署，可水平扩展</li>
+</ul><a id="more"></a>
+
+
+<h3 id="集群（cluster）和节点（node）"><a href="#集群（cluster）和节点（node）" class="headerlink" title="集群（cluster）和节点（node）"></a>集群（cluster）和节点（node）</h3><p><strong>集群（Cluster）</strong></p>
+<ul>
+<li>Elasticsearch 集群部署使其可以随时可用和并按需扩容，并保证数据的安全性</li>
+<li>通过启动参数 cluster.name 修改集群名称，默认名称为 elasticsearch</li>
+</ul>
+<p><strong>节点(Node)</strong></p>
+<ul>
+<li>一个节点是一个 Java 进程实例，一台机器可以运行多个实例，一般情况下一台机器只允许一个节点</li>
+<li>一个集群有一个或者多个节点</li>
+<li>通过启动参数 node.name 定义节点名称</li>
+<li>每个节点都保存了集群的状态信息，只有 Master 节点可以<strong>修改集群的状态信息</strong></li>
+<li>集群状态信息包括：<strong>所有节点信息、索引、Mapping、Settings、分片路由等信息</strong></li>
+</ul>
+<h4 id="三种类型的节点"><a href="#三种类型的节点" class="headerlink" title="三种类型的节点"></a>三种类型的节点</h4><h5 id="Master-eligible-节点："><a href="#Master-eligible-节点：" class="headerlink" title="Master-eligible 节点："></a>Master-eligible 节点：</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- 每个节点启动，默认自己是一个 Master-eligible 节点</span><br><span class="line">- 可以通过启动参数 node.master: false 禁止当前启动节点是 Master-eligible 节点</span><br><span class="line">- 所有 Master-eligible 都可以参与选主流程，成为 Master 节点</span><br></pre></td></tr></table></figure>
+
+<h5 id="Data-节点："><a href="#Data-节点：" class="headerlink" title="Data 节点："></a>Data 节点：</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- 保存分片数据的节点</span><br><span class="line">- 在数据扩展上起了很大的作用</span><br><span class="line">- 通过启动参数 node.data 设置</span><br></pre></td></tr></table></figure>
+
+<h5 id="Coordinating-节点"><a href="#Coordinating-节点" class="headerlink" title="Coordinating 节点"></a>Coordinating 节点</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 接收客户端请求，将请求分发到合适的节点，最终再对结果进行汇集</span><br><span class="line">- 每个节点默认都是 Coordinating 节点</span><br></pre></td></tr></table></figure>
+
+<h4 id="如何启动节点"><a href="#如何启动节点" class="headerlink" title="如何启动节点"></a>如何启动节点</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bin/elasticsearch -E node.name=node1 -E cluster.name=myEs -d</span><br><span class="line">bin/elasticsearch -E node.name=node2 -E cluster.name=myEs -d</span><br><span class="line">bin/elasticsearch -E node.name=node3 -E cluster.name=myEs -d</span><br></pre></td></tr></table></figure>
+
+<h3 id="索引（Index）-gt-table"><a href="#索引（Index）-gt-table" class="headerlink" title="索引（Index）-&gt; table"></a>索引（Index）-&gt; table</h3><ul>
+<li>一个集群下面可以新建多个索引，索引体现了逻辑空间概念</li>
+<li>索引是一类相似文档的集合，是文档的容器，<strong>类比关系型数据库中的一张表的 Schema 的概念</strong></li>
+<li>每个索引有自己的 Mapping 用于定义文档的字段名和字段类型</li>
+<li>每个索引有自己的 Settings 用于定义不同的数据分布，也就是索引使用分片的情况</li>
+</ul>
+<h3 id="类型（type）"><a href="#类型（type）" class="headerlink" title="类型（type）"></a>类型（type）</h3><p>Elasticsearch 7.x 版本已废弃 type 的概念，默认所有 index 只具备 _doc 一个类型，因此该概念可以不用深究。</p>
+<h3 id="分片（Shard）"><a href="#分片（Shard）" class="headerlink" title="分片（Shard）"></a>分片（Shard）</h3><ul>
+<li>分片是物理空间概念，索引中的数据都分布在分片上</li>
+<li>一个分片就是运行的一个 Lucene 的实例</li>
+<li>为了支持更大量的数据，索引一般会按某个维度分成多个部分，每个部分就是一个分片，分片被节点(Node)管理。一个节点(Node)一般会管理多个分片，这些分片可能是属于同一份索引</li>
+</ul>
+<p>分片有两种，主分片和副本分片。</p>
+<h4 id="副本分片（分片副本）"><a href="#副本分片（分片副本）" class="headerlink" title="副本分片（分片副本）"></a>副本分片（分片副本）</h4><p>副本(Replica)：同一个分片(Shard)的备份数据，一个分片可能会有0个或多个副本，这些副本中的数据保证强一致或最终一致。</p>
+<h4 id="设置分片"><a href="#设置分片" class="headerlink" title="设置分片"></a>设置分片</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">curl -X DELETE 'localhost:9200/accounts'</span><br><span class="line"><span class="meta">#</span><span class="bash"> number_of_shards 分片数，不可修改， number_of_replicas 副本数，可以修改</span></span><br><span class="line">curl -X PUT -H "Content-Type:application/json" 'localhost:9200/accounts' --data '&#123;</span><br><span class="line">    "settings": &#123;</span><br><span class="line">        "number_of_shards" :   2,</span><br><span class="line">        "number_of_replicas" : 0 </span><br><span class="line">    &#125;</span><br><span class="line">&#125;' </span><br><span class="line"></span><br><span class="line">curl "localhost:9200/accounts?pretty"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 修改副本数</span></span><br><span class="line">curl -X PUT -H "Content-Type:application/json" 'localhost:9200/accounts/_settings' --data '&#123;</span><br><span class="line">	"number_of_replicas" : 1 </span><br><span class="line">&#125;' </span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 再查一次可以看到有两个分片，一个副本</span></span><br><span class="line">curl "localhost:9200/accounts?pretty"</span><br><span class="line"></span><br><span class="line">curl "localhost:9200/accounts/_cat/shards?pretty"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 现在的状况</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 拥有两个主分片，加上每个主分片的一个副本，总共给予我们四个分片</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="文档（Document）"><a href="#文档（Document）" class="headerlink" title="文档（Document）"></a>文档（Document）</h3><ul>
+<li>文档是所有可搜索数据的最小单位，类似关系数据库中某张表中的一行记录</li>
+<li>文档会被序列化成 JSON 格式，JSON 对象由字段组成</li>
+<li>每个字段都有对应的字段类型，类型可以自己指定，也可以使用 ElasticSearch 自动推算</li>
+<li>JSON 文档支持数组和嵌套</li>
+<li>每个文档都有一个唯一性 ID，可以自己指定，也可以系统自动生成</li>
+</ul>
+<h4 id="一个文档主要的元信息"><a href="#一个文档主要的元信息" class="headerlink" title="一个文档主要的元信息"></a>一个文档主要的元信息</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1. _index: 文档所属的索引名</span><br><span class="line">2. _type: 文档所属的类型名</span><br><span class="line">3. _id: 文档的唯一ID</span><br><span class="line">4. _source: 文档存储的 Json 数据</span><br><span class="line">5. _version：文档的版本信息</span><br><span class="line">6. _score: 相关性打分</span><br></pre></td></tr></table></figure>
+
+<h3 id="Mapping"><a href="#Mapping" class="headerlink" title="Mapping"></a>Mapping</h3><h4 id="新增-index-并且设置-mapping"><a href="#新增-index-并且设置-mapping" class="headerlink" title="新增 index 并且设置 mapping"></a>新增 index 并且设置 mapping</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT 'localhost:9200/weather'</span><br><span class="line">curl -XPUT -H "Content-Type:application/json" "http://127.0.0.1:9200/weather/_mapping?pretty" -d '&#123;</span><br><span class="line">  "properties": &#123;</span><br><span class="line">    "id": &#123;</span><br><span class="line">      "type": "long",</span><br><span class="line">      "index": false</span><br><span class="line">    &#125;,</span><br><span class="line">    "name": &#123;</span><br><span class="line">      "type": "text",</span><br><span class="line">      "index_options": "positions",</span><br><span class="line">      "copy_to": "fullName",</span><br><span class="line">      "fields": &#123;</span><br><span class="line">        "english_comment": &#123;</span><br><span class="line">          "type": "text",</span><br><span class="line">          "analyzer": "english",</span><br><span class="line">          "search_analyzer": "english"</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    "phone": &#123;</span><br><span class="line">      "type": "keyword",</span><br><span class="line">      "null_value": "NULL"</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="查询mapping"><a href="#查询mapping" class="headerlink" title="查询mapping"></a>查询mapping</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl 'localhost:9200/weather/_mapping?pretty'</span><br></pre></td></tr></table></figure>
+
+<p>Mapping 主要用于定义索引的字段名称和数据类型以及倒排索引等相关配置，Mapping 可以系统自动推断生成，也可以由用户自己定义，下面我们看一个简单 Mapping 的格式：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">//该索引包含三个字段</span><br><span class="line">//id，类型是 long，不支持索引搜索</span><br><span class="line">//name，类型是 text，并定义了索引级别，以及自定义的分词器</span><br><span class="line">//phone，类型是 keyword，对于值为空的情况可以使用"NULL"字符串来搜索</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"mappings"</span> : &#123;</span><br><span class="line">      <span class="attr">"properties"</span> : &#123;</span><br><span class="line">        <span class="attr">"id"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"long"</span>,</span><br><span class="line">          <span class="attr">"index"</span>: <span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"name"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"text"</span>,</span><br><span class="line">          <span class="attr">"index_options"</span>: <span class="string">"positions"</span>,</span><br><span class="line">          <span class="attr">"copy_to"</span>: <span class="string">"fullName"</span>,</span><br><span class="line">          <span class="attr">"fields"</span>: &#123;</span><br><span class="line">            <span class="attr">"english_comment"</span>:&#123;</span><br><span class="line">              <span class="attr">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">              <span class="attr">"analyzer"</span>: <span class="string">"english"</span>,</span><br><span class="line">              <span class="attr">"search_analyzer"</span>: <span class="string">"english"</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"phone"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"keyword"</span>,</span><br><span class="line">          <span class="attr">"null_value"</span>: <span class="string">"NULL"</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="字段的属性"><a href="#字段的属性" class="headerlink" title="字段的属性"></a>字段的属性</h4><h5 id="type"><a href="#type" class="headerlink" title="type"></a>type</h5><p>type：字段的数据类型，并没有提供专门数组类型，通过 TEXT 字段实现，Elasticsearch 主要支持以下几种数据类型：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- Text：默认情况下会进行分词</span><br><span class="line">- Keyword：不会进行分词，全文本匹配</span><br><span class="line">- Date：日期类型</span><br><span class="line">- Integer/Floating：整数/浮点数</span><br><span class="line">- Boolean：布尔类型</span><br><span class="line">- IPv4 &amp; IPv6</span><br><span class="line">- 特殊类型：geo_point &amp; geo_shape &amp; percolator</span><br></pre></td></tr></table></figure>
+
+<h5 id="index"><a href="#index" class="headerlink" title="index"></a>index</h5><p>index：表示该字段是否可以被搜索，是否需要建立倒排索引</p>
+<h3 id="Index-Template"><a href="#Index-Template" class="headerlink" title="Index Template"></a>Index Template</h3><p>帮助你设定 Mappings 和 Settings，并按照一定的规则，自动匹配到新创建的索引之上。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">PUT _template/test_template</span><br><span class="line">&#123;</span><br><span class="line">  &quot;index_patterns&quot;: [&quot;test*&quot;],  // 什么样的 index 会使用这个模板</span><br><span class="line">  &quot;order&quot;: 1,                   // 设置模板的优先级</span><br><span class="line">  &quot;settings&quot;: &#123; </span><br><span class="line">    &quot;number_of_shards&quot;: 1,      // shard 的数量</span><br><span class="line">    &quot;number_of_replicas&quot;: 2     //replication 的数量</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">    &quot;date_detection&quot;: false,   //字符串的日期类型是否自动转换</span><br><span class="line">    &quot;numeric_detection&quot;: true  //字符串的数字类型是否自动转换</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Index Template 只是对于一个新创建的索引才起作用</li>
+<li>可以通过 order 参数来控制模板的优先级</li>
+<li>一个 Elasticsearch 可以设置多个 Index Template</li>
+<li>创建一个索引时，按照以下顺序配置其 Settings 和 Mappings，后面的覆盖前面的配置</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- ES 默认的 Settings 和 Mappings</span><br><span class="line">- order 数值低的 Index Template</span><br><span class="line">- order 数值高的 Index Template</span><br><span class="line">- 用户对于当前索引指定的 Settings 和 Mappings</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget https://mirrors.huaweicloud.com/elasticsearch/7.7.0/elasticsearch-7.7.0-windows-x86_64.zip</span><br><span class="line">unzip elasticsearch-5.5.1.zip</span><br><span class="line">cd elasticsearch-5.5.1/ </span><br><span class="line">elasticsearch</span><br></pre></td></tr></table></figure>
+
+<h2 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h2><h3 id="集群信息查询"><a href="#集群信息查询" class="headerlink" title="集群信息查询"></a>集群信息查询</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET 'http://localhost:9200/_cat/indices?v'</span><br></pre></td></tr></table></figure>
+
+<h3 id="新建和删除-Index"><a href="#新建和删除-Index" class="headerlink" title="新建和删除 Index"></a>新建和删除 Index</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 新建</span></span><br><span class="line">curl -X PUT 'localhost:9200/weather'</span><br><span class="line"><span class="meta">#</span><span class="bash"> 删除</span></span><br><span class="line">curl -X DELETE 'localhost:9200/weather'</span><br></pre></td></tr></table></figure>
+
+<h3 id="index-操作"><a href="#index-操作" class="headerlink" title="index 操作"></a>index 操作</h3><p>按理说默认是 type， 但是这里使用 type = person</p>
+<h4 id="新增"><a href="#新增" class="headerlink" title="新增"></a>新增</h4><p>向指定的 /Index/Type 发送 PUT 请求，就可以在 Index 里面新增一条记录。新增记录的时候，也可以不指定 Id，这时要改成 POST 请求。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT -H "Content-Type:application/json" 'localhost:9200/accounts/person/1' --data '&#123;</span><br><span class="line">  "user": "zhangsan",</span><br><span class="line">  "title": "engineer",</span><br><span class="line">  "desc": "task DBA",</span><br><span class="line">  "num": 4</span><br><span class="line">&#125;' </span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> id 随机</span></span><br><span class="line">curl -X POST -H "Content-Type:application/json" 'localhost:9200/accounts/person' --data '&#123;</span><br><span class="line">  "user": "li 4",</span><br><span class="line">  "title": "engineer",</span><br><span class="line">  "desc": "task HK",</span><br><span class="line">  "num": 6</span><br><span class="line">&#125;' </span><br><span class="line"></span><br><span class="line">curl -X POST -H "Content-Type:application/json" 'localhost:9200/articles/_doc' --data '&#123;</span><br><span class="line">  "title": "how to make millions",</span><br><span class="line">  "tag": "starred",</span><br><span class="line">  "date": "2014-01-01"</span><br><span class="line">&#125;' </span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 批量写数据</span></span><br><span class="line">for i in `seq 0 10`; do \</span><br><span class="line">curl -X POST -H "Content-Type:application/json" 'localhost:9200/accounts/person' --data '&#123;</span><br><span class="line">  "user": "li 4",</span><br><span class="line">  "title": "engineer",</span><br><span class="line">  "desc": "task HK",</span><br><span class="line">  "num": 6</span><br><span class="line">&#125;'</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+<p>返回</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"_index"</span>:<span class="string">"accounts"</span>,</span><br><span class="line">    <span class="attr">"_type"</span>:<span class="string">"person"</span>,</span><br><span class="line">    "_id":"1", // 由于传入了id， 所以这里id按我们传入的给</span><br><span class="line">    "_version":1,</span><br><span class="line">    "result":"created",</span><br><span class="line">    "_shards":&#123;</span><br><span class="line">        "total":2,</span><br><span class="line">        "successful":1,</span><br><span class="line">        "failed":0</span><br><span class="line">    &#125;,</span><br><span class="line">    "_seq_no":0,</span><br><span class="line">    "_primary_term":1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询， 向/Index/Type/Id发出 GET 请求，就可以查看这条记录。</span></span><br><span class="line">curl 'localhost:9200/accounts/person/1'</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 可以通过自定义唯一id(dy_order_id)来查询</span></span><br><span class="line">curl 'localhost:9200/accounts/person/dy_order_id'</span><br></pre></td></tr></table></figure>
+
+<p>返回</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"_index"</span>:<span class="string">"accounts"</span>,</span><br><span class="line">    <span class="attr">"_type"</span>:<span class="string">"person"</span>,</span><br><span class="line">    <span class="attr">"_id"</span>:<span class="string">"1"</span>,</span><br><span class="line">    <span class="attr">"_version"</span>:<span class="number">1</span>,</span><br><span class="line">    <span class="attr">"_seq_no"</span>:<span class="number">0</span>,</span><br><span class="line">    <span class="attr">"_primary_term"</span>:<span class="number">1</span>,</span><br><span class="line">    <span class="attr">"found"</span>:<span class="literal">true</span>,</span><br><span class="line">    <span class="attr">"_source"</span>:&#123;</span><br><span class="line">        <span class="attr">"user"</span>:<span class="string">"zhangsan"</span>,</span><br><span class="line">        <span class="attr">"title"</span>:<span class="string">"engineer"</span>,</span><br><span class="line">        <span class="attr">"desc"</span>:<span class="string">"task DBA"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除记录"><a href="#删除记录" class="headerlink" title="删除记录"></a>删除记录</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 删除记录就是发出 DELETE 请求。</span></span><br><span class="line">curl -X DELETE 'localhost:9200/accounts/person/1'</span><br></pre></td></tr></table></figure>
+
+<p>返回</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"_index"</span>:<span class="string">"accounts"</span>,<span class="attr">"_type"</span>:<span class="string">"person"</span>,<span class="attr">"_id"</span>:<span class="string">"1"</span>,<span class="attr">"_version"</span>:<span class="number">2</span>,<span class="attr">"result"</span>:<span class="string">"deleted"</span>,<span class="attr">"_shards"</span>:&#123;<span class="attr">"total"</span>:<span class="number">2</span>,<span class="attr">"successful"</span>:<span class="number">1</span>,<span class="attr">"failed"</span>:<span class="number">0</span>&#125;,<span class="attr">"_seq_no"</span>:<span class="number">3</span>,<span class="attr">"_primary_term"</span>:<span class="number">1</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="更新记录"><a href="#更新记录" class="headerlink" title="更新记录"></a>更新记录</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT -H "Content-Type:application/json" 'localhost:9200/accounts/person/1' -d '</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"user"</span> : <span class="string">"zhang 3"</span>,</span><br><span class="line">    <span class="attr">"title"</span> : <span class="string">"engineer"</span>,</span><br><span class="line">    <span class="attr">"desc"</span> : <span class="string">"DBA"</span>,</span><br><span class="line">    <span class="attr">"num"</span>: <span class="number">4</span></span><br><span class="line">&#125;'</span><br></pre></td></tr></table></figure>
+
+<p>返回</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">"_index"</span>:<span class="string">"accounts"</span>,<span class="string">"_type"</span>:<span class="string">"person"</span>,<span class="string">"_id"</span>:<span class="string">"1"</span>,<span class="string">"_version"</span>:<span class="number">1</span>,<span class="string">"result"</span>:<span class="string">"created"</span>,<span class="string">"_shards"</span>:&#123;<span class="string">"total"</span>:<span class="number">2</span>,<span class="string">"successful"</span>:<span class="number">1</span>,<span class="string">"failed"</span>:<span class="number">0</span>&#125;,<span class="string">"_seq_no"</span>:<span class="number">4</span>,<span class="string">"_primary_term"</span>:<span class="number">1</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="基本高级查询"><a href="#基本高级查询" class="headerlink" title="基本高级查询"></a>基本高级查询</h2><h3 id="返回所有记录"><a href="#返回所有记录" class="headerlink" title="返回所有记录"></a>返回所有记录</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl 'localhost:9200/accounts/person/_search'</span><br></pre></td></tr></table></figure>
+
+<h3 id="查询和过滤的区别"><a href="#查询和过滤的区别" class="headerlink" title="查询和过滤的区别"></a>查询和过滤的区别</h3><p>当使用于 过滤情况 时，查询被设置成一个“不评分”或者“过滤”查询。即，这个查询只是简单的问一个问题：“这篇文档是否匹配？”。回答也是非常的简单，yes 或者 no ，二者必居其一。当使用于 <em>查询情况</em> 时，查询就变成了一个“评分”的查询。和不评分的查询类似，也要去判断这个文档是否匹配，同时它还需要判断这个文档匹配的有 <em>多好</em>（匹配程度如何）。 </p>
+<p>过滤查询（Filtering queries）只是简单的检查包含或者排除，这就使得计算起来非常快。考虑到至少有一个过滤查询（filtering query）的结果是 “稀少的”（很少匹配的文档），并且经常使用不评分查询（non-scoring queries），结果会被缓存到内存中以便快速读取，所以有各种各样的手段来优化查询结果。</p>
+<p>相反，评分查询（scoring queries）不仅仅要找出匹配的文档，还要计算每个匹配文档的相关性，计算相关性使得它们比不评分查询费力的多。同时，查询结果并不缓存。</p>
+<p>多亏倒排索引（inverted index），一个简单的评分查询在匹配少量文档时可能与一个涵盖百万文档的filter表现的一样好，甚至会更好。但是在一般情况下，一个filter 会比一个评分的query性能更优异，并且每次都表现的很稳定。</p>
+<h4 id="如何选择查询与过滤"><a href="#如何选择查询与过滤" class="headerlink" title="如何选择查询与过滤"></a>如何选择查询与过滤</h4><p>通常的规则是，使用查询（query）语句来进行 全文 搜索或者其它任何需要影响 相关性得分 的搜索。除此以外的情况都使用过滤（filters)。</p>
+<h4 id="bool-查询和过滤的区别"><a href="#bool-查询和过滤的区别" class="headerlink" title="bool 查询和过滤的区别"></a>bool 查询和过滤的区别</h4><p>bool 过滤的子句使用 term, range 等过滤语法。 bool 查询使用 match， multi_match等子句</p>
+<h3 id="过滤"><a href="#过滤" class="headerlink" title="过滤"></a>过滤</h3><h4 id="term-过滤"><a href="#term-过滤" class="headerlink" title="term 过滤"></a>term 过滤</h4><p>term主要用于精确匹配哪些值，比如数字，日期，布尔值或 not_analyzed 的字符串(未经切词的文本数据类型)： </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"query": &#123;"term": &#123;"num": 4&#125;&#125;&#125;'</span><br><span class="line"></span><br><span class="line">curl -H "Content-Type:application/json" "http://10.23.111.70:9200/personal_orders/_doc/_search" --data '&#123;"query": &#123;"term": &#123;"SellerID": 1901625824&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="terms-过滤"><a href="#terms-过滤" class="headerlink" title="terms 过滤"></a>terms 过滤</h4><p>terms 跟 term 有点类似，但 terms 允许指定多个匹配条件。 如果某个字段指定了多个值，那么文档</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"query": &#123;"terms": &#123;"num": [3, 4]&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="range-过滤"><a href="#range-过滤" class="headerlink" title="range 过滤"></a>range 过滤</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"query": &#123;"range": &#123;"num": &#123;"gte": 4&#125;&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="exists-和-missing-过滤"><a href="#exists-和-missing-过滤" class="headerlink" title="exists 和 missing 过滤"></a>exists 和 missing 过滤</h4><p>exists 和 missing 过滤可以用于查找文档中是否包含指定字段或没有某个字段，类似于SQL语句中的IS_NULL条件. </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"exists": &#123;"field": "title"&#125;&#125;'</span><br><span class="line"></span><br><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"exists": &#123;"field": "title1"&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="bool-过滤"><a href="#bool-过滤" class="headerlink" title="bool 过滤"></a>bool 过滤</h4><p>bool 过滤可以用来合并多个过滤条件查询结果的布尔逻辑，它包含以下操作符：</p>
+<ul>
+<li>must :: 多个查询条件的完全匹配,相当于 and。</li>
+<li>must_not :: 多个查询条件的相反匹配，相当于 not。</li>
+<li>should :: 至少有一个查询条件匹配, 相当于 or。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data   '&#123;"query": &#123;"bool": &#123;"must": &#123;"term": &#123;"title": "engineer"&#125;&#125;, "should": [&#123;"term": &#123;"desc": "task"&#125;&#125;, &#123;"term": &#123;"desc": "task123"&#125;&#125;], "must_not": &#123;"term": &#123;"title": "engineer1"&#125;&#125;&#125;&#125;&#125;'</span><br><span class="line"></span><br><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data   '&#123;"query": &#123;"bool": &#123;"must": &#123;"term": &#123;"title": "engineer"&#125;&#125;&#125;&#125;&#125;'</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">curl "http://10.23.111.70:9200/personal_orders/_mapping?pretty"</span><br></pre></td></tr></table></figure>
+
+<h3 id="查询-1"><a href="#查询-1" class="headerlink" title="查询"></a>查询</h3><h4 id="match-查询"><a href="#match-查询" class="headerlink" title="match 查询"></a>match 查询</h4><p>match查询是一个标准查询，不管你需要全文本查询还是精确查询基本上都要用到它。</p>
+<p>如果你使用 match 查询一个全文本字段，它会在真正查询之前用分析器先分析match一下查询字符：</p>
+<p>如果用match下指定了一个确切值，在遇到数字，日期，布尔值或者not_analyzed 的字符串时，它将为你搜索你给定的值：</p>
+<p>做精确匹配搜索时，你最好用过滤语句，因为过滤语句可以缓存数据。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -H &quot;Content-Type:application/json&quot; &apos;localhost:9200/accounts/person/_s</span><br><span class="line">earch&apos; --data &apos;&#123;&quot;query&quot;: &#123;&quot;match&quot;: &#123;&quot;title&quot;: &quot;engineer&quot;&#125;&#125;&#125;&apos;</span><br><span class="line"></span><br><span class="line">curl -H &quot;Content-Type:application/json&quot; &apos;localhost:9200/accounts/person/_search&apos; --data &apos;&#123;&quot;query&quot;: &#123;&quot;match&quot;: &#123;&quot;desc&quot;: &quot;HK&quot;&#125;&#125;&#125;&apos;</span><br></pre></td></tr></table></figure>
+
+<h4 id="multi-match-查询"><a href="#multi-match-查询" class="headerlink" title="multi_match 查询"></a>multi_match 查询</h4><p>multi_match查询允许你做match查询的基础上同时搜索多个字段，在多个字段中同时查一个：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/accounts/person/_search' --data '&#123;"query": &#123;"multi_match": &#123;"query": "engineer","fields": ["title", "desc"]&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="bool-查询"><a href="#bool-查询" class="headerlink" title="bool 查询"></a>bool 查询</h4><p>bool 查询与 bool 过滤相似，用于合并多个查询子句。不同的是，bool 过滤可以直接给出是否匹配成功， 而bool 查询要计算每一个查询子句的 _score （相关性分值）。</p>
+<ul>
+<li>must:: 查询指定文档一定要被包含。</li>
+<li>must_not:: 查询指定文档一定不要被包含。</li>
+<li>should:: 查询指定文档，有则可以为文档相关性加分。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H "Content-Type:application/json" 'localhost:9200/articles/_doc/_search' --data '&#123;"query": &#123;"bool": &#123;"should": [&#123;"match": &#123;"tag": "starred"&#125;&#125;, &#123;"range": &#123;"date": &#123;"gte": "2014-01-01"&#125;&#125;&#125;], "must": &#123;"match": &#123;"title": "how to make millions"&#125;&#125;, "must_not": &#123;"match": &#123;"tag": "spam"&#125;&#125;&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h3 id="嵌套查询（内部对象和嵌套对象）"><a href="#嵌套查询（内部对象和嵌套对象）" class="headerlink" title="嵌套查询（内部对象和嵌套对象）"></a>嵌套查询（内部对象和嵌套对象）</h3><h4 id="object新增"><a href="#object新增" class="headerlink" title="object新增"></a>object新增</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">curl -X DELETE 'localhost:9200/my_index'</span><br><span class="line">curl -H "Content-Type:application/json" "localhost:9200/my_index/blogpost/1" --data '&#123;</span><br><span class="line">  "title": "Nest eggs",</span><br><span class="line">  "body":  "Making your money work...",</span><br><span class="line">  "tags":  [ "cash", "shares" ],</span><br><span class="line">  "comments": [ </span><br><span class="line">    &#123;</span><br><span class="line">      "name":    "John Smith",</span><br><span class="line">      "comment": "Great article",</span><br><span class="line">      "age":     28,</span><br><span class="line">      "stars":   4,</span><br><span class="line">      "date":    "2014-09-01"</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      "name":    "Alice White",</span><br><span class="line">      "comment": "More like this please",</span><br><span class="line">      "age":     31,</span><br><span class="line">      "stars":   5,</span><br><span class="line">      "date":    "2014-10-22"</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;'</span><br><span class="line"></span><br><span class="line">curl "localhost:9200/my_index/_mapping?pretty"</span><br><span class="line"><span class="meta">#</span><span class="bash"> 如果我们依赖字段自动映射,那么 comments 字段会自动映射为 object 类型。</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="object查询"><a href="#object查询" class="headerlink" title="object查询"></a>object查询</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 没有查到...不符合预期， 正如我们在 对象数组 中讨论的一样,出现上面这种问题的原因是 JSON 格式的文档被处理成如下的扁平式键值对的结构。</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">   <span class="string">"comments.comment"</span>: [ article, great, like, more, please, this ],</span></span><br><span class="line"><span class="meta">#</span><span class="bash">	<span class="string">"comments.age"</span>:     [ 28, 31 ],</span></span><br><span class="line"><span class="meta">#</span><span class="bash">	<span class="string">"comments.stars"</span>:   [ 4, 5 ],</span></span><br><span class="line"><span class="meta">#</span><span class="bash">	<span class="string">"comments.date"</span>:    [ 2014-09-01, 2014-10-22 ]</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 注意这里并不是说查到了一个name 为 alice 并且 age 为 28的 documnet， 而是commnets 中只要有任意两个 name 和 age 匹配就可以。</span></span><br><span class="line">curl -H "Content-Type:application/json" "localhost:9200/my_index/_search?pretty" --data  '&#123;</span><br><span class="line">  "query": &#123;</span><br><span class="line">    "bool": &#123;</span><br><span class="line">      "must": [</span><br><span class="line">        &#123; "match": &#123; "comments.name": "Alice" &#125;&#125;,</span><br><span class="line">        &#123; "match": &#123; "comments.age":  28      &#125;&#125; </span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;'</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 在内部对象下，尝试nested 查询, nested object under path [comments] is not of nested <span class="built_in">type</span>, 不对哦</span></span><br><span class="line">curl -H "Content-Type:application/json" "localhost:9200/my_index/_search?pretty" --data '&#123;"query": &#123;"bool": &#123;"must": [&#123;"match": &#123;"title": "eggs"&#125;&#125;, &#123;"nested": &#123;"query": &#123;"bool": &#123;"must": [&#123;"match": &#123;"comments.name": "john"&#125;&#125;, &#123;"match": &#123;"comments.age": 28&#125;&#125;]&#125;&#125;, "path": "comments"&#125;&#125;]&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<p>虽然 object 类型 (参见 内部对象) 在存储 单一对象 时非常有用,但对于对象数组的搜索而言,毫无用处。*<em>嵌套对象 *</em> 就是来解决这个问题的。将 comments 字段类型设置为 nested 而不是 object 后,每一个嵌套对象都会被索引为一个 隐藏的独立文档 ,举例如下:</p>
+<h4 id="nested-查询"><a href="#nested-查询" class="headerlink" title="nested 查询"></a>nested 查询</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">curl -X DELETE 'localhost:9200/my_index'</span><br><span class="line">curl -X PUT 'localhost:9200/my_index'</span><br><span class="line">curl -XPUT -H "Content-Type:application/json" "localhost:9200/my_index/_mapping?pretty" --data '&#123;"properties": &#123;"comments": &#123;"type": "nested", "properties": &#123;"date": &#123;"type": "date"&#125;, "comment": &#123;"type": "text"&#125;, "stars": &#123;"type": "short"&#125;, "age": &#123;"type": "short"&#125;, "name": &#123;"type": "text"&#125;&#125;&#125;&#125;&#125;'</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">curl "localhost:9200/my_index/_mapping?pretty"</span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="string">"type"</span> : <span class="string">"nested"</span>, 这样 tpye 为 nested</span></span><br><span class="line"></span><br><span class="line">curl -H "Content-Type:application/json" "localhost:9200/my_index/_doc/1" --data '&#123;</span><br><span class="line">  "title": "Nest eggs",</span><br><span class="line">  "body":  "Making your money work...",</span><br><span class="line">  "tags":  [ "cash", "shares" ],</span><br><span class="line">  "comments": [ </span><br><span class="line">    &#123;</span><br><span class="line">      "name":    "John Smith",</span><br><span class="line">      "comment": "Great article",</span><br><span class="line">      "age":     28,</span><br><span class="line">      "stars":   4,</span><br><span class="line">      "date":    "2014-09-01"</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      "name":    "Alice White",</span><br><span class="line">      "comment": "More like this please",</span><br><span class="line">      "age":     31,</span><br><span class="line">      "stars":   5,</span><br><span class="line">      "date":    "2014-10-22"</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;'</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> nested 查询</span></span><br><span class="line">curl -H "Content-Type:application/json" "localhost:9200/my_index/_search?pretty" --data '&#123;"query": &#123;"bool": &#123;"must": [&#123;"match": &#123;"title": "eggs"&#125;&#125;, &#123;"nested": &#123;"query": &#123;"bool": &#123;"must": [&#123;"match": &#123;"comments.name": "john"&#125;&#125;, &#123;"match": &#123;"comments.age": 28&#125;&#125;]&#125;&#125;, "path": "comments"&#125;&#125;]&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.9/nested.html" target="_blank" rel="noopener">https://www.elastic.co/guide/en/elasticsearch/reference/7.9/nested.html</a></p>
+<h3 id="分页查询"><a href="#分页查询" class="headerlink" title="分页查询"></a>分页查询</h3><p>在 Elasticsearch 中，搜索一般包括两个阶段，query 和 fetch 阶段，可以简单的理解，query 阶段确定要取哪些doc（doc_id），fetch 阶段取出具体的 doc。</p>
+<p><strong>具体查询见下方 kibana 查询。</strong></p>
+<h4 id="Query-阶段"><a href="#Query-阶段" class="headerlink" title="Query 阶段"></a>Query 阶段</h4><ol>
+<li>Client 发送一次搜索请求，node1 接收到请求，然后，node1 创建一个大小为 from + size 的优先级队列用来存结果，我们管 node1 叫 coordinating node。</li>
+<li>coordinating node将请求广播到涉及到的 shards，每个 shard 在内部执行搜索请求，然后，将结果存到内部的大小同样为 from + size 的优先级队列里，可以把优先级队列理解为一个包含 top N 结果的列表。</li>
+<li>每个 shard 把暂存在自身优先级队列里的数据返回给 coordinating node，coordinating node 拿到各个 shards 返回的结果后对结果进行一次合并，产生一个全局的优先级队列，存到自身的优先级队列里。</li>
+</ol>
+<p>在上面的例子中，coordinating node 拿到 (from + size) * 6 条数据，然后合并并排序后选择前面的 from + size 条数据存到优先级队列，以便 fetch 阶段使用。另外，各个分片返回给 coordinating node 的数据用于选出前 from + size 条数据，所以，只需要返回唯一标记 doc 的 _id 以及用于排序的 _score 即可，这样也可以保证返回的数据量足够小。</p>
+<p>coordinating node 计算好自己的优先级队列后，query 阶段结束，进入 fetch 阶段。</p>
+<p>为什么是 from + size 大小的数据量，而不是单纯 size 大小的数据量，这是因为在一个分片里得分很低的文档，在和另一个分片中得分较高的文档比，甚至可能得分更高， 所以需要每个分片都将前 from + size 多的 doc_id 取出来。这实际上也就导致深翻页的问题。</p>
+<h4 id="Fetch-阶段"><a href="#Fetch-阶段" class="headerlink" title="Fetch 阶段"></a>Fetch 阶段</h4><ol>
+<li>coordinating node 发送 GET 请求到相关shards。</li>
+<li>shard 根据 doc 的 _id 取到数据详情，然后返回给 coordinating node。</li>
+<li>coordinating node 返回数据给 Client。</li>
+</ol>
+<p>coordinating node 的优先级队列里有 from + size 个 _doc _id，但是，在 fetch 阶段，并不需要取回所有数据，在上面的例子中，前100条数据是不需要取的，<strong>只需要取优先级队列里的第101到110条数据即可</strong>。</p>
+<p>需要取的数据可能在不同分片，也可能在同一分片，coordinating node 使用 multi-get 来避免多次去同一分片取数据，从而提高性能。</p>
+<h4 id="深度分页的问题"><a href="#深度分页的问题" class="headerlink" title="深度分页的问题"></a>深度分页的问题</h4><p>Elasticsearch 的这种方式提供了分页的功能，同时，也有相应的限制。举个例子，一个索引，有10亿数据，分10个 shards，然后，一个搜索请求，from=1,000,000，size=100，这时候，会带来严重的性能问题：</p>
+<p>CPU、内存和IO消耗容易理解，网络带宽问题稍难理解一点。在 query 阶段，每个shards需要返回 1,000,100 条数据给 coordinating node，而 coordinating node 需要接收 10 * 1,000,100 条数据，即使每条数据只有 _doc _id 和 _score，这数据量也很大了，而且，这才一个查询请求，那如果再乘以100呢？</p>
+<p>在另一方面，我们意识到，这种深度分页的请求并不合理，因为我们是很少人为的看很后面的请求的，<strong>在很多的业务场景中，都直接限制分页，比如只能看前100页</strong>。</p>
+<p>这种深度分页确实存在，比如，业务上有遍历数据的需要，比如，有1千万粉丝的微信大V，要给所有粉丝群发消息，或者给某省粉丝群发，这时候就需要取得所有符合条件的粉丝，而最容易想到的就是利用 from + size 来实现，不过，这个是不现实的，这时，可以采用 Elasticsearch 提供的 scroll 方式来实现遍历。</p>
+<h3 id="深翻页的解决之道（游标查询scroll）"><a href="#深翻页的解决之道（游标查询scroll）" class="headerlink" title="深翻页的解决之道（游标查询scroll）"></a>深翻页的解决之道（游标查询scroll）</h3><p>可以把 scroll 理解为关系型数据库里的 cursor，因此，scroll 并不适合用来做实时搜索，而更适用于后台批处理任务，比如群发。</p>
+<p>可以把 scroll 分为初始化和遍历两步，初始化时将所有符合搜索条件的搜索结果缓存起来，<strong>可以想象成快照，在遍历时，从这个快照里取数据，也就是说，在初始化后对索引插入、删除、更新数据都不能影响遍历结果</strong>。</p>
+<p>为了使用 scroll，初始搜索请求应该在查询中指定 scroll 参数，这可以告诉 Elasticsearch 需要保持搜索的上下文环境多久</p>
+<h4 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 保持游标查询窗口一分钟。</span></span><br><span class="line">curl -X GET -H "Content-Type:application/json" "http://10.23.111.70:9200/trade_orders/_doc/_search?scroll=1m" --data '&#123;"query": &#123; "match_all": &#123;&#125;&#125;&#125;'</span><br></pre></td></tr></table></figure>
+
+<p>初始化时需要像普通 search 一样，指明 index 和 type (当然，search 是可以不指明 index 和 type 的)，然后，加上参数 scroll，表示暂存搜索结果的时间，其它就像一个普通的search请求一样。</p>
+<p>初始化返回一个 _scroll_id，_scroll_id 用来下次取数据用。</p>
+<h5 id="scroll-1m"><a href="#scroll-1m" class="headerlink" title="scroll=1m"></a>scroll=1m</h5><p>启用游标查询可以通过在查询的时候设置参数 scroll 的值为我们期望的游标查询的过期时间。 游标查询的过期时间会在每次做查询的时候刷新，所以这个时间只需要足够处理当前批的结果就可以了，而不是处理查询结果的所有文档的所需时间。 这个过期时间的参数很重要，因为保持这个游标查询窗口需要消耗资源，所以我们期望如果不再需要维护这种资源就该早点儿释放掉。 设置这个超时能够让 Elasticsearch 在稍后空闲的时候自动释放这部分资源。</p>
+<h4 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h4><p>注意遍历时的 url ，不需要 index 和 type 并且是 _search/scroll</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET -H "Content-Type:application/json" "http://10.23.111.70:9200/_search/scroll?scroll=1m" --data '&#123;"scroll_id":"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAADvxFnhpZlhVQllnVG42dklaUThoNWFXSmcAAAAAAANLwhZaUHo0aGJROVNscTJhc2JtdEo0dkpnAAAAAAADlx0WWEFrS3VVSFhTeG1mWEMtUVFfeENwUQ=="&#125;'</span><br></pre></td></tr></table></figure>
+
+<h4 id="Scroll-Scan"><a href="#Scroll-Scan" class="headerlink" title="Scroll-Scan"></a>Scroll-Scan</h4><p>Elasticsearch 提供了 Scroll-Scan 方式进一步提高遍历性能。还是上面的例子，微信大V要给粉丝群发这种后台任务，是不需要关注顺序的，只要能遍历所有数据即可，这时候，就可以用Scroll-Scan。</p>
+<p>Scroll-Scan 的遍历与普通 Scroll 一样，初始化存在一点差别。</p>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/2.1/breaking_21_search_changes.html" target="_blank" rel="noopener">search_type=scan已经被废弃了</a>， 可以使用下面的方式</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET -H "Content-Type:application/json" "http://10.23.111.70:9200/trade_orders/_doc/_search?scroll=1m" --data '&#123;"sort": ["_doc"]&#125;'</span><br></pre></td></tr></table></figure>
+
+<h2 id="Kibana-查询"><a href="#Kibana-查询" class="headerlink" title="Kibana 查询"></a>Kibana 查询</h2><p>每一个GET都可以直接查询</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">GET _search</span><br><span class="line">&#123;</span><br><span class="line">  "query": &#123;</span><br><span class="line">    "match_all": &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> from size 分页查询</span></span><br><span class="line">GET trade_orders/_doc/_search</span><br><span class="line">&#123;</span><br><span class="line">    "query": &#123; "match_all": &#123;&#125;&#125;,</span><br><span class="line">    "from": 11,</span><br><span class="line">    "size":  5</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 初始化 游标查询 scroll， 过期时间1分钟，关键字 _doc 是最有效的排序顺序。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 尽管我们指定字段 size 的值为 2，我们有可能取到超过这个值数量的文档。 当查询的时候， 字段 size </span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 作用于单个分片，所以每个批次实际返回的文档数量最大为 size * number_of_primary_shards 。</span></span><br><span class="line">GET trade_orders/_doc/_search?scroll=1m</span><br><span class="line">&#123;</span><br><span class="line">    "query": &#123; "match_all": &#123;&#125;&#125;,</span><br><span class="line">    "sort" : ["_doc"], </span><br><span class="line">    "size":  2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> personal_orders 下 personal_orders_jd_720328_xinbz891015 这个id 的查询</span></span><br><span class="line">GET personal_orders/_doc/personal_orders_jd_720328_xinbz891015</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> trade_orders 下 jd_120823795963 这个id 的查询</span></span><br><span class="line">GET trade_orders/_doc/jd_120823795963</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> es 的详情</span></span><br><span class="line">GET _cat/indices?v</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> index 的结构</span></span><br><span class="line">GET trade_orders</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 通过 _search 查询</span></span><br><span class="line">GET trade_orders/_search</span><br><span class="line">&#123;</span><br><span class="line">  "query": &#123;</span><br><span class="line">    "match": &#123;</span><br><span class="line">      "ItemIDs": "14084259599"</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="查询原理"><a href="#查询原理" class="headerlink" title="查询原理"></a>查询原理</h2><h3 id="分片及副本"><a href="#分片及副本" class="headerlink" title="分片及副本"></a>分片及副本</h3><p>Index 1：蓝色部分，有3个shard，分别是P1，P2，P3，位于3个不同的Node中，这里没有Replica。</p>
+<p>Index 2：绿色部分，有2个shard，分别是P1，P2，位于2个不同的Node中。并且每个shard有一个replica，分别是R1和R2。基于系统可用性的考虑，同一个shard的primary和replica不能位于同一个Node中。这里Shard1的P1和R1分别位于Node3和Node2中，如果某一刻Node2发生宕机，服务基本不会受影响，因为还有一个P1和R2都还是可用的。因为是主备架构，当主分片发生故障时，需要切换，这时候需要选举一个副本作为新主，这里除了会耗费一点点时间外，也会有丢失数据的风险。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/eaa66da6fe7e41c191dede268873192a.jpg" alt></p>
+<h3 id="创建Index流程"><a href="#创建Index流程" class="headerlink" title="创建Index流程"></a>创建Index流程</h3><p>建索引(Index， 就是创建数据表，es 中的 index 就是表)的时候，一个Doc先是经过路由规则定位到主Shard （主分片可能有多个），发送这个doc到主Shard上建索引，成功后再发送这个Doc到这个Shard的副本上建索引，等副本上建索引成功后才返回成功。</p>
+<p>在这种架构中，索引数据全部位于Shard中，主Shard和副本Shard各存储一份。当某个副本Shard或者主Shard丢失(比如机器宕机，网络中断等)时，需要将丢失的Shard在其他Node中恢复回来，这时候就需要从其他副本(Replica)全量拷贝这个Shard的所有数据到新Node上构造新Shard。这个拷贝过程需要一段时间，这段时间内只能由剩余主副本来承载流量，在恢复完成之前，整个系统会处于一个比较危险的状态，直到failover结束。</p>
+<p>这里就体现了副本(Replica)存在的一个理由，避免数据丢失，提高数据可靠性。副本(Replica)存在的另一个理由是读请求量很大的时候，一个Node无法承载所有流量，这个时候就需要一个副本来分流查询压力，<strong>目的就是扩展查询能力（支持读写分离）</strong>。</p>
+<h3 id="部署层架构"><a href="#部署层架构" class="headerlink" title="部署层架构"></a>部署层架构</h3><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/ac61d59cc952484a9609f685bd48cd38.jpg" alt></p>
+<p>Elasticsearch支持上述两种方式：可以参考之前的文章《分布式系统之数据分区》，请求路由的4中方式，这里实际上是其中两种。</p>
+<h4 id="混合部署-左图-Data-Node和Transport-Node-结合"><a href="#混合部署-左图-Data-Node和Transport-Node-结合" class="headerlink" title="混合部署(左图) Data Node和Transport Node 结合"></a>混合部署(左图) Data Node和Transport Node 结合</h4><p>不考虑MasterNode的情况下，还有两种Node，Data Node和Transport Node，这种部署模式下，这两种不同类型Node角色都位于同一个Node中，相当于一个Node具备两种功能：Data和Transport。</p>
+<p>当有index或者query请求的时候，请求随机(自定义)发送给任何一个Node，这台Node中会持有一个全局的路由表，通过路由表选择合适的Node，将请求发送给这些Node，然后等所有请求都返回后，合并结果，然后返回给用户。一个Node分饰两种角色。</p>
+<h5 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h5><p>好处就是使用极其简单，易上手，对推广系统有很大价值。最简单的场景下只需要启动一个Node，就能完成所有的功能。</p>
+<h5 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h5><p>缺点就是多种类型的请求会相互影响，在大集群如果某一个Data Node出现热点，那么就会影响途经这个Data Node的所有其他跨Node请求。如果发生故障，故障影响面会变大很多。</p>
+<p>Elasticsearch中每个Node都需要和其余的每一个Node都保持连接。这种情况下，每个Node都需要和其他所有Node保持连接，而一个系统的连接数是有上限的，这样连接数就会限制集群规模。</p>
+<h4 id="分层部署-右图"><a href="#分层部署-右图" class="headerlink" title="分层部署(右图)"></a>分层部署(右图)</h4><p>设置部分Node为Transport Node，专门用来做请求转发和结果合并。</p>
+<p>其他Node可以设置为DataNode，专门用来处理数据。</p>
+<h5 id="优势-1"><a href="#优势-1" class="headerlink" title="优势"></a>优势</h5><p>好处就是角色相互独立，不会相互影响，一般Transport Node的流量是平均分配的，很少出现单台机器的CPU或流量被打满的情况，而DataNode由于处理数据，很容易出现单机资源被占满，比如CPU，网络，磁盘等。独立开后，DataNode如果出了故障只是影响单节点的数据处理，不会影响其他节点的请求，影响限制在最小的范围内。</p>
+<p>角色独立后，只需要Transport Node连接所有的DataNode，而DataNode则不需要和其他DataNode有连接。一个集群中DataNode的数量远大于Transport Node，这样集群的规模可以更大。另外，还可以通过分组，使Transport Node只连接固定分组的DataNode，这样Elasticsearch的连接数问题就彻底解决了。</p>
+<p>可以支持热更新：先一台一台的升级DataNode，升级完成后再升级Transport Node，整个过程中，可以做到让用户无感知。</p>
+<h5 id="劣势-1"><a href="#劣势-1" class="headerlink" title="劣势"></a>劣势</h5><p>缺点是上手复杂，需要提前设置好Transport的数量，且数量和Data Node、流量等相关，否则要么资源闲置，要么机器被打爆。</p>
+<h3 id="数据层架构"><a href="#数据层架构" class="headerlink" title="数据层架构"></a>数据层架构</h3><h4 id="数据存储"><a href="#数据存储" class="headerlink" title="数据存储"></a>数据存储</h4><p>Elasticsearch的Index和meta，目前支持存储在本地文件系统中，同时支持niofs，mmap，simplefs，smb等不同加载方式，性能最好的是直接将索引LOCK进内存的MMap方式。默认，Elasticsearch会自动选择加载方式，另外可以自己在配置文件中配置。这里有几个细节，具体可以看官方文档。</p>
+<p>索引和meta数据都存在本地，会带来一个问题：当某一台机器宕机或者磁盘损坏的时候，数据就丢失了。为了解决这个问题，可以使用Replica(副本)功能。</p>
+<h4 id="副本-Replica"><a href="#副本-Replica" class="headerlink" title="副本(Replica)"></a>副本(Replica)</h4><p>可以为每一个Index设置一个配置项：副本(Replicda)数，如果设置副本数为2，那么就会有3个Shard，其中一个是PrimaryShard，其余两个是ReplicaShard，这三个Shard会被Master尽量调度到不同机器，甚至机架上，这三个Shard中的数据一样，提供同样的服务能力。</p>
+<h5 id="副本-Replica-的目的有三个："><a href="#副本-Replica-的目的有三个：" class="headerlink" title="副本(Replica)的目的有三个："></a>副本(Replica)的目的有三个：</h5><p>保证服务可用性：当设置了多个Replica的时候，如果某一个Replica不可用的时候，那么请求流量可以继续发往其他Replica，服务可以很快恢复开始服务。</p>
+<p>保证数据可靠性：如果只有一个Primary，没有Replica，那么当Primary的机器磁盘损坏的时候，那么这个Node中所有Shard的数据会丢失，只能reindex了。</p>
+<p>提供更大的查询能力：当Shard提供的查询能力无法满足业务需求的时候， 可以继续加N个Replica，这样查询能力就能提高N倍，轻松增加系统的并发度。</p>
+<h5 id="Replica-的问题"><a href="#Replica-的问题" class="headerlink" title="Replica 的问题"></a>Replica 的问题</h5><p>Replica带来成本浪费。为了保证数据可靠性，必须使用Replica，但是当一个Shard就能满足处理能力的时候，另一个Shard的计算能力就会浪费。</p>
+<p>Replica带来写性能和吞吐的下降。每次Index或者update的时候，需要先更新Primary Shard，更新成功后再并行去更新Replica，再加上长尾，写入性能会有不少的下降。</p>
+<h2 id="分布式数据系统架构"><a href="#分布式数据系统架构" class="headerlink" title="分布式数据系统架构"></a>分布式数据系统架构</h2><h3 id="基于本地文件系统的分布式系统"><a href="#基于本地文件系统的分布式系统" class="headerlink" title="基于本地文件系统的分布式系统"></a>基于本地文件系统的分布式系统</h3><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/04c02a0d8fab47fca87ccbe4a8980797.jpg" alt></p>
+<p>上图中是一个基于本地磁盘存储数据的分布式系统。Index一共有3个Shard，每个Shard除了Primary Shard外，还有一个Replica Shard。当Node 3机器宕机或磁盘损坏的时候，首先确认P3已经不可用，重新选举R3位Primary Shard，此Shard发生主备切换。然后重新找一台机器Node 7，在Node7 上重新启动P3的新Replica。由于数据都会存在本地磁盘，此时需要将Shard 3的数据从Node 6上拷贝到Node7上。如果有200G数据，千兆网络，拷贝完需要1600秒。如果没有replica，则这1600秒内这些Shard就不能服务。</p>
+<p>为了保证可靠性，就需要冗余Shard，会导致更多的物理资源消耗。</p>
+<p>这种思想的另外一种表现形式是使用双集群，集群级别做备份。</p>
+<h3 id="基于分布式文件系统的分布式系统-共享存储-存储和计算分离"><a href="#基于分布式文件系统的分布式系统-共享存储-存储和计算分离" class="headerlink" title="基于分布式文件系统的分布式系统(共享存储)-存储和计算分离"></a>基于分布式文件系统的分布式系统(共享存储)-存储和计算分离</h3><p>针对第一种架构中的问题，另一种思路是：存储和计算分离。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/b674a4895ca54eb7a1dd1c53ca68fc2b.jpg" alt></p>
+<p>第一种思路的问题根源是数据量大，拷贝数据耗时多，那么有没有办法可以不拷贝数据?为了实现这个目的，一种思路是底层存储层使用共享存储，每个Shard只需要连接到一个分布式文件系统中的一个目录/文件即可，Shard中不含有数据，只含有计算部分。相当于每个Node中只负责计算部分，存储部分放在底层的另一个分布式文件系统中，比如HDFS。<br>上图中，Node 1 连接到第一个文件;Node 2连接到第二个文件;Node3连接到第三个文件。当Node 3机器宕机后，只需要在Node 4机器上新建一个空的Shard，然后构造一个新连接，连接到底层分布式文件系统的第三个文件即可，创建连接的速度是很快的，总耗时会非常短。</p>
+<h4 id="优势-2"><a href="#优势-2" class="headerlink" title="优势"></a>优势</h4><p>在这种架构下，资源可以更加弹性，当存储不够的时候只需要扩容存储系统的容量;当计算不够的时候，只需要扩容计算部分容量。</p>
+<p>存储和计算是独立管理的，资源管理粒度更小，管理更加精细化，浪费更少，结果就是总体成本可以更低。</p>
+<p>负载更加突出，抗热点能力更强。一般热点问题基本都出现在计算部分，对于存储和计算分离系统，计算部分由于没有绑定数据，可以实时的扩容、缩容和迁移，当出现热点的时候，可以第一时间将计算调度到新节点上。</p>
+<h4 id="劣势-2"><a href="#劣势-2" class="headerlink" title="劣势"></a>劣势</h4><p>访问分布式文件系统的性能可能不及访问本地文件系统。在上一代分布式文件系统中，这是一个比较明显的问题，但是目前使用了各种用户态协议栈后，这个差距已经越来越小了。</p>
+<p>HBase使用的就是这种架构方式。</p>
+<h2 id="参考-1"><a href="#参考-1" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.elastic.co/cn/" target="_blank" rel="noopener">es 官网</a></p>
+<p><a href="https://elasticsearch.cn/" target="_blank" rel="noopener">es中文社区</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/104215274" target="_blank" rel="noopener">eslaticsearch 基础概念</a></p>
+<p><a href="http://www.ruanyifeng.com/blog/2017/08/elasticsearch.html" target="_blank" rel="noopener">阮一峰的es文章翻译</a></p>
+<p><a href="https://yq.aliyun.com/articles/653029" target="_blank" rel="noopener">ElasticSearch常用的基本查询语句详解</a></p>
+<p><a href="http://tech.it168.com/a2018/0626/3211/000003211367.shtml" target="_blank" rel="noopener">从Elasticsearch来看分布式系统架构设计</a></p>
+<p><a href="https://www.elastic.co/guide/cn/elasticsearch/guide/current/scroll.html" target="_blank" rel="noopener">es官网游标查询</a></p>
+<p><a href="https://www.elastic.co/guide/cn/elasticsearch/guide/current/replica-shards.html" target="_blank" rel="noopener">关于副本分片</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+            
+              <a href="/tags/实例/" rel="tag"># 实例</a>
+            
+              <a href="/tags/集群搭建/" rel="tag"># 集群搭建</a>
+            
+              <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之集群搭建/" rel="next" title="【分布式系统实例】elasticsearch集群之集群搭建">
+                  <i class="fa fa-chevron-left"></i> 【分布式系统实例】elasticsearch集群之集群搭建
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/08/21/golang/【golang】逃逸分析/" rel="prev" title="【golang】逃逸分析">
+                  【golang】逃逸分析 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">80</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">2.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#elasticsearch是什么"><span class="nav-number">2.1.</span> <span class="nav-text">elasticsearch是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群（cluster）和节点（node）"><span class="nav-number">2.2.</span> <span class="nav-text">集群（cluster）和节点（node）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三种类型的节点"><span class="nav-number">2.2.1.</span> <span class="nav-text">三种类型的节点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Master-eligible-节点："><span class="nav-number">2.2.1.1.</span> <span class="nav-text">Master-eligible 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-节点："><span class="nav-number">2.2.1.2.</span> <span class="nav-text">Data 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Coordinating-节点"><span class="nav-number">2.2.1.3.</span> <span class="nav-text">Coordinating 节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何启动节点"><span class="nav-number">2.2.2.</span> <span class="nav-text">如何启动节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#索引（Index）-gt-table"><span class="nav-number">2.3.</span> <span class="nav-text">索引（Index）-&gt; table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类型（type）"><span class="nav-number">2.4.</span> <span class="nav-text">类型（type）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分片（Shard）"><span class="nav-number">2.5.</span> <span class="nav-text">分片（Shard）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#副本分片（分片副本）"><span class="nav-number">2.5.1.</span> <span class="nav-text">副本分片（分片副本）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#设置分片"><span class="nav-number">2.5.2.</span> <span class="nav-text">设置分片</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文档（Document）"><span class="nav-number">2.6.</span> <span class="nav-text">文档（Document）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一个文档主要的元信息"><span class="nav-number">2.6.1.</span> <span class="nav-text">一个文档主要的元信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mapping"><span class="nav-number">2.7.</span> <span class="nav-text">Mapping</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#新增-index-并且设置-mapping"><span class="nav-number">2.7.1.</span> <span class="nav-text">新增 index 并且设置 mapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询mapping"><span class="nav-number">2.7.2.</span> <span class="nav-text">查询mapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字段的属性"><span class="nav-number">2.7.3.</span> <span class="nav-text">字段的属性</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#type"><span class="nav-number">2.7.3.1.</span> <span class="nav-text">type</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#index"><span class="nav-number">2.7.3.2.</span> <span class="nav-text">index</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Index-Template"><span class="nav-number">2.8.</span> <span class="nav-text">Index Template</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">3.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#windows"><span class="nav-number">3.1.</span> <span class="nav-text">windows</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本操作"><span class="nav-number">4.</span> <span class="nav-text">基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#集群信息查询"><span class="nav-number">4.1.</span> <span class="nav-text">集群信息查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新建和删除-Index"><span class="nav-number">4.2.</span> <span class="nav-text">新建和删除 Index</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#index-操作"><span class="nav-number">4.3.</span> <span class="nav-text">index 操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#新增"><span class="nav-number">4.3.1.</span> <span class="nav-text">新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询"><span class="nav-number">4.3.2.</span> <span class="nav-text">查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除记录"><span class="nav-number">4.4.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新记录"><span class="nav-number">4.5.</span> <span class="nav-text">更新记录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本高级查询"><span class="nav-number">5.</span> <span class="nav-text">基本高级查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返回所有记录"><span class="nav-number">5.1.</span> <span class="nav-text">返回所有记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询和过滤的区别"><span class="nav-number">5.2.</span> <span class="nav-text">查询和过滤的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何选择查询与过滤"><span class="nav-number">5.2.1.</span> <span class="nav-text">如何选择查询与过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询和过滤的区别"><span class="nav-number">5.2.2.</span> <span class="nav-text">bool 查询和过滤的区别</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤"><span class="nav-number">5.3.</span> <span class="nav-text">过滤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#term-过滤"><span class="nav-number">5.3.1.</span> <span class="nav-text">term 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#terms-过滤"><span class="nav-number">5.3.2.</span> <span class="nav-text">terms 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#range-过滤"><span class="nav-number">5.3.3.</span> <span class="nav-text">range 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#exists-和-missing-过滤"><span class="nav-number">5.3.4.</span> <span class="nav-text">exists 和 missing 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-过滤"><span class="nav-number">5.3.5.</span> <span class="nav-text">bool 过滤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-1"><span class="nav-number">5.4.</span> <span class="nav-text">查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#match-查询"><span class="nav-number">5.4.1.</span> <span class="nav-text">match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#multi-match-查询"><span class="nav-number">5.4.2.</span> <span class="nav-text">multi_match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询"><span class="nav-number">5.4.3.</span> <span class="nav-text">bool 查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#嵌套查询（内部对象和嵌套对象）"><span class="nav-number">5.5.</span> <span class="nav-text">嵌套查询（内部对象和嵌套对象）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#object新增"><span class="nav-number">5.5.1.</span> <span class="nav-text">object新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#object查询"><span class="nav-number">5.5.2.</span> <span class="nav-text">object查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nested-查询"><span class="nav-number">5.5.3.</span> <span class="nav-text">nested 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">5.5.4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分页查询"><span class="nav-number">5.6.</span> <span class="nav-text">分页查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Query-阶段"><span class="nav-number">5.6.1.</span> <span class="nav-text">Query 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fetch-阶段"><span class="nav-number">5.6.2.</span> <span class="nav-text">Fetch 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#深度分页的问题"><span class="nav-number">5.6.3.</span> <span class="nav-text">深度分页的问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深翻页的解决之道（游标查询scroll）"><span class="nav-number">5.7.</span> <span class="nav-text">深翻页的解决之道（游标查询scroll）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化"><span class="nav-number">5.7.1.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#scroll-1m"><span class="nav-number">5.7.1.1.</span> <span class="nav-text">scroll=1m</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#遍历"><span class="nav-number">5.7.2.</span> <span class="nav-text">遍历</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Scroll-Scan"><span class="nav-number">5.7.3.</span> <span class="nav-text">Scroll-Scan</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kibana-查询"><span class="nav-number">6.</span> <span class="nav-text">Kibana 查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查询原理"><span class="nav-number">7.</span> <span class="nav-text">查询原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分片及副本"><span class="nav-number">7.1.</span> <span class="nav-text">分片及副本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Index流程"><span class="nav-number">7.2.</span> <span class="nav-text">创建Index流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署层架构"><span class="nav-number">7.3.</span> <span class="nav-text">部署层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#混合部署-左图-Data-Node和Transport-Node-结合"><span class="nav-number">7.3.1.</span> <span class="nav-text">混合部署(左图) Data Node和Transport Node 结合</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势"><span class="nav-number">7.3.1.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势"><span class="nav-number">7.3.1.2.</span> <span class="nav-text">劣势</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分层部署-右图"><span class="nav-number">7.3.2.</span> <span class="nav-text">分层部署(右图)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势-1"><span class="nav-number">7.3.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势-1"><span class="nav-number">7.3.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据层架构"><span class="nav-number">7.4.</span> <span class="nav-text">数据层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据存储"><span class="nav-number">7.4.1.</span> <span class="nav-text">数据存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#副本-Replica"><span class="nav-number">7.4.2.</span> <span class="nav-text">副本(Replica)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#副本-Replica-的目的有三个："><span class="nav-number">7.4.2.1.</span> <span class="nav-text">副本(Replica)的目的有三个：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Replica-的问题"><span class="nav-number">7.4.2.2.</span> <span class="nav-text">Replica 的问题</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式数据系统架构"><span class="nav-number">8.</span> <span class="nav-text">分布式数据系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于本地文件系统的分布式系统"><span class="nav-number">8.1.</span> <span class="nav-text">基于本地文件系统的分布式系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于分布式文件系统的分布式系统-共享存储-存储和计算分离"><span class="nav-number">8.2.</span> <span class="nav-text">基于分布式文件系统的分布式系统(共享存储)-存储和计算分离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优势-2"><span class="nav-number">8.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#劣势-2"><span class="nav-number">8.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考-1"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">206k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
