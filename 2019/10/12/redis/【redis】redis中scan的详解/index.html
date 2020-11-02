@@ -55,18 +55,18 @@
   };
 </script>
 
-  <meta name="description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
+  <meta name="description" content="[TOC]实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通">
 <meta name="keywords" content="redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【redis】redis中scan的详解">
 <meta property="og:url" content="http://yoursite.com/2019/10/12/redis/【redis】redis中scan的详解/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
+<meta property="og:description" content="[TOC]实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.369Z">
+<meta property="og:updated_time" content="2020-10-31T11:30:19.269Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【redis】redis中scan的详解">
-<meta name="twitter:description" content="实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果">
+<meta name="twitter:description" content="[TOC]实践123456789101112131415161718192021 # 从开始开始遍历 scan 0 MATCH key* COUNT 10 # 或者 scan 0 MATCH &quot;key* COUNT 10  # 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是&quot;0&quot;时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通">
   <link rel="canonical" href="http://yoursite.com/2019/10/12/redis/【redis】redis中scan的详解/">
 
 
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2020-10-31 19:30:19" itemprop="dateModified" datetime="2020-10-31T19:30:19+08:00">2020-10-31</time>
               </span>
             
           
@@ -321,7 +321,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"> #</span><span class="bash"> 从开始开始遍历</span></span><br><span class="line"> scan 0 MATCH key* COUNT 10</span><br><span class="line"><span class="meta"> #</span><span class="bash"> 或者</span></span><br><span class="line"> scan 0 MATCH "key* COUNT 10</span><br><span class="line"> </span><br><span class="line"><span class="meta"> #</span><span class="bash"> 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是<span class="string">"0"</span>时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果集是否为空判断迭代结束。）</span></span><br><span class="line">1) "76"</span><br><span class="line">2)  1) "key56"</span><br><span class="line">    2) "key91"</span><br><span class="line">    3) "key17"</span><br><span class="line">    4) "key51"</span><br><span class="line">    5) "key54"</span><br><span class="line">    6) "key86"</span><br><span class="line">    7) "key98"</span><br><span class="line">    8) "key0"</span><br><span class="line">    9) "key41"</span><br><span class="line">   10) "key97"</span><br><span class="line">   11) "key82"</span><br><span class="line">   </span><br><span class="line"><span class="meta">#</span><span class="bash"> 例如，下一次迭代</span></span><br><span class="line">scan 76 MATCH "key*" COUNT 10</span><br></pre></td></tr></table></figure><a id="more"></a>
+        <p>[TOC]</p><h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"> #</span><span class="bash"> 从开始开始遍历</span></span><br><span class="line"> scan 0 MATCH key* COUNT 10</span><br><span class="line"><span class="meta"> #</span><span class="bash"> 或者</span></span><br><span class="line"> scan 0 MATCH "key* COUNT 10</span><br><span class="line"> </span><br><span class="line"><span class="meta"> #</span><span class="bash"> 它有两个返回值，第一个返回值，表示下一次游标开始的位置，第二个返回值，是一个key的数组，当返回的游标再一次是<span class="string">"0"</span>时，表示遍历完成。（这是唯一迭代结束的判定方式，而不能通过返回结果集是否为空判断迭代结束。）</span></span><br><span class="line">1) "76"</span><br><span class="line">2)  1) "key56"</span><br><span class="line">    2) "key91"</span><br><span class="line">    3) "key17"</span><br><span class="line">    4) "key51"</span><br><span class="line">    5) "key54"</span><br><span class="line">    6) "key86"</span><br><span class="line">    7) "key98"</span><br><span class="line">    8) "key0"</span><br><span class="line">    9) "key41"</span><br><span class="line">   10) "key97"</span><br><span class="line">   11) "key82"</span><br><span class="line">   </span><br><span class="line"><span class="meta">#</span><span class="bash"> 例如，下一次迭代</span></span><br><span class="line">scan 76 MATCH "key*" COUNT 10</span><br></pre></td></tr></table></figure><a id="more"></a>
+
 
 <h3 id="和keys对比"><a href="#和keys对比" class="headerlink" title="和keys对比"></a>和keys对比</h3><p>keys *的缺点</p>
 <ul>
@@ -441,7 +442,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -657,7 +658,31 @@
         
           
         
-        <span class="site-state-item-count">80</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">92</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -725,12 +750,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">206k</span>
+    <span title="站点总字数">234k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:07</span>
+    <span title="站点阅读时长">3:33</span>
 </div>
 
         

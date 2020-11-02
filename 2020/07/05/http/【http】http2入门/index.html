@@ -55,23 +55,23 @@
   };
 </script>
 
-  <meta name="description" content="概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请求时，不用">
+  <meta name="description" content="[TOC]概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请">
 <meta name="keywords" content="入门,http2">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【http】http2入门">
 <meta property="og:url" content="http://yoursite.com/2020/07/05/http/【http】http2入门/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请求时，不用">
+<meta property="og:description" content="[TOC]概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/e2895a9110224e0c9c378dddfd2d5cb8.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/09bfb281d2d34e8cbad71f2e4b201030.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/40bdcc2e7f3f4c9e9233fb37ed3d87ec.png">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/89b01e68c0594163a6ccd8085c529589.png">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.353Z">
+<meta property="og:updated_time" content="2020-10-30T12:57:52.951Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】http2入门">
-<meta name="twitter:description" content="概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请求时，不用">
+<meta name="twitter:description" content="[TOC]概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次请">
 <meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png">
   <link rel="canonical" href="http://yoursite.com/2020/07/05/http/【http】http2入门/">
 
@@ -277,7 +277,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2020-10-30 20:57:52" itemprop="dateModified" datetime="2020-10-30T20:57:52+08:00">2020-10-30</time>
               </span>
             
           
@@ -327,12 +327,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h3 id="HTTP2的核心概念有哪些"><a href="#HTTP2的核心概念有哪些" class="headerlink" title="HTTP2的核心概念有哪些"></a>HTTP2的核心概念有哪些</h3><ul>
+        <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h3 id="HTTP2的核心概念有哪些"><a href="#HTTP2的核心概念有哪些" class="headerlink" title="HTTP2的核心概念有哪些"></a>HTTP2的核心概念有哪些</h3><ul>
 <li>二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式</li>
 <li>请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧））</li>
 <li>服务器推送，一问多答（一次请求多次相应）</li>
 <li>头部压缩，相同的头在同一连接上，在再次请求时，不用显式地传递（客户端和服务端维护一个头索引表）</li>
 </ul><a id="more"></a>
+
 <h3 id="如何查看当前使用的是http哪个协议"><a href="#如何查看当前使用的是http哪个协议" class="headerlink" title="如何查看当前使用的是http哪个协议"></a>如何查看当前使用的是http哪个协议</h3><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png" alt></p>
 <h2 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h2><h3 id="二进制分帧"><a href="#二进制分帧" class="headerlink" title="二进制分帧"></a>二进制分帧</h3><p>HTTP/2 所有性能增强的核心在于新的二进制分帧层，它定义了如何封装 HTTP 消息并在客户端与服务器之间传输。</p>
 <p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/e2895a9110224e0c9c378dddfd2d5cb8.png" alt></p>
@@ -486,7 +487,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -702,7 +703,31 @@
         
           
         
-        <span class="site-state-item-count">80</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">92</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -770,12 +795,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">206k</span>
+    <span title="站点总字数">234k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:07</span>
+    <span title="站点阅读时长">3:33</span>
 </div>
 
         

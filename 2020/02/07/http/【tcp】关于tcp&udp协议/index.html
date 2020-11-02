@@ -63,7 +63,7 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.357Z">
+<meta property="og:updated_time" content="2020-10-31T08:33:24.381Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于 tcp &amp; udp 协议">
 <meta name="twitter:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2020-10-31 16:33:24" itemprop="dateModified" datetime="2020-10-31T16:33:24+08:00">2020-10-31</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.5k</span>
+              <span>2.1k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -308,7 +308,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>1 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -366,8 +366,18 @@
 </tr>
 </tbody></table><a id="more"></a>
 <p>数据在网络上传输，通过网络层的IP地址找到目标主机，通过传输层的端口号定位目标主机上的服务(应用程序)。</p>
-<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><p>传输控制协议（TCP，Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。</p>
-<p>可靠性：TCP为了保证报文传输的可靠，就给每个包一个序号，同时序号也保证了传送到接收端实体的包的按序接收。然后接收端实体对已成功收到的字节发回一个<strong>相应的确认（ACK）</strong>；如果发送端实体在合理的往返时延（RTT）内未收到确认，那么对应的数据（假设丢失了）将会被<strong>重传</strong>。</p>
+<h2 id="TCP（TCP可靠性）"><a href="#TCP（TCP可靠性）" class="headerlink" title="TCP（TCP可靠性）"></a>TCP（TCP可靠性）</h2><p>传输控制协议（TCP，Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。</p>
+<p><strong>可靠性</strong>：TCP为了保证报文传输的可靠，就给每个包一个序号，同时序号也保证了传送到接收端实体的包的按序接收。然后接收端实体对已成功收到的字节发回一个<strong>相应的确认（ACK）</strong>；如果发送端实体在合理的往返时延（RTT）内未收到确认，那么对应的数据（假设丢失了）将会被<strong>重传</strong>。</p>
+<p>TCP如何保证可靠的传输层：<strong>TCP在数据传输之前有三次握手来建立连接，并且在数据传递时，有确认、窗口、重传、拥塞控制机制，在数据传输完之后，还会断开连接用来节约系统资源， 其中确认，重传，流量控制以及报文排序都是基于 syn 的设计来实现的</strong></p>
+<p>TCP 会保证每一个报文都能够抵达对方，它的机制是这样：报文发出去后，必须接收到对方返回的确认报文 ACK，如果迟迟未收到，就会超时重发该报文，直到收到对方的 ACK 为止。<strong>所以，TCP 报文发出去后，并不会立马从内存中删除，因为重传时还需要用到它。</strong>由于 TCP 是内核维护的，所以报文存放在内核缓冲区。如果连接非常多，我们可以通过 free 命令观察到 <code>buff/cache</code> 内存是会增大。</p>
+<h3 id="TCP可靠传输的实现"><a href="#TCP可靠传输的实现" class="headerlink" title="TCP可靠传输的实现"></a>TCP可靠传输的实现</h3><p>TCP 连接的每一端都必须设有两个窗口——一个发送窗口和一个接收窗口。TCP 的可靠传输机制用字节的序号进行控制。TCP 所有的确认都是基于序号而不是基于报文段。发送过的数据未收到确认之前必须保留，以便超时重传时使用。发送窗口没收到确认前不动，收到新的确认前移</p>
+<p><strong>发送缓存</strong>用来暂时存放： 发送应用程序传送给发送方 TCP 准备发送的数据；TCP 已发送出但尚未收到确认的数据。</p>
+<p><strong>接收缓存</strong>用来暂时存放：按序到达的、但尚未被接收应用程序读取的数据； 不按序到达的数据。<br>必须强调三点：</p>
+<ul>
+<li>A 的发送窗口并不总是和 B 的接收窗口一样大（因为有一定的时间滞后）。</li>
+<li>TCP 标准没有规定对不按序到达的数据应如何处理。通常是先临时存放在接收窗口中，等到字节流中所缺少的字节收到后，再按序交付上层的应用进程。</li>
+<li>TCP 要求接收方必须有累积确认的功能，这样可以减小传输开销</li>
+</ul>
 <h2 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h2><p>用户数据报协议（UDP，User Datagram Protocol）为应用程序提供了一种无需建立连接就可以发送封装的 IP 数据报的方法。</p>
 <p>在选择UDP作为传输协议时必须要谨慎。在网络质量令人十分不满意的环境下，UDP协议数据包丢失会比较严重。但是由于UDP的特性：它不属于连接型协议，因而具有资源消耗小，处理速度快的优点，所以通常音频、视频和普通数据在传送时使用UDP较多，因为它们即使偶尔丢失一两个数据包，也不会对接收结果产生太大影响。</p>
 <h2 id="TCP-和-UDP-对比"><a href="#TCP-和-UDP-对比" class="headerlink" title="TCP 和 UDP 对比"></a>TCP 和 UDP 对比</h2><table>
@@ -415,7 +425,7 @@
 </tr>
 </tbody></table>
 <ul>
-<li>TCP提供面向连接的服务，在传送数据之前必须先建立连接，数据传输结束之后要释放连接，TCP不提供多播和广播。并且由于TCP提供可靠的（<strong>TCP在数据传输之前有三次握手来建立连接，并且在数据传递时，有确认、窗口、重传、拥塞控制机制，在数据传输完之后，还会断开连接用来节约系统资源</strong>）、面向连接的运输服务，这些难免会增加系统的开销，如确认，流量控制，计时器以及连接管理，使得首部字节增大很多，还需要占用很多的处理机资源。TCP一般用于文件传输、发送和接受邮件、远程登陆等场景。</li>
+<li>TCP提供面向连接的服务，在传送数据之前必须先建立连接，数据传输结束之后要释放连接，TCP不提供多播和广播。并且由于TCP提供可靠的、面向连接的运输服务，这些难免会增加系统的开销，如确认，流量控制，计时器以及连接管理，使得首部字节增大很多，还需要占用很多的处理机资源。TCP一般用于文件传输、发送和接受邮件、远程登陆等场景。</li>
 <li>UDP传输数据之前不需要先建立连接，<strong>远地主机在收到UDP报文后，不需要给出任何确认</strong>，远地主机假如发现UDP报文段出错，<strong>直接丢弃，也不需要给发送主机返回消息</strong>。</li>
 </ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>百度百科</p>
@@ -518,7 +528,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -734,7 +744,31 @@
         
           
         
-        <span class="site-state-item-count">80</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">92</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -775,7 +809,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#七层模型"><span class="nav-number">1.</span> <span class="nav-text">七层模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP"><span class="nav-number">2.</span> <span class="nav-text">TCP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP"><span class="nav-number">3.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-和-UDP-对比"><span class="nav-number">4.</span> <span class="nav-text">TCP 和 UDP 对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#七层模型"><span class="nav-number">1.</span> <span class="nav-text">七层模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP（TCP可靠性）"><span class="nav-number">2.</span> <span class="nav-text">TCP（TCP可靠性）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP可靠传输的实现"><span class="nav-number">2.1.</span> <span class="nav-text">TCP可靠传输的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP"><span class="nav-number">3.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-和-UDP-对比"><span class="nav-number">4.</span> <span class="nav-text">TCP 和 UDP 对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -802,12 +836,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">206k</span>
+    <span title="站点总字数">234k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:07</span>
+    <span title="站点阅读时长">3:33</span>
 </div>
 
         

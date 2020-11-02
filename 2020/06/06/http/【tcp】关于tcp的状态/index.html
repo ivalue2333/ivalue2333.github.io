@@ -55,18 +55,20 @@
   };
 </script>
 
-  <meta name="description" content="tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步（SYNC">
+  <meta name="description" content="[TOC]tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步">
 <meta name="keywords" content="http,tcp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【http】关于tcp的状态">
 <meta property="og:url" content="http://yoursite.com/2020/06/06/http/【tcp】关于tcp的状态/index.html">
 <meta property="og:site_name" content="blog | percy">
-<meta property="og:description" content="tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步（SYNC">
+<meta property="og:description" content="[TOC]tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.358Z">
+<meta property="og:image" content="https://pic2.zhimg.com/v2-5e3336e73d8b924381f347d0ebab1b71_r.jpg">
+<meta property="og:updated_time" content="2020-10-31T08:10:31.116Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【http】关于tcp的状态">
-<meta name="twitter:description" content="tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步（SYNC">
+<meta name="twitter:description" content="[TOC]tcp 的状态枚举客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;amp;C表示两者，S/C表示两者之一。   状态 解释 所属端    LISTEN 服务器等待从任意远程TCP端口的连接请求。侦听状态。 S   SYN-SENT 客户在发送连接请求后等待匹配的连接请求。通过connect()函数向服务器发出一个同步">
+<meta name="twitter:image" content="https://pic2.zhimg.com/v2-5e3336e73d8b924381f347d0ebab1b71_r.jpg">
   <link rel="canonical" href="http://yoursite.com/2020/06/06/http/【tcp】关于tcp的状态/">
 
 
@@ -271,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2020-10-31 16:10:31" itemprop="dateModified" datetime="2020-10-31T16:10:31+08:00">2020-10-31</time>
               </span>
             
           
@@ -298,7 +300,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>2.5k</span>
+              <span>2.6k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -321,7 +323,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="tcp-的状态枚举"><a href="#tcp-的状态枚举" class="headerlink" title="tcp 的状态枚举"></a>tcp 的状态枚举</h2><p>客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;C表示两者，S/C表示两者之一。</p><table>
+        <p>[TOC]</p><h2 id="tcp-的状态枚举"><a href="#tcp-的状态枚举" class="headerlink" title="tcp 的状态枚举"></a>tcp 的状态枚举</h2><p>客户端和服务端在建立和使用连接时，tcp的状态值也会随之改变。下表为TCP状态码列表，以S指代服务器，C指代客户端，S&amp;C表示两者，S/C表示两者之一。</p><table>
 <thead>
 <tr>
 <th>状态</th>
@@ -386,15 +388,25 @@
 </tr>
 </tbody></table><a id="more"></a>
 
+
 <h2 id="time-wait"><a href="#time-wait" class="headerlink" title="time-wait"></a>time-wait</h2><ul>
 <li>TCP 连接建立后，「主动关闭连接」的一端，收到对方的 FIN 请求后，发送 ACK 响应，会处于 time_wait 状态；</li>
 <li>time_wait 状态，存在的必要性<ul>
-<li>可靠的实现 TCP 全双工连接的终止：四次挥手关闭 TCP 连接过程中，最后的 ACK 是由「主动关闭连接」的一端发出的，如果这个 ACK 丢失，则，对方会重发 FIN 请求，因此，在「主动关闭连接」的一段，需要维护一个 time_wait 状态，处理对方重发的 FIN 请求；</li>
-<li>处理延迟到达的报文：由于路由器可能抖动，TCP 报文会延迟到达，为了避免「延迟到达的 TCP 报文」被误认为是「新 TCP 连接」的数据，则，需要在允许新创建 TCP 连接之前，保持一个不可用的状态，等待所有延迟报文的消失，一般设置为 2 倍的 MSL（报文的最大生存时间），解决「延迟达到的 TCP 报文」问题；</li>
+<li>防止具有相同「四元组」的「旧」数据包被收到；<ul>
+<li>如上图黄色框框服务端在关闭连接之前发送的 <code>SEQ = 301</code> 报文，被网络延迟了。</li>
+<li>这时有相同端口的 TCP 连接被复用后（已经是新的客户端了），被延迟的 <code>SEQ = 301</code> 抵达了客户端，那么客户端是有可能正常接收这个过期的报文，这就会产生数据错乱等严重的问题。</li>
+</ul>
+</li>
+<li>保证「被动关闭连接」的一方能被正确的关闭，即保证最后的 ACK 能让被动关闭方接收，从而帮助其正常关闭；</li>
 </ul>
 </li>
 </ul>
+<h4 id="为什么是-2MSL"><a href="#为什么是-2MSL" class="headerlink" title="为什么是 2MSL"></a>为什么是 2MSL</h4><ul>
+<li>第一点是至少要大于 MSL， 让上个连接服务端发出的所有报文都能被处理，这个时间最大是 MSL</li>
+<li>然后考虑在 4次挥手中主动方最后一次 ack 报文可能在经过了一个MSL 后没有到达 被动方，然后被动方重发 Fin 报文，这个 Fin 报文的最长时间又是 MSL， 所以至少要等待 2MSL，确保如果被动方重发 Fin 报文，主动方一定可以处理。这还只是挥手的过程，如果挥手和上一次请求的时间非常近，那么这也是能处理所有的上个连接的请求。这其实是相当于<strong>至少允许报文丢失一次</strong>。</li>
+</ul>
 <p><strong>一个小思路，如果你的服务处理了一个请求后，这个请求对应的连接立刻进入了time-wait状态，那么很显然你的连接是个短连接，因为长连接会等一段时间后才会由服务端主动释放连接。如果你的服务器上看到这个连接很快进入time-wait，那么就是你的服务端发起了关闭连接的挥手会话（这可能是因为你的客户端进程已经退出了，也可能是你的客户端的请求中http 头部 connection 参数，可能设置为 close）。</strong></p>
+<p><img src="https://pic2.zhimg.com/v2-5e3336e73d8b924381f347d0ebab1b71_r.jpg" alt></p>
 <h3 id="time-wait的危害"><a href="#time-wait的危害" class="headerlink" title="time-wait的危害"></a>time-wait的危害</h3><ul>
 <li>占用连接资源<ul>
 <li>TIME_WAIT占用的1分钟时间内，相同四元组(源地址，源端口，目标地址，目标端口)的连接无法创建，通常一个ip可以开启的端口为net.ipv4.ip_local_port_range指定的32768-61000，如果TIME_WAIT状态过多，会导致无法创建新连接。</li>
@@ -513,7 +525,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -729,7 +741,31 @@
         
           
         
-        <span class="site-state-item-count">80</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">92</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -770,7 +806,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp-的状态枚举"><span class="nav-number">1.</span> <span class="nav-text">tcp 的状态枚举</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#time-wait"><span class="nav-number">2.</span> <span class="nav-text">time-wait</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#time-wait的危害"><span class="nav-number">2.1.</span> <span class="nav-text">time-wait的危害</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#危害的解决方法之一：net-ipv4-tcp-tw-reuse"><span class="nav-number">2.2.</span> <span class="nav-text">危害的解决方法之一：net.ipv4.tcp_tw_reuse</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#危害的解决办法之二：net-ipv4-tcp-tw-recycl（已不推荐）"><span class="nav-number">2.3.</span> <span class="nav-text">危害的解决办法之二：net.ipv4.tcp_tw_recycl（已不推荐）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp-的状态枚举"><span class="nav-number">1.</span> <span class="nav-text">tcp 的状态枚举</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#time-wait"><span class="nav-number">2.</span> <span class="nav-text">time-wait</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#为什么是-2MSL"><span class="nav-number">2.0.1.</span> <span class="nav-text">为什么是 2MSL</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#time-wait的危害"><span class="nav-number">2.1.</span> <span class="nav-text">time-wait的危害</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#危害的解决方法之一：net-ipv4-tcp-tw-reuse"><span class="nav-number">2.2.</span> <span class="nav-text">危害的解决方法之一：net.ipv4.tcp_tw_reuse</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#危害的解决办法之二：net-ipv4-tcp-tw-recycl（已不推荐）"><span class="nav-number">2.3.</span> <span class="nav-text">危害的解决办法之二：net.ipv4.tcp_tw_recycl（已不推荐）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -797,12 +833,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">206k</span>
+    <span title="站点总字数">234k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:07</span>
+    <span title="站点阅读时长">3:33</span>
 </div>
 
         
