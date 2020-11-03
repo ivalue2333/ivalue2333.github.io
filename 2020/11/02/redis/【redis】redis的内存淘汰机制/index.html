@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]内存淘汰机制Redis在使用内存达到某个阈值（通过maxmemory配置)的时候，就会触发内存淘汰机制，选取一些key来删除。内存淘汰有许多策略，下面分别介绍这几种不同的策略。12# maxmemory &amp;lt;bytes&amp;gt; 配置内存阈值# maxmemory-policy noeviction">
+<meta name="keywords" content="redis,内存淘汰机制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【redis】redis的内存淘汰机制">
+<meta property="og:url" content="http://yoursite.com/2020/11/02/redis/【redis】redis的内存淘汰机制/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]内存淘汰机制Redis在使用内存达到某个阈值（通过maxmemory配置)的时候，就会触发内存淘汰机制，选取一些key来删除。内存淘汰有许多策略，下面分别介绍这几种不同的策略。12# maxmemory &amp;lt;bytes&amp;gt; 配置内存阈值# maxmemory-policy noeviction">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-02T11:47:35.479Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【redis】redis的内存淘汰机制">
+<meta name="twitter:description" content="[TOC]内存淘汰机制Redis在使用内存达到某个阈值（通过maxmemory配置)的时候，就会触发内存淘汰机制，选取一些key来删除。内存淘汰有许多策略，下面分别介绍这几种不同的策略。12# maxmemory &amp;lt;bytes&amp;gt; 配置内存阈值# maxmemory-policy noeviction">
+  <link rel="canonical" href="http://yoursite.com/2020/11/02/redis/【redis】redis的内存淘汰机制/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【redis】redis的内存淘汰机制 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/02/redis/【redis】redis的内存淘汰机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【redis】redis的内存淘汰机制
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-02 14:30:59 / 修改时间：19:47:35" itemprop="dateCreated datePublished" datetime="2020-11-02T14:30:59+08:00">2020-11-02</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>7.3k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>7 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="内存淘汰机制"><a href="#内存淘汰机制" class="headerlink" title="内存淘汰机制"></a>内存淘汰机制</h2><p>Redis在使用内存达到某个阈值（通过maxmemory配置)的时候，就会触发内存淘汰机制，选取一些key来删除。内存淘汰有许多策略，下面分别介绍这几种不同的策略。</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> maxmemory &lt;bytes&gt; 配置内存阈值</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> maxmemory-policy noeviction</span></span><br></pre></td></tr></table></figure><a id="more"></a>
+
+
+
+<ul>
+<li>noeviction：当内存不足以容纳新写入数据时，新写入操作会报错。<strong>默认策略</strong></li>
+<li>allkeys-lru：当内存不足以容纳新写入数据时，在键空间（server.db[i].dict）中，移除最近最少使用的key。</li>
+<li>allkeys-random：当内存不足以容纳新写入数据时，在键空间中，随机移除某个key。</li>
+<li>allkeys-lfu： 对所有key使用LFU算法进行删除。</li>
+<li>volatile-lru：当内存不足以容纳新写入数据时，在设置了过期时间的键空间（server.db[i].expires）中，移除最近最少使用的key。</li>
+<li>volatile-random：当内存不足以容纳新写入数据时，在设置了过期时间的键空间中，随机移除某个key。</li>
+<li>volatile-lfu： 对所有设置了过期时间的key使用LFU算法进行删除</li>
+<li>volatile-ttl：当内存不足以容纳新写入数据时，在设置了过期时间的键空间中，有更早过期时间的key优先移除。</li>
+</ul>
+<h3 id="如何选择淘汰机制"><a href="#如何选择淘汰机制" class="headerlink" title="如何选择淘汰机制"></a>如何选择淘汰机制</h3><ul>
+<li>在Redis中，数据有一部分访问频率较高，其余部分访问频率较低，或者无法预测数据的使用频率时，设置allkeys-lru是比较合适的。</li>
+<li>如果所有数据访问概率大致相等时，可以选择allkeys-random。</li>
+<li>如果研发者需要通过设置不同的ttl来判断数据过期的先后顺序，此时可以选择volatile-ttl策略。</li>
+<li>如果希望一些数据能长期被保存，而一些数据可以被淘汰掉时，选择volatile-lru或volatile-random都是比较不错的。</li>
+<li>由于设置expire会消耗额外的内存，如果计划避免Redis内存在此项上的浪费，可以选用allkeys-lru 策略，这样就可以不再设置过期时间，高效利用内存了。</li>
+</ul>
+<h3 id="淘汰机制分类"><a href="#淘汰机制分类" class="headerlink" title="淘汰机制分类"></a>淘汰机制分类</h3><h4 id="lru"><a href="#lru" class="headerlink" title="lru"></a>lru</h4><p>LRU(Least recently used，最近最少使用)算法根据数据的历史访问记录来进行淘汰数据，其核心思想是“如果数据最近被访问过，那么将来被访问的几率也更高”。</p>
+<h4 id="lfu"><a href="#lfu" class="headerlink" title="lfu"></a>lfu</h4><p>LFU， 最近最少使用淘汰</p>
+<h4 id="random"><a href="#random" class="headerlink" title="random"></a>random</h4><p>在随机淘汰的场景下获取待删除的键值对，随机找hash桶再次hash指定位置的dictEntry即可。</p>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><h3 id="内存淘汰主逻辑"><a href="#内存淘汰主逻辑" class="headerlink" title="内存淘汰主逻辑"></a>内存淘汰主逻辑</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">performEvictions</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 算出需要释放多少内存 mem_tofree</span></span><br><span class="line">    <span class="keyword">if</span> (getMaxmemoryState(&amp;mem_reported,<span class="literal">NULL</span>,&amp;mem_tofree,<span class="literal">NULL</span>) == C_OK) &#123;</span><br><span class="line">    	<span class="keyword">return</span> EVICT_OK;</span><br><span class="line">    &#125;</span><br><span class="line">     <span class="keyword">while</span> (mem_freed &lt; (<span class="keyword">long</span> <span class="keyword">long</span>)mem_tofree) &#123;</span><br><span class="line">         <span class="comment">// 先判断是否是 lru, lfu, ttl 策略</span></span><br><span class="line">        <span class="keyword">if</span> (server.maxmemory_policy &amp; (MAXMEMORY_FLAG_LRU|MAXMEMORY_FLAG_LFU) ||</span><br><span class="line">            server.maxmemory_policy == MAXMEMORY_VOLATILE_TTL)</span><br><span class="line">        &#123;</span><br><span class="line">                <span class="comment">/* We don't want to make local-db choices when expiring keys,</span></span><br><span class="line"><span class="comment">                 * so to start populate the eviction pool sampling keys from</span></span><br><span class="line"><span class="comment">                 * every DB. */</span></span><br><span class="line">                <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; server.dbnum; i++) &#123;</span><br><span class="line">                    db = server.db+i;</span><br><span class="line">                    dict = (server.maxmemory_policy &amp; MAXMEMORY_FLAG_ALLKEYS) ?</span><br><span class="line">                            db-&gt;dict : db-&gt;expires;</span><br><span class="line">                    <span class="keyword">if</span> ((keys = dictSize(dict)) != <span class="number">0</span>) &#123;</span><br><span class="line">                        evictionPoolPopulate(i, dict, db-&gt;dict, pool);</span><br><span class="line">                        total_keys += keys;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            	<span class="comment">// 根据策略计算出每一个样本的idle值，值越高，可以理解为匹配度越高，优先删除</span></span><br><span class="line">            	<span class="comment">// 倒序查， 数组后面的更适合被删除</span></span><br><span class="line">                <span class="comment">/* Go backward from best to worst element to evict. */</span></span><br><span class="line">                <span class="keyword">for</span> (k = EVPOOL_SIZE<span class="number">-1</span>; k &gt;= <span class="number">0</span>; k--) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (pool[k].key == <span class="literal">NULL</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* If the key exists, is our pick. Otherwise it is</span></span><br><span class="line"><span class="comment">                     * a ghost and we need to try the next element. */</span></span><br><span class="line">                    <span class="keyword">if</span> (de) &#123;</span><br><span class="line">                        bestkey = dictGetKey(de);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">/* Ghost... Iterate again. */</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            </span><br><span class="line">        &#125;        </span><br><span class="line">         <span class="comment">/* volatile-random and allkeys-random policy */</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (server.maxmemory_policy == MAXMEMORY_ALLKEYS_RANDOM ||</span><br><span class="line">                 server.maxmemory_policy == MAXMEMORY_VOLATILE_RANDOM)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// random 就比较简答了</span></span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">        <span class="comment">/* Finally remove the selected key. */</span></span><br><span class="line">        <span class="keyword">if</span> (bestkey) &#123;</span><br><span class="line">            <span class="comment">// 删除</span></span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">     &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="采样并计算-idle-score"><a href="#采样并计算-idle-score" class="headerlink" title="采样并计算 idle (score)"></a>采样并计算 idle (score)</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">evictionPoolPopulate</span><span class="params">(<span class="keyword">int</span> dbid, dict *sampledict, dict *keydict, struct evictionPoolEntry *pool)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 采样，代码分析见下面</span></span><br><span class="line">    count = dictGetSomeKeys(sampledict,samples,server.maxmemory_samples);</span><br><span class="line">    <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; count; j++) &#123;</span><br><span class="line">    	<span class="comment">// 在这里根据策略来计算得分 </span></span><br><span class="line">    <span class="comment">/* Calculate the idle time according to the policy. This is called</span></span><br><span class="line"><span class="comment"> 		* idle just because the code initially handled LRU, but is in fact</span></span><br><span class="line"><span class="comment"> 		* just a score where an higher score means better candidate. */</span></span><br><span class="line">        pool[k].idle = idle;</span><br><span class="line">		pool[k].dbid = dbid;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="采样"><a href="#采样" class="headerlink" title="采样"></a>采样</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* This function samples the dictionary to return a few keys from random</span></span><br><span class="line"><span class="comment"> * locations.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * It does not guarantee to return all the keys specified in 'count', nor</span></span><br><span class="line"><span class="comment"> * it does guarantee to return non-duplicated elements, however it will make</span></span><br><span class="line"><span class="comment"> * some effort to do both things.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Returned pointers to hash table entries are stored into 'des' that</span></span><br><span class="line"><span class="comment"> * points to an array of dictEntry pointers. The array must have room for</span></span><br><span class="line"><span class="comment"> * at least 'count' elements, that is the argument we pass to the function</span></span><br><span class="line"><span class="comment"> * to tell how many random elements we need.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 数据被存放 des 中， des 是一个数组</span></span><br><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">dictGetSomeKeys</span><span class="params">(dict *d, dictEntry **des, <span class="keyword">unsigned</span> <span class="keyword">int</span> count)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 随机选一个 table</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> i = random() &amp; maxsizemask;</span><br><span class="line">    <span class="comment">// j 用于判断是否处于 rehash 阶段</span></span><br><span class="line">    dictEntry *he = d-&gt;ht[j].table[i];</span><br><span class="line">    <span class="comment">// 向数组中放样本数据</span></span><br><span class="line">    <span class="keyword">while</span> (he) &#123;</span><br><span class="line">        <span class="comment">/* Collect all the elements of the buckets found non</span></span><br><span class="line"><span class="comment">         * empty while iterating. */</span></span><br><span class="line">        *des = he;</span><br><span class="line">        des++;</span><br><span class="line">        <span class="comment">// hash 冲突的链表</span></span><br><span class="line">        he = he-&gt;next;</span><br><span class="line">        stored++;</span><br><span class="line">        <span class="keyword">if</span> (stored == count) <span class="keyword">return</span> stored;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回采样数量</span></span><br><span class="line">    <span class="keyword">return</span> stored;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="redis-LRU-实现"><a href="#redis-LRU-实现" class="headerlink" title="redis LRU 实现"></a>redis LRU 实现</h3><h4 id="如果基于传统-LRU-算法实现-Redis-LRU-会有什么问题？"><a href="#如果基于传统-LRU-算法实现-Redis-LRU-会有什么问题？" class="headerlink" title="如果基于传统 LRU 算法实现 Redis LRU 会有什么问题？"></a>如果基于传统 LRU 算法实现 Redis LRU 会有什么问题？</h4><p>需要额外的数据结构存储，消耗内存。Redis LRU 对传统的 LRU 算法进行了改良，通过随机采样来调整算法的精度。</p>
+<p>如果淘汰策略是 LRU，则根据配置的采样值 maxmemory_samples（默认是 5 个）,随机从数据库中选择 m 个 key, 淘汰其中热度最低的 key 对应的缓存数据。所以采样参数m配置的数值越大, 就越能精确的查找到待淘汰的缓存数据,但是也消耗更多的CPU计算,执行效率降低。</p>
+<h4 id="如何找出热度最低的数据？"><a href="#如何找出热度最低的数据？" class="headerlink" title="如何找出热度最低的数据？"></a>如何找出热度最低的数据？</h4><p>Redis 中所有对象结构都有一个 lru 字段, 且使用了 unsigned 的低 24 位，这个字段用来记录对象的热度。对象被创建时会记录 lru 值。在被访问的时候也会更新 lru 的值。但不是获取系统当前的时间戳，而是设置为全局变量server.lruclock 的值。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对象在被读写时，会更新 lru 时间</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisObject</span> &#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> type:<span class="number">4</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> encoding:<span class="number">4</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> lru:LRU_BITS; <span class="comment">/* LRU time (relative to global lru_clock) or</span></span><br><span class="line"><span class="comment">                            * LFU data (least significant 8 bits frequency</span></span><br><span class="line"><span class="comment">                            * and most significant 16 bits access time). */</span></span><br><span class="line">    <span class="keyword">int</span> refcount;</span><br><span class="line">    <span class="keyword">void</span> *ptr;</span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<h5 id="问题：server-lruclock-的值怎么来的？"><a href="#问题：server-lruclock-的值怎么来的？" class="headerlink" title="问题：server.lruclock 的值怎么来的？"></a>问题：server.lruclock 的值怎么来的？</h5><p>Redis中有个定时处理的函数serverCron，默认每100毫秒调用函数。 updateCachedTime 更新一次全局变量的server.lruclock的值，它记录的是当前unix时间戳。</p>
+<h5 id="问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？"><a href="#问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？" class="headerlink" title="问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？"></a>问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？</h5><p>这样函数 lookupKey 中更新数据的 lru 热度值时,就不用每次调用系统函数 time，可以提高执行效率。</p>
+<p>OK，当对象里面已经有了 LRU 字段的值，就可以评估对象的热度了。  函数 estimateObjectIdleTime 评估指定对象的 lru 热度，<strong>思想就是对象的 lru 值和全局的 server.lruclock 的差值越大（越久没有得到更新）， 该对象热度越低。</strong></p>
+<h5 id="为什么不用常规的哈希表-双向链表的方式实现？"><a href="#为什么不用常规的哈希表-双向链表的方式实现？" class="headerlink" title="为什么不用常规的哈希表+双向链表的方式实现？"></a>为什么不用常规的哈希表+双向链表的方式实现？</h5><p>需要额外的数据结构，消耗资源。而 Redis LRU 算法在 sample 为 10 的情况下，已经能接近传统 LRU 算法了。</p>
+<p>假设 A 在 10 秒内被访问了 5 次，而 B 在 10 秒内被访问了 3 次。因为 B 最后一次被访问的时间比 A 要晚，在同等的情况下，A 反而先被回收。</p>
+<h3 id="redis-LFU-实现"><a href="#redis-LFU-实现" class="headerlink" title="redis LFU 实现"></a>redis LFU 实现</h3><p>当这 24 bits 用作 LFU 时，其被分为两部分：</p>
+<ul>
+<li>高 16 位用来记录访问时间（单位为分钟，ldt，last decrement time）</li>
+<li>低 8 位用来记录访问频率，简称 counter（logc，logistic counter）</li>
+</ul>
+<p>counter 是用基于概率的对数计数器实现的，8 位可以表示百万次的访问频率。对象被读写的时候，lfu 的值会被更新。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Update LFU when an object is accessed.</span></span><br><span class="line"><span class="comment"> * Firstly, decrement the counter if the decrement time is reached.</span></span><br><span class="line"><span class="comment"> * Then logarithmically increment the counter, and update the access time. */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updateLFU</span><span class="params">(robj *val)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> counter = LFUDecrAndReturn(val);</span><br><span class="line">    counter = LFULogIncr(counter);</span><br><span class="line">    val-&gt;lru = (LFUGetTimeInMinutes()&lt;&lt;<span class="number">8</span>) | counter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果计数器只会递增不会递减，也不能体现对象的热度。没有被访问的时候，计数器怎么递减呢？</p>
+<p>减少的值由衰减因子 lfu-decay-time（分钟）来控制，如果值是 1 的话，N 分钟没有访问就要减少 N。  redis.conf 配置文件<code># lfu-decay-time 1</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="title">LFUDecrAndReturn</span><span class="params">(robj *o)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> ldt = o-&gt;lru &gt;&gt; <span class="number">8</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> counter = o-&gt;lru &amp; <span class="number">255</span>;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> num_periods = server.lfu_decay_time ? LFUTimeElapsed(ldt) / server.lfu_decay_time : <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (num_periods)</span><br><span class="line">        counter = (num_periods &gt; counter) ? <span class="number">0</span> : counter - num_periods;</span><br><span class="line">    <span class="keyword">return</span> counter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://cloud.tencent.com/developer/article/1692189" target="_blank" rel="noopener">Redis内存回收知多少</a></p>
+<p><a href="https://juejin.im/post/6844904120533401607" target="_blank" rel="noopener">Redis内存淘汰策略源码分析以及LFU/LRU实现</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/redis/" rel="tag"># redis</a>
+            
+              <a href="/tags/内存淘汰机制/" rel="tag"># 内存淘汰机制</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/11/02/redis/【redis】redis的过期策略及简单源码分析/" rel="next" title="【redis】redis的过期策略及简单源码分析">
+                  <i class="fa fa-chevron-left"></i> 【redis】redis的过期策略及简单源码分析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/11/02/redis/【redis】redis的数据类型/" rel="prev" title="【redis】redis的数据类型">
+                  【redis】redis的数据类型 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">73</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存淘汰机制"><span class="nav-number">1.</span> <span class="nav-text">内存淘汰机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何选择淘汰机制"><span class="nav-number">1.1.</span> <span class="nav-text">如何选择淘汰机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#淘汰机制分类"><span class="nav-number">1.2.</span> <span class="nav-text">淘汰机制分类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#lru"><span class="nav-number">1.2.1.</span> <span class="nav-text">lru</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lfu"><span class="nav-number">1.2.2.</span> <span class="nav-text">lfu</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#random"><span class="nav-number">1.2.3.</span> <span class="nav-text">random</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码分析"><span class="nav-number">2.</span> <span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内存淘汰主逻辑"><span class="nav-number">2.1.</span> <span class="nav-text">内存淘汰主逻辑</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#采样并计算-idle-score"><span class="nav-number">2.1.1.</span> <span class="nav-text">采样并计算 idle (score)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#采样"><span class="nav-number">2.1.2.</span> <span class="nav-text">采样</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-LRU-实现"><span class="nav-number">2.2.</span> <span class="nav-text">redis LRU 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如果基于传统-LRU-算法实现-Redis-LRU-会有什么问题？"><span class="nav-number">2.2.1.</span> <span class="nav-text">如果基于传统 LRU 算法实现 Redis LRU 会有什么问题？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何找出热度最低的数据？"><span class="nav-number">2.2.2.</span> <span class="nav-text">如何找出热度最低的数据？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#问题：server-lruclock-的值怎么来的？"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">问题：server.lruclock 的值怎么来的？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">问题：为什么不获取精确的时间而是放在全局变量中？不会有延迟的问题吗？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#为什么不用常规的哈希表-双向链表的方式实现？"><span class="nav-number">2.2.2.3.</span> <span class="nav-text">为什么不用常规的哈希表+双向链表的方式实现？</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-LFU-实现"><span class="nav-number">2.3.</span> <span class="nav-text">redis LFU 实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">254k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">3:51</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

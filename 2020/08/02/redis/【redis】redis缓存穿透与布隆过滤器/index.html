@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="[TOC]从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？">
-<meta name="keywords" content="redis,缓存,布隆过滤器,缓存穿透">
+<meta name="keywords" content="redis,布隆过滤器,缓存,缓存穿透">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【redis】redis缓存穿透与布隆过滤器">
 <meta property="og:url" content="http://yoursite.com/2020/08/02/redis/【redis】redis缓存穿透与布隆过滤器/index.html">
@@ -399,9 +399,9 @@
             
               <a href="/tags/redis/" rel="tag"># redis</a>
             
-              <a href="/tags/缓存/" rel="tag"># 缓存</a>
-            
               <a href="/tags/布隆过滤器/" rel="tag"># 布隆过滤器</a>
+            
+              <a href="/tags/缓存/" rel="tag"># 缓存</a>
             
               <a href="/tags/缓存穿透/" rel="tag"># 缓存穿透</a>
             
@@ -482,7 +482,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">71</span>
+          <span class="site-state-item-count">73</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -722,7 +722,17 @@
         
           
         
-        <span class="site-state-item-count">92</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">97</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -790,12 +800,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">234k</span>
+    <span title="站点总字数">254k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:33</span>
+    <span title="站点阅读时长">3:51</span>
 </div>
 
         
