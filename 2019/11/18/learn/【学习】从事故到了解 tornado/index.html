@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="从robot-engine事故到了解 tornado[TOC]robot-engine事故问题一：tornado 是多进程还是多线程？它能同时支持多少连接…线上事故作为一个 TB 的产品，我们的很多功能都支持通过导入导入 excel 来让用户批量修改数据，但是在一些情况下，我们的服务却会出现直接拒绝服务的情况">
+<meta name="keywords" content="epoll,nginx,tornado">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【学习】从事故到了解 tornado">
+<meta property="og:url" content="http://yoursite.com/2019/11/18/learn/【学习】从事故到了解 tornado/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="从robot-engine事故到了解 tornado[TOC]robot-engine事故问题一：tornado 是多进程还是多线程？它能同时支持多少连接…线上事故作为一个 TB 的产品，我们的很多功能都支持通过导入导入 excel 来让用户批量修改数据，但是在一些情况下，我们的服务却会出现直接拒绝服务的情况">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://s3.ax1x.com/2020/11/16/DAc3gU.md.png">
+<meta property="og:updated_time" content="2020-11-21T09:36:59.656Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【学习】从事故到了解 tornado">
+<meta name="twitter:description" content="从robot-engine事故到了解 tornado[TOC]robot-engine事故问题一：tornado 是多进程还是多线程？它能同时支持多少连接…线上事故作为一个 TB 的产品，我们的很多功能都支持通过导入导入 excel 来让用户批量修改数据，但是在一些情况下，我们的服务却会出现直接拒绝服务的情况">
+<meta name="twitter:image" content="https://s3.ax1x.com/2020/11/16/DAc3gU.md.png">
+  <link rel="canonical" href="http://yoursite.com/2019/11/18/learn/【学习】从事故到了解 tornado/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【学习】从事故到了解 tornado | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/18/learn/【学习】从事故到了解 tornado/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【学习】从事故到了解 tornado
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-18 19:02:37" itemprop="dateCreated datePublished" datetime="2019-11-18T19:02:37+08:00">2019-11-18</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-21 17:36:59" itemprop="dateModified" datetime="2020-11-21T17:36:59+08:00">2020-11-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="从robot-engine事故到了解-tornado"><a href="#从robot-engine事故到了解-tornado" class="headerlink" title="从robot-engine事故到了解 tornado"></a>从robot-engine事故到了解 tornado</h1><p>[TOC]</p><h2 id="robot-engine事故"><a href="#robot-engine事故" class="headerlink" title="robot-engine事故"></a>robot-engine事故</h2><h3 id="问题一：tornado-是多进程还是多线程？它能同时支持多少连接"><a href="#问题一：tornado-是多进程还是多线程？它能同时支持多少连接" class="headerlink" title="问题一：tornado 是多进程还是多线程？它能同时支持多少连接"></a>问题一：tornado 是多进程还是多线程？它能同时支持多少连接</h3><p>…</p><h3 id="线上事故"><a href="#线上事故" class="headerlink" title="线上事故"></a>线上事故</h3><p>作为一个 TB 的产品，我们的很多功能都支持通过导入导入 excel 来让用户<strong>批量修改</strong>数据，但是在一些情况下，我们的服务却会出现直接拒绝服务的情况</p><a id="more"></a>
+
+
+<h2 id="复现"><a href="#复现" class="headerlink" title="复现"></a>复现</h2><h3 id="第一个实验，-Recv-Q-少于-Send-Q-Recv-Q-的数量逐渐减少"><a href="#第一个实验，-Recv-Q-少于-Send-Q-Recv-Q-的数量逐渐减少" class="headerlink" title="第一个实验， Recv-Q 少于 Send-Q, Recv-Q 的数量逐渐减少"></a>第一个实验， Recv-Q 少于 Send-Q, Recv-Q 的数量逐渐减少</h3><p>Recv-Q：当前 accept 队列的大小，也就是当前已完成三次握手并等待服务端 <code>accept()</code> 的 TCP 连接；</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 服务端 </span></span><br><span class="line">python server.py -s 1</span><br><span class="line"><span class="comment"># 启动后查看， 可以看到是多个进程</span></span><br><span class="line">ps -ef | grep <span class="string">"python server.py"</span></span><br><span class="line"><span class="comment">#		If num_processes is ``None`` or &lt;= 0, we detect the number of cores</span></span><br><span class="line"><span class="comment">#		available on this machine and fork that number of child processes.</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 客户端请求100次</span></span><br><span class="line">./req -path /sleep -count 100</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     92     128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*                             </span><br><span class="line">|root@zjk-qa-k8s-node010 ~</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     84     128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*                  </span><br><span class="line">|root@zjk-qa-k8s-node010 ~</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     76     128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*                  </span><br><span class="line">|root@zjk-qa-k8s-node010 ~</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     68     128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*                  </span><br><span class="line">|root@zjk-qa-k8s-node010 ~</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     36     128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*  </span><br><span class="line">|root@zjk-qa-k8s-node010 ~</span><br><span class="line">|&gt;<span class="comment"># ss -ntl | grep 5001</span></span><br><span class="line">LISTEN     0      128          *:5001                     *:*                  </span><br><span class="line">LISTEN     0      128       [::]:5001                  [::]:*</span><br></pre></td></tr></table></figure>
+
+<h3 id="第二个实验，-Recv-Q-超过-Send-Q"><a href="#第二个实验，-Recv-Q-超过-Send-Q" class="headerlink" title="第二个实验， Recv-Q 超过 Send-Q"></a>第二个实验， Recv-Q 超过 Send-Q</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">python server.py -s 1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 客户端请求1000次</span></span><br><span class="line">./req -path /sleep -count 1000</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">|&gt;<span class="comment"># ./req -path /sleep -count 1000</span></span><br><span class="line">req <span class="keyword">done</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 服务器的并发连接数超过了其承载量，服务器会将其中一些连接关闭</span></span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40056-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40058-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40432-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40436-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40060-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: <span class="built_in">read</span> tcp 127.0.0.1:40062-&gt;127.0.0.1:5001: <span class="built_in">read</span>: connection reset by peer</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: dial tcp 127.0.0.1:5001: i/o timeout</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: dial tcp 127.0.0.1:5001: i/o timeout</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: dial tcp 127.0.0.1:5001: i/o timeout</span><br><span class="line">Get Get <span class="string">"http://127.0.0.1:5001/sleep"</span>: dial tcp 127.0.0.1:5001: i/o timeout</span><br></pre></td></tr></table></figure>
+
+<h3 id="问题二：如果要使用-tornado，如何处理这个问题"><a href="#问题二：如果要使用-tornado，如何处理这个问题" class="headerlink" title="问题二：如果要使用 tornado，如何处理这个问题?"></a>问题二：如果要使用 tornado，如何处理这个问题?</h3><p>开放…</p>
+<h2 id="谣言"><a href="#谣言" class="headerlink" title="谣言"></a>谣言</h2><h3 id="python-“有问题”"><a href="#python-“有问题”" class="headerlink" title="python “有问题”"></a>python “有问题”</h3><p>之前遇到线上的这个问题，不了解 python的同事可能就觉得 python 这个语言有问题，但是实际上这很容易证伪， python 语言下的 Flask 框架就天然没有这个问题。</p>
+<h3 id="tornado-是-“异步的”"><a href="#tornado-是-“异步的”" class="headerlink" title="tornado 是 “异步的”"></a>tornado 是 “异步的”</h3><p>还有就是很多人认为 tornado 是异步的，实际上理解不完全准确。首先大多数场景下，我们使用 tornado 都是在阻塞的使用，其次官方文档中异步主要还是用于 httpclient中，像我们在 configure-tb 中的使用。</p>
+<p><a href="https://imgchr.com/i/DAc3gU" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/11/16/DAc3gU.md.png" alt="DAc3gU.md.png"></a></p>
+<h2 id="相同的模型-–-nginx"><a href="#相同的模型-–-nginx" class="headerlink" title="相同的模型 – nginx"></a>相同的模型 – nginx</h2><p>多进程+事件驱动IO 是一种高效的编程模型，例如 Nginx 就是使用了这种模型。</p>
+<h3 id="问题三，-多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）"><a href="#问题三，-多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）" class="headerlink" title="问题三， 多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）?"></a>问题三， 多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）?</h3><h2 id="惊群现象"><a href="#惊群现象" class="headerlink" title="惊群现象"></a>惊群现象</h2><p>惊群通常发生在server 上，当父进程绑定一个端口监听socket，然后fork出多个子进程，子进程们开始循环处理（比如accept）这个socket。每当用户发起一个TCP连接时，多个子进程同时被唤醒，然后其中一个子进程accept新连接成功，余者皆失败，重新休眠。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">worker  3 return from epoll_wait!</span><br><span class="line">worker  2 return from epoll_wait!</span><br><span class="line">worker  1 return from epoll_wait!</span><br><span class="line">worker  0 return from epoll_wait!</span><br><span class="line">worker 3 accept successed!</span><br><span class="line">worker 2 accept failed!</span><br><span class="line">worker 0 accept failed!</span><br><span class="line">worker 1 accept failed!</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>tornado 作为服务端，其编程模式是多进程+IO多路复用，这种编程模型的好处是能支持10k及以上的并发连接，缺点是一旦一个请求占用时间过长，那么整个系统的可能因为其他请求直接死掉，因为没有其他的线程(worker)来工作了。tornado作为请求的client（tornado也是一个http请求库），他可以实现异步请求。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://tornado-zh.readthedocs.io/zh/latest/guide/intro.html" target="_blank" rel="noopener">tornado</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/epoll/" rel="tag"># epoll</a>
+            
+              <a href="/tags/nginx/" rel="tag"># nginx</a>
+            
+              <a href="/tags/tornado/" rel="tag"># tornado</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/11/08/http/【http】http3了解/" rel="next" title="【rpc】tp99">
+                  <i class="fa fa-chevron-left"></i> 【rpc】tp99
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/12/21/http/【http】关于http请求参数，你想要知道的一切/" rel="prev" title="【http】关于http请求参数，你想要知道的一切">
+                  【http】关于http请求参数，你想要知道的一切 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">113</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#从robot-engine事故到了解-tornado"><span class="nav-number">1.</span> <span class="nav-text">从robot-engine事故到了解 tornado</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#robot-engine事故"><span class="nav-number">1.1.</span> <span class="nav-text">robot-engine事故</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题一：tornado-是多进程还是多线程？它能同时支持多少连接"><span class="nav-number">1.1.1.</span> <span class="nav-text">问题一：tornado 是多进程还是多线程？它能同时支持多少连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线上事故"><span class="nav-number">1.1.2.</span> <span class="nav-text">线上事故</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复现"><span class="nav-number">1.2.</span> <span class="nav-text">复现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一个实验，-Recv-Q-少于-Send-Q-Recv-Q-的数量逐渐减少"><span class="nav-number">1.2.1.</span> <span class="nav-text">第一个实验， Recv-Q 少于 Send-Q, Recv-Q 的数量逐渐减少</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二个实验，-Recv-Q-超过-Send-Q"><span class="nav-number">1.2.2.</span> <span class="nav-text">第二个实验， Recv-Q 超过 Send-Q</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题二：如果要使用-tornado，如何处理这个问题"><span class="nav-number">1.2.3.</span> <span class="nav-text">问题二：如果要使用 tornado，如何处理这个问题?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#谣言"><span class="nav-number">1.3.</span> <span class="nav-text">谣言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#python-“有问题”"><span class="nav-number">1.3.1.</span> <span class="nav-text">python “有问题”</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tornado-是-“异步的”"><span class="nav-number">1.3.2.</span> <span class="nav-text">tornado 是 “异步的”</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相同的模型-–-nginx"><span class="nav-number">1.4.</span> <span class="nav-text">相同的模型 – nginx</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题三，-多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）"><span class="nav-number">1.4.1.</span> <span class="nav-text">问题三， 多进程下，一个请求过来，如何决定是哪个进程处理这个请求（惊群）?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#惊群现象"><span class="nav-number">1.5.</span> <span class="nav-text">惊群现象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">1.7.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">306k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">4:38</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

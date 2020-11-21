@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
+<meta name="keywords" content="epoll,入门,多路复用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【IO】epoll 入门">
+<meta property="og:url" content="http://yoursite.com/2020/11/20/IO/【IO】IO多路复用 epoll 入门/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-21T09:40:14.567Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【IO】epoll 入门">
+<meta name="twitter:description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
+  <link rel="canonical" href="http://yoursite.com/2020/11/20/IO/【IO】IO多路复用 epoll 入门/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【IO】epoll 入门 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/20/IO/【IO】IO多路复用 epoll 入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【IO】epoll 入门
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-20 20:32:39" itemprop="dateCreated datePublished" datetime="2020-11-20T20:32:39+08:00">2020-11-20</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-21 17:40:14" itemprop="dateModified" datetime="2020-11-21T17:40:14+08:00">2020-11-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>4.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>4 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。</p><p>假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请求的时间反而少之又少。（<strong>连接数太多了，每次轮序，有数据的连接可能就1-2个</strong>）</p><a id="more"></a>
+
+
+<p>Linux系统中通常使用epoll模型搭建这种活跃连接较少的服务器，相比select/poll的主动查询，<strong>epoll模型采用基于事件的通知方式，事先为建立连接的文件描述符注册事件，一旦该文件描述符就绪，内核会采用类似callback的回调机制，将文件描述符加入到epoll的指定的文件描述符集中，之后进程再根据该集合中文件描述符的数量，对客户端请求逐一进行处理。</strong></p>
+<p>虽然epoll机制中返回的同样是就绪文件描述符的数量，但epoll中的文件描述符集只存储了就绪的文件描述符，服务器进程无需再扫描所有已连接的文件描述符；且epoll机制使用内存映射机制（类似共享内存），不必再将内核中的文件描述符集复制到内存空间；此外，epoll机制不受进程可打开最大文件描述符数量的限制（只与系统内存有关），可连接远超过默认FD_SETSIZE的进程。</p>
+<p>linux系统中提供了几个与实现epoll机制相关的系统调用——epoll_create()、epoll_ctl()和epoll_wait()，下面将对这些系统调用逐一进行讲解。</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><h3 id="epoll-create"><a href="#epoll-create" class="headerlink" title="epoll_create"></a>epoll_create</h3><p>epoll_create()函数用于创建一个epoll句柄，并请求内核为该实例后期需存储的文件描述符及对应事件预先分配存储空间，该函数存在于函数库sys/poll.h中，其声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>函数中的参数size为在该epoll中<strong>可监听的文件描述符的最大个数</strong>，若该函数调用成功，将返回一个用于引用epoll的句柄；若调用失败，则返回-1，并设置errno。</p>
+<p>当所有与该epoll相关的文件描述符都关闭后，内核会销毁epoll实例并释放相关资源，但若该函数返回的epoll句柄不再被使用，用户应主动调用close()函数将其关闭。</p>
+<h3 id="epoll-ctl"><a href="#epoll-ctl" class="headerlink" title="epoll_ctl"></a>epoll_ctl</h3><p>epoll_ctl()是epoll的事件注册函数，用于将文件描述符添加到epoll的文件描述符集中，或从集合中删除指定文件描述符。该函数存在于函数库sys/poll.h中，其声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>epoll_ctl()函数中的参数epfd为函数epoll_create()返回的epoll句柄；参数op表示epoll_ctl()的动作，该动作的取值由三个宏指定，这些宏及其含义分别如下：</p>
+<p>● EPOLL_CTL_ADD表示epoll_ctl()将会在epfd中为新fd注册事件；</p>
+<p>● EPOLL_CTL_MOD表示epoll_ctl()将会修改已注册的fd监听事件；</p>
+<p>● EPOLL_CTL_DEL表示epoll_ctl()将会删除epfd中监听的fd。</p>
+<p>epoll_ctl()函数的参数fd用于指定待操作的文件描述符；参数event用于设定要监听的事件，该参数是一个struct epoll_event类型的指针，用于传入一个struct epoll_event结构体类型的数组，该结构体的类型定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> &#123;</span></span><br><span class="line">  <span class="keyword">__uint32_t</span>  events;   <span class="comment">//epoll事件</span></span><br><span class="line">  <span class="keyword">epoll_data_t</span> data;    <span class="comment">//用户数据变量</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>struct epoll_event结构体中的成员events表示要监控的事件，该成员可以是由一些单一事件组成的位集，这些单一事件由一组宏表示，宏及其含义分别如下：</p>
+<p>● EPOLLIN表示监控文件描述符fd的读事件（包括socket正常关闭）；</p>
+<p>● EPOLLOUT表示监控fd的写事件；</p>
+<p>● EPOLLPRI表示监控fd的紧急可读事件（有优先数据到达时触发）；</p>
+<p>● EPOLLERR表示监控fd的错误事件；</p>
+<p>● EPOLLHUP表示监控fd的挂断事件；</p>
+<p>● EPOLLET表示将epoll设置为边缘触发（Edge Triggered）模式；</p>
+<p>● EPOLLONESHOT表示只监听一次事件，当此次事件监听完成后，若要再次监听该fd，需将其再次添加到epoll队列中。</p>
+<p>struct epoll_event结构体成员data的数据类型是共用体epoll_data_t，其类型定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">union</span> epoll_data &#123;</span><br><span class="line">  <span class="keyword">void</span>    *ptr;</span><br><span class="line">  <span class="keyword">int</span>     fd;</span><br><span class="line">  <span class="keyword">__uint32_t</span>  u32;</span><br><span class="line">  <span class="keyword">__uint64_t</span>  u64;</span><br><span class="line">&#125; <span class="keyword">epoll_data_t</span>;</span><br></pre></td></tr></table></figure>
+
+<p>可根据程序需要选择不同的成员，后续的案例中将以fd为例进行示范。</p>
+<p>若epoll_ctl()函数调用成功时会返回0；若调用失败，则返回-1，并设置errno。不同于select/poll机制在监听事件时才确定事件的类型，epoll机制在连接建立后便会指定要监控的事件。</p>
+<h3 id="epoll-wait"><a href="#epoll-wait" class="headerlink" title="epoll_wait"></a>epoll_wait</h3><p>epoll_wait()函数用于等待epoll句柄epfd中所监控事件的发生，当有一个或多个事件发生或等待超时后epoll_wait()返回，该函数存在于函数库sys/epoll.h中，其声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>参数epfd为epoll_create()函数返回的句柄；</li>
+<li>参数events指向发生epoll_create()调用时系统事先预备的空间，当有监听的事件发生时，内核会将该事件复制到此段空间中；</li>
+<li>参数maxevents表示events的大小，该值不能超过调用epoll_create()时所传参数size的大小；</li>
+<li>参数timeout的单位为毫秒，用于设置epoll_wait()的工作方式：若设置为0则立即返回，设置为-1则使epoll无限期等待，设置为大于0的值表示epoll等待一定的时长。</li>
+</ul>
+<p>若epoll_wait()函数调用成功时返回就绪文件描述符的数量；若等待超时后并无就绪文件描述符则返回0；若调用失败则返回-1，并设置errno。</p>
+<h2 id="epoll-的工作模式"><a href="#epoll-的工作模式" class="headerlink" title="epoll 的工作模式"></a>epoll 的工作模式</h2><p>epoll有两种工作模式，分别为边缘触发（Edge Triggered）模式和水平触发（LevelTriggered）模式。</p>
+<p><strong>所谓边缘触发，指只有当文件描述符就绪时会触发通知，即便此次通知后系统执行I/O操作只读取了部分数据，文件描述符中仍有数据剩余，也不会再有通知递达，直到该文件描述符从当前的就绪态变为非就绪态，再由非就绪态再次变为就绪态，才会触发第二次通知；此外，接收缓冲区大小为5字节，也就是说ET模式下若只进行一次I/O操作，每次只能接收到5字节的数据。因此系统在收到就绪通知后，应尽量多次地执行I/O操作，直到无法再读出数据为止。</strong></p>
+<p><strong>而水平触发与边缘触发有所不同，即便就绪通知已发送，内核仍会多次检测文件描述符状态，只要文件描述符为就绪态，内核就会继续发送通知。</strong></p>
+<p>epoll的工作模式在调用注册函数epoll_ctl()时确定，由该函数中参数event的成员events指定，默认情况下epoll的工作模式为水平触发，若要将其设置为边缘触发模式，需使用宏EPOLLET对event进行设置，具体示例如下。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">event.events=EPOLLIN|EPOLLET;</span><br></pre></td></tr></table></figure>
+
+<p>之后需在循环中不断调用，保证将文件描述符中的数据全部读出。</p>
+<p>epoll_s.c 中的epoll便工作在水平模式下，为帮助读者理解，下面给出具体案例，来展示epoll在边缘触发模式下如何实现双端通信。ET模式只能工作在非阻塞模式下，否则单纯使用epoll（单进程）将无法同时处理多个文件描述符，因此在实现案例之前，需先掌握设置文件描述符状态的方法，Linux系统中可使用fcntl()函数来设置文件描述符的属性。</p>
+<h3 id="fcntl"><a href="#fcntl" class="headerlink" title="fcntl"></a>fcntl</h3><p>fcntl()函数是Linux中的一个系统调用，其功能为获取或修改已打开文件的性质，该函数存在于函数库fcntl.h中，其声明如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fcntl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> cmd, ... <span class="comment">/* arg */</span> )</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>其中参数fd为被操作的文件描述符，cmd为操作fd的命令（具体取值可参见Linux的manpage），之后的arg用来接收命令cmd所需使用的参数，该值可为空。</p>
+<p>若要通过fcntl()设置文件描述符状态，通常先使用该函数获取fd的当前状态，再对获取的值进行位操作，最后调用fcntl()将操作的结果重新写回文件描述符。如下为修改文件描述符阻塞状态的方法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">flag = fcntl(fd, F_GETFL);   <span class="comment">//宏F_GETEL表示获取文件描述符相关属性</span></span><br><span class="line">flag |= O_NONBLOCK;</span><br><span class="line">fcntl(fd, F_SETFL, flag);   <span class="comment">//使用新属性设置文件描述符</span></span><br></pre></td></tr></table></figure>
+
+<p>函数执行失败，将返回-1并设置errno全局变量来指明错误。</p>
+<h4 id="fcntl-常见指令"><a href="#fcntl-常见指令" class="headerlink" title="fcntl 常见指令"></a>fcntl 常见指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">F_DUPFD     <span class="comment">//复制文件描述符，跟dup()函数功能一样</span></span><br><span class="line">F_GETFD     <span class="comment">//获取文件描述符标志</span></span><br><span class="line">F_SETFD     <span class="comment">//设置文件描述符标志</span></span><br><span class="line">F_GETFL     <span class="comment">//获取文件状态</span></span><br><span class="line">F_SETFL     <span class="comment">//设置文件状态</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="使用fcntl对文件加锁"><a href="#使用fcntl对文件加锁" class="headerlink" title="使用fcntl对文件加锁"></a>使用fcntl对文件加锁</h4><p>当fcntl中的cmd为F_GETLK,F_SETLK,F_SELFKW时为对文件进行锁操作，此时arg参数为flock。注意：<strong>使用fcntl对文件加锁，加锁效果类似于自旋锁，只有写写互斥和读写互斥，读读并不互斥。</strong></p>
+<h2 id="epoll-配合多进程或线程池"><a href="#epoll-配合多进程或线程池" class="headerlink" title="epoll 配合多进程或线程池"></a>epoll 配合多进程或线程池</h2><p>多进程/多线程可单独使用，也可与I/O多路转接服务器结合，通过转接机制监控客户端程序状态，通过多进程/多线程处理用户请求，以期减少资源消耗，提升服务器效率。</p>
+<p>然而大多网络端服务器都有一个特点，即单位时间内需处理的连接请求数目虽然巨大，但处理时间却是极短的，如此，若使用多进程/多线程机制结合I/O多路转接机制搭建的服务器，便需在每时每刻不停地创建、销毁进程或线程，虽说相对进程，线程消耗的资源已相当少，但诸多线程同时创建和销毁，其开销仍是不可忽视的。而Linux系统中的线程池机制便能客服这些问题。</p>
+<p>所谓线程池（Thread Pool），简单来说，就是一个用来放置线程的“池子”。线程池的实现原理如下：当服务器程序启动后，预先在其中创建一定数量的线程，并将这些线程依次加入队列中。在没有客户端请求抵达时，线程队列中的线程都处于阻塞状态，此时这些线程只占用一些内存，但不占用cpu。若随后有用户请求到达，由线程池从线程队列中选出一个空闲线程，并将用户请求传给选出的线程，由该线程完成用户请求。用户请求处理完毕，该线程并不退出，而是再次被加入线程队列，等待下一次任务。此外，若线程队列中处于阻塞状态的线程较多，为节约资源，线程池会自动销毁一部分线程；若线程队列中所有线程都有任务执行，线程池会自动创建一定数量的新线程，以提高服务器效率。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://book.itheima.net/course/223/1277519158031949826/1277529181294436354" target="_blank" rel="noopener">epoll</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/epoll/" rel="tag"># epoll</a>
+            
+              <a href="/tags/入门/" rel="tag"># 入门</a>
+            
+              <a href="/tags/多路复用/" rel="tag"># 多路复用</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/11/20/IO/【IO】IO多路复用 poll 入门 /" rel="next" title="【IO】poll 入门">
+                  <i class="fa fa-chevron-left"></i> 【IO】poll 入门
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/11/20/IO/【IO】IO多路复用 epoll 惊群 /" rel="prev" title="【IO】epoll 惊群">
+                  【IO】epoll 惊群 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">113</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用"><span class="nav-number">2.</span> <span class="nav-text">系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-create"><span class="nav-number">2.1.</span> <span class="nav-text">epoll_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-ctl"><span class="nav-number">2.2.</span> <span class="nav-text">epoll_ctl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-wait"><span class="nav-number">2.3.</span> <span class="nav-text">epoll_wait</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-的工作模式"><span class="nav-number">3.</span> <span class="nav-text">epoll 的工作模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fcntl"><span class="nav-number">3.1.</span> <span class="nav-text">fcntl</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fcntl-常见指令"><span class="nav-number">3.1.1.</span> <span class="nav-text">fcntl 常见指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用fcntl对文件加锁"><span class="nav-number">3.1.2.</span> <span class="nav-text">使用fcntl对文件加锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-配合多进程或线程池"><span class="nav-number">4.</span> <span class="nav-text">epoll 配合多进程或线程池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">306k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">4:38</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

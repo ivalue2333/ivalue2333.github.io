@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]Kafka基本概念Kafka是一个分布式流数据系统，使用Zookeeper进行集群的管理。与其他消息系统类似，整个系统由生产者、Broker Server和消费者三部分组成，生产者和消费者由开发人员编写，通过API连接到Broker Server进行数据操作。我们重点关注三个概念：Topic">
+<meta name="keywords" content="入门,kafka">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【消息队列】kafka 入门">
+<meta property="og:url" content="http://yoursite.com/2020/11/09/message queue/【消息队列】kafka入门/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]Kafka基本概念Kafka是一个分布式流数据系统，使用Zookeeper进行集群的管理。与其他消息系统类似，整个系统由生产者、Broker Server和消费者三部分组成，生产者和消费者由开发人员编写，通过API连接到Broker Server进行数据操作。我们重点关注三个概念：Topic">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHzoZt.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHzjMj.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHTMin.md.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHxRun.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHTzlV.md.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHHL2q.md.png">
+<meta property="og:updated_time" content="2020-11-21T09:41:08.307Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【消息队列】kafka 入门">
+<meta name="twitter:description" content="[TOC]Kafka基本概念Kafka是一个分布式流数据系统，使用Zookeeper进行集群的管理。与其他消息系统类似，整个系统由生产者、Broker Server和消费者三部分组成，生产者和消费者由开发人员编写，通过API连接到Broker Server进行数据操作。我们重点关注三个概念：Topic">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/11/09/BHzoZt.png">
+  <link rel="canonical" href="http://yoursite.com/2020/11/09/message queue/【消息队列】kafka入门/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【消息队列】kafka 入门 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/09/message queue/【消息队列】kafka入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【消息队列】kafka 入门
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-09 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-09T19:40:37+08:00">2020-11-09</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-21 17:41:08" itemprop="dateModified" datetime="2020-11-21T17:41:08+08:00">2020-11-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>6.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>6 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="Kafka基本概念"><a href="#Kafka基本概念" class="headerlink" title="Kafka基本概念"></a>Kafka基本概念</h2><p>Kafka是一个分布式流数据系统，使用Zookeeper进行集群的管理。与其他消息系统类似，整个系统由生产者、Broker Server和消费者三部分组成，生产者和消费者由开发人员编写，通过API连接到Broker Server进行数据操作。我们重点关注三个概念：</p><h3 id="Topic"><a href="#Topic" class="headerlink" title="Topic"></a>Topic</h3><a id="more"></a>
+
+<p>Topic，是Kafka下消息的类别，相当于一条专用的消息通道。对于大多数人来说，在开发的时候只需要关注数据写入到了哪个topic、从哪个topic取出数据。与 pulsar 对比，kafka 没有租户和命名空间的概念，直接就是一个 topic。</p>
+<p>Topic 就是数据主题，是数据记录发布的地方,可以用来区分业务系统。Kafka中的Topics总是多订阅者模式，一个topic可以拥有一个或者多个消费者来订阅它的数据。</p>
+<p>对于每一个topic， Kafka集群都会维持一个分区日志，如下所示：</p>
+<p><a href="https://imgchr.com/i/BHzoZt" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHzoZt.png" alt="BHzoZt.png"></a></p>
+<p>每个分区都是有序且顺序不可变的记录集，并且不断地追加到结构化的commit log文件。分区中的每一个记录都会分配一个id号来表示顺序，我们称之为offset，<em>offset</em>用来唯一的标识分区中每一条记录。</p>
+<p>Kafka 集群保留所有发布的记录—无论他们是否已被消费—并通过一个可配置的参数——保留期限来控制. 举个例子， 如果保留策略设置为2天，一条记录发布后两天内，可以随时被消费，两天过后这条记录会被抛弃并释放磁盘空间。Kafka的性能和数据大小无关，所以长时间存储数据没有什么问题.</p>
+<p><a href="https://imgchr.com/i/BHzjMj" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHzjMj.png" alt="BHzjMj.png"></a></p>
+<p>事实上，在每一个消费者中唯一保存的元数据是offset（偏移量）即消费在log中的位置.偏移量由消费者所控制:通常在读取记录后，消费者会以线性的方式增加偏移量，但是实际上，由于这个位置由消费者控制，所以消费者可以采用任何顺序来消费记录。例如，一个消费者可以重置到一个旧的偏移量，从而重新处理过去的数据；也可以跳过最近的记录，从”现在”开始消费。</p>
+<p>这些细节说明Kafka 消费者是非常廉价的—消费者的增加和减少，对集群或者其他消费者没有多大的影响。比如，你可以使用命令行工具，对一些topic内容执行 tail操作，并不会影响已存在的消费者消费数据。</p>
+<p>日志中的 partition（分区）有以下几个用途。第一，当日志大小超过了单台服务器的限制，允许日志进行扩展。每个单独的分区都必须受限于主机的文件限制，不过一个主题可能有多个分区，因此可以处理无限量的数据。第二，可以作为并行的单元集—关于这一点，更多细节如下</p>
+<h3 id="Partition"><a href="#Partition" class="headerlink" title="Partition"></a>Partition</h3><p>Partition，是Kafka下数据存储的基本单元，这个是物理上的概念。同一个topic的数据，会被分散的存储到多个partition中，这些partition可以在同一台机器上，也可以是在多台机器上，比如下图所示的topic就有4个partition，分散在两台机器上。这种方式在大多数分布式存储中都可以见到，比如MongoDB、Elasticsearch的分片技术，其优势在于：有利于水平扩展，避免单台机器在磁盘空间和性能上的限制，同时可以通过复制来增加数据冗余性，提高容灾能力。为了做到均匀分布，通常partition的数量通常是Broker Server数量的整数倍。<strong>partition 就是 kafka 支持支持消息和消费者横向扩展的基础</strong></p>
+<p>每个分区都有一台 server 作为 “leader”，零台或者多台server作为 follwers 。leader server 处理一切对 partition （分区）的读写请求，而follwers只需被动的同步leader上的数据。当leader宕机了，followers 中的一台服务器会自动成为新的 leader。每台 server 都会成为某些分区的 leader 和某些分区的 follower，因此集群的负载是平衡的。</p>
+<h3 id="Consumer-Group"><a href="#Consumer-Group" class="headerlink" title="Consumer Group"></a>Consumer Group</h3><p>Consumer Group，同样是逻辑上的概念，是Kafka实现单播和广播两种消息模型的手段。同一个topic的数据，会广播给不同的group；同一个group中的worker，只有一个worker能拿到这个数据。换句话说，对于同一个topic，每个group都可以拿到同样的所有数据，但是数据进入group后只能被其中的一个worker消费。group内的worker可以使用多线程或多进程来实现，也可以将进程分散在多台机器上，worker的数量通常不超过partition的数量，且二者最好保持整数倍关系，因为Kafka在设计时假定了一个partition只能被一个worker消费（同一group内）。这里其实已经说得很清楚了。对于一个 group 内的多个worker 来看，就是单播， 对于多个 group 来看，就是广播。与 pulsar 作为对比，不同的 group，相当于 Shared 模式下，不同的 subScribetionName。同一个 group 内的多个 worker， 相当于 Shared 模式下，配置了相同的 subScribetionName的 多个 worker。</p>
+<p><a href="https://imgchr.com/i/BHTMin" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHTMin.md.png" alt="BHTMin.md.png"></a></p>
+<h4 id="分组消费再平衡策略"><a href="#分组消费再平衡策略" class="headerlink" title="分组消费再平衡策略"></a>分组消费再平衡策略</h4><p>当一个group中,有consumer加入或者离开时,会触发partitions均衡partition.assignment.strategy,决定了partition分配给消费者的分配策略，有两种分配策略：</p>
+<h5 id="org-apache-kafka-clients-consumer-RangeAssignor"><a href="#org-apache-kafka-clients-consumer-RangeAssignor" class="headerlink" title="org.apache.kafka.clients.consumer.RangeAssignor"></a>org.apache.kafka.clients.consumer.RangeAssignor</h5><p>默认采用的是这种再平衡方式，这种方式分配只是针对消费者订阅的topic的单个topic所有分区再分配，Consumer Rebalance的算法如下：</p>
+<ul>
+<li>A=(partition数量/同分组消费者总个数) </li>
+<li>M=对上面所得到的A值小数点第一位向上取整 </li>
+<li>计算出该消费者拉取数据的patition合集：Ci = [P(M*i ),P((i + 1) * M -1)]</li>
+</ul>
+<p>例如 partition 有 6个，消费者有8个，他们属于同一个消费组。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">A=6/8=0.75</span><br><span class="line">M=1</span><br><span class="line">C0=[P(1*0),P((0+1)*1-1)]=[P0,P0] </span><br><span class="line">C1=[P(1*1),P((1+1)*1-1)]=[P1,P1] </span><br><span class="line">C2=[P(1*2),P((2+1)*1-1)]=[P2,P2] </span><br><span class="line">C3=[P(1*3),P((3+1)*1-1)]=[P3,P3] </span><br><span class="line">C4=[P(1*4),P((4+1)*1-1)]=[P4,P4] </span><br><span class="line">C5=[P(1*5),P((5+1)*1-1)]=[P5,P5] </span><br><span class="line">C6=[P(1*6),P((6+1)*1-1)]=[P6,P6] </span><br><span class="line">C7=[P(1*7),P((7+1)*1-1)]=[P7,P7]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 但是partition只有P0-P5根本就没有P6和P7，所以这两个消费者相当于是会被闲置的，就相当于占用资源，却没什么用，所以在这里真正起到作用的就是C0-C5。</span></span><br></pre></td></tr></table></figure>
+
+<p>例如 partition 有 6个，消费者有5个，他们属于同一个消费组。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">A=6/5=1.2 </span><br><span class="line">M=2</span><br><span class="line"></span><br><span class="line">C0=[P(2*0),P((0+1)*2-1)]=[P0,P1] </span><br><span class="line">C1=[P(2*1),P((1+1)*2-1)]=[P2,P3] </span><br><span class="line">C2=[P(2*2),P((2+1)*2-1)]=[P4,P5]</span><br><span class="line">C3=[P(2*3),P((3+1)*2-1)]=[P6,P7] </span><br><span class="line">C4=[P(2*4),P((4+1)*2-1)]=[P8,P9]</span><br><span class="line"><span class="comment"># 同上面一样C3和C4没有起到任何作用。</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h5><ul>
+<li>按照如上的算法，所以如果kafka的消费组需要增加组员，最多增加到和partition数量一致，超过的组员只会占用资源，而不起作用；</li>
+<li>kafka的partition的个数一定要大于消费组组员的个数，并且partition的个数对于消费组组员取模一定要为0，不然有些消费者会占用资源却不起作用；</li>
+</ul>
+<h4 id="分组成员的存活检测"><a href="#分组成员的存活检测" class="headerlink" title="分组成员的存活检测"></a>分组成员的存活检测</h4><p>分组消费有一个比较好的功能就是自动检测失败的消费者并将其踢出分组，然后重新进行分区分配。那么kafka是如何检测失败的消费者的呢。我们就拿0.10.x为例进行讲解说明。</p>
+<p>消费着订阅了一组的topic后，会在调用poll(long)函数的时候加入分组，分组内新增消费者就会进行再平衡。Poll 函数的设计目标就是来保证消费者存活的。只要持续不断的调用poll函数，消费者就会留在分组里，连续的从分配给他的分区里消费消息。</p>
+<h5 id="存活检测-live"><a href="#存活检测-live" class="headerlink" title="存活检测 (live)"></a>存活检测 (live)</h5><p>消费者也会使用一个后台线程发送周期性的心跳给broker。如果消费者挂掉或者无法在session.timeout.ms时间范围内发送心跳，消费者会被视为死亡，它的分区就会被重新分配。<strong>心跳检测能保证消费者存活。</strong></p>
+<h5 id="活跃检测-active"><a href="#活跃检测-active" class="headerlink" title="活跃检测 (active)"></a>活跃检测 (active)</h5><p>由于心跳是后台线程周期性发送的，那么会存在消费者心跳正常发送，但是不消费消息的情况。为了避免这种消费者无限期的占用分配给他的分区这种情况，kafka提供了一种活跃检测机制，使用max.poll.interval.ms配置。根本上来说，<strong>两次调用poll函数的间隔大于该值，消费者就会离开分组，然后它的分区会被其它消费着消费。</strong>当发生这种情况时，你会收到一个offset提交失败的异常。这种机制确保了只有活跃的消费者才能提交offset。<strong>poll 的时间间隔检测能保证消费者的活跃 active</strong></p>
+<h2 id="生产者，消费者【非常好的描述】"><a href="#生产者，消费者【非常好的描述】" class="headerlink" title="生产者，消费者【非常好的描述】"></a>生产者，消费者【非常好的描述】</h2><h3 id="生产者"><a href="#生产者" class="headerlink" title="生产者"></a>生产者</h3><p>生产者可以将数据发布到所选择的topic（主题）中。生产者负责将记录分配到topic的哪一个 partition（分区）中。可以使用循环的方式来简单地实现负载均衡，也可以根据某些语义分区函数(例如：记录中的key)来完成。下面会介绍更多关于分区的使用。</p>
+<h3 id="消费者"><a href="#消费者" class="headerlink" title="消费者"></a>消费者</h3><p>消费者使用一个 <em>消费组</em> 名称来进行标识，发布到topic中的每条记录被分配给订阅消费组中的一个消费者实例.消费者实例可以分布在多个进程中或者多个机器上。</p>
+<ul>
+<li><p>如果所有的消费者实例在同一消费组中，消息记录会负载平衡到一个消费者实例（只有一个消费者实例能消费一条消息）.</p>
+</li>
+<li><p>如果所有的消费者实例在不同的消费组中，每条消息记录会广播到所有的消费者进程（所有的消费者都能想消费同一条消息）.</p>
+</li>
+</ul>
+<p><a href="https://imgchr.com/i/BHxRun" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHxRun.png" alt="BHxRun.png"></a></p>
+<p>如图，这个 Kafka 集群有两台 server 的，四个分区(p0-p3)和两个消费者组。消费组A有两个消费者，消费组B有四个消费者。</p>
+<p>通常情况下，每个 topic 都会有一些消费组，<strong>一个消费组对应一个”逻辑订阅者”</strong>。一个消费组由许多消费者实例组成，便于扩展和容错。这就是发布和订阅的概念，只不过订阅者是一组消费者而不是单个的进程。</p>
+<p>在Kafka中实现消费的方式是将日志中的分区划分到每一个消费者实例上，以便在任何时间，<strong>每个实例都是分区唯一的消费者</strong>。维护消费组中的消费关系由Kafka协议动态处理。如果新的实例加入组，他们将从组中其他成员处接管一些 partition 分区;如果一个实例消失，拥有的分区将被分发到剩余的实例。</p>
+<p>Kafka 只保证分区内的记录是有序的，而不保证主题中不同分区的顺序。每个 partition 分区按照key值排序足以满足大多数应用程序的需求。但如果你需要总记录在所有记录的上面，可使用仅有一个分区的主题来实现，这意味着每个消费者组只有一个消费者进程。</p>
+<h2 id="kafka的保证"><a href="#kafka的保证" class="headerlink" title="kafka的保证"></a>kafka的保证</h2><p>high-level Kafka给予以下保证:</p>
+<ul>
+<li>生产者发送到特定topic partition 的消息将按照发送的顺序处理。 也就是说，如果记录M1和记录M2由相同的生产者发送，并先发送M1记录，那么M1的偏移比M2小，并在日志中较早出现</li>
+<li>一个消费者实例按照日志中的顺序查看记录.</li>
+<li>对于具有N个副本的主题，我们最多容忍N-1个服务器故障，从而保证不会丢失任何提交到日志中的记录.</li>
+</ul>
+<h3 id="如何保证数据不丢失"><a href="#如何保证数据不丢失" class="headerlink" title="如何保证数据不丢失"></a>如何保证数据不丢失</h3><h4 id="broker如何保证数据的不丢失"><a href="#broker如何保证数据的不丢失" class="headerlink" title="broker如何保证数据的不丢失"></a>broker如何保证数据的不丢失</h4><ul>
+<li>acks=all : 所有副本都写入成功并确认。</li>
+<li>retries = 一个合理值。</li>
+<li>min.insync.replicas=2 消息至少要被写入到这么多副本才算成功。</li>
+<li>unclean.leader.election.enable=false 关闭unclean leader选举，即不允许非ISR中的副本被选举为leader，以避免数据丢失。</li>
+</ul>
+<h4 id="consumer如果保证数据得不丢失"><a href="#consumer如果保证数据得不丢失" class="headerlink" title="consumer如果保证数据得不丢失"></a>consumer如果保证数据得不丢失</h4><p>enable.auto.commit=false 关闭自动提交offset。</p>
+<h2 id="kafka的使用"><a href="#kafka的使用" class="headerlink" title="kafka的使用"></a>kafka的使用</h2><h3 id="Kafka作为消息系统"><a href="#Kafka作为消息系统" class="headerlink" title="Kafka作为消息系统"></a>Kafka作为消息系统</h3><p>传统的消息系统有两个模块: 队列 和 发布-订阅。 在队列中，消费者池从server读取数据，每条记录被池子中的一个消费者消费; 在发布订阅中，记录被广播到所有的消费者。两者均有优缺点。 队列的优点在于它允许你将处理数据的过程分给多个消费者实例，使你可以扩展处理过程。 不好的是，队列不是多订阅者模式的—一旦一个进程读取了数据，数据就会被丢弃。 而发布-订阅系统允许你广播数据到多个进程，但是无法进行扩展处理，因为每条消息都会发送给所有的订阅者。</p>
+<p>消费组在Kafka有两层概念。在队列中，消费组允许你将处理过程分发给一系列进程(消费组中的成员)。 在发布订阅中，Kafka允许你将消息广播给多个消费组。</p>
+<p>Kafka的优势在于每个topic都有以下特性—可以扩展处理并且允许多订阅者模式—不需要只选择其中一个.</p>
+<p>Kafka相比于传统消息队列还具有更严格的顺序保证 ……</p>
+<p>Kafka 设计的更好。topic中的partition是一个并行的概念。 Kafka能够为一个消费者池提供顺序保证和负载平衡，是通过将topic中的partition分配给消费者组中的消费者来实现的， 以便每个分区由消费组中的一个消费者消耗。通过这样，我们能够确保消费者是该分区的唯一读者，并按顺序消费数据。 众多分区保证了多个消费者实例间的负载均衡。但请注意，消费者组中的消费者实例个数不能超过分区的数量。</p>
+<h3 id="Kafka-作为存储系统"><a href="#Kafka-作为存储系统" class="headerlink" title="Kafka 作为存储系统"></a>Kafka 作为存储系统</h3><p>许多消息队列可以发布消息，除了消费消息之外还可以充当中间数据的存储系统。那么Kafka作为一个优秀的存储系统有什么不同呢?</p>
+<p>数据写入Kafka后被写到磁盘，并且进行备份以便容错。直到完全备份，Kafka才让生产者认为完成写入，即使写入失败Kafka也会确保继续写入</p>
+<p>Kafka使用磁盘结构，具有很好的扩展性—50kb和50TB的数据在server上表现一致。</p>
+<p>可以存储大量数据，并且可通过客户端控制它读取数据的位置，您可认为Kafka是一种高性能、低延迟、具备日志存储、备份和传播功能的分布式文件系统。</p>
+<h3 id="Kafka用做流处理"><a href="#Kafka用做流处理" class="headerlink" title="Kafka用做流处理"></a>Kafka用做流处理</h3><p>Kafka 流处理不仅仅用来读写和存储流式数据，它最终的目的是为了能够进行实时的流处理。</p>
+<p>在Kafka中，流处理器不断地从输入的topic获取流数据，处理数据后，再不断生产流数据到输出的topic中去。</p>
+<h2 id="多种消费者模式"><a href="#多种消费者模式" class="headerlink" title="多种消费者模式"></a>多种消费者模式</h2><h3 id="生产消费者模式"><a href="#生产消费者模式" class="headerlink" title="生产消费者模式"></a>生产消费者模式</h3><p>搞清楚了Kafka的基本概念后，我们来看如何设计生产消费者模式来实现上述的“数据接入”场景。在下图中，由Producer负责接收前端上报的数据，投递到对应的topic中（这里忽略了Broker Server的细节），在Consumer端，所有对该数据感兴趣的业务都可以建立自己的group来消费数据，<strong>至于group内部开多少个worke来消费完全取决于数据量和业务的实时性要求了。</strong></p>
+<p><a href="https://imgchr.com/i/BHTzlV" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHTzlV.md.png" alt="BHTzlV.md.png"></a></p>
+<h3 id="发布订阅模式"><a href="#发布订阅模式" class="headerlink" title="发布订阅模式"></a>发布订阅模式</h3><p>再来看“事件分发”的场景，假如我们有“收藏”、“下单”、“付款”三个事件，业务一对“收藏”和“下单”事件感兴趣，而业务二对“下单”和“付款”事件感兴趣，那么我们如何进行事件订阅？<strong>Kafka只提供了单播和广播的消息模型，无法直接进行消费对象的绑定</strong>，所以理论上Kafka是不适合做此种场景下的订阅发布模式的，如果一定要做，有这么几个方案：</p>
+<ul>
+<li>方案一：继续使用上述生产消费者的模式，在不同的group中过滤出自己感兴趣的事件数据，然后进行处理。这种方式简单有效，缺点就是每个group都会收到很多自己不感兴趣的垃圾数据。</li>
+<li>方案二：把每个事件的数据推送到不同的topic中，即以事件名称来作为topic分类，在Consumer端，建立自己的group来消费自己感兴趣的一组topic。这种方式适用于事件个数可以明确评估并且数量较少，如果事件种类很多，会导致topic的数量过多，创建过多的topic和partition则会影响到Kafka的性能，因为Kafka的每个Topic、每个分区都会对应一个物理文件，当Topic数量增加时，消息分散的落盘策略会导致磁盘IO竞争激烈成为瓶颈。</li>
+</ul>
+<p><a href="https://imgchr.com/i/BHHL2q" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/09/BHHL2q.md.png" alt="BHHL2q.md.png"></a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://kafka.apachecn.org/intro.html" target="_blank" rel="noopener">官方文档，看这一篇就够了</a></p>
+<p><a href="https://blog.csdn.net/wobuaizhi/article/details/80950387" target="_blank" rel="noopener">kafka分区（partition）和和分组（group）</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1639449" target="_blank" rel="noopener">Kafka下的生产消费者模式与订阅发布模式</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/入门/" rel="tag"># 入门</a>
+            
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/11/09/message queue/【消息队列】消息队列入门/" rel="next" title="【消息队列】消息队列入门">
+                  <i class="fa fa-chevron-left"></i> 【消息队列】消息队列入门
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/11/11/learn/【学习】如何保证业务幂等性/" rel="prev" title="【学习】如何保证业务的幂等性">
+                  【学习】如何保证业务的幂等性 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">113</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka基本概念"><span class="nav-number">1.</span> <span class="nav-text">Kafka基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Topic"><span class="nav-number">1.1.</span> <span class="nav-text">Topic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Partition"><span class="nav-number">1.2.</span> <span class="nav-text">Partition</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Consumer-Group"><span class="nav-number">1.3.</span> <span class="nav-text">Consumer Group</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分组消费再平衡策略"><span class="nav-number">1.3.1.</span> <span class="nav-text">分组消费再平衡策略</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#org-apache-kafka-clients-consumer-RangeAssignor"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">org.apache.kafka.clients.consumer.RangeAssignor</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#小结"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分组成员的存活检测"><span class="nav-number">1.3.2.</span> <span class="nav-text">分组成员的存活检测</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#存活检测-live"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">存活检测 (live)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#活跃检测-active"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">活跃检测 (active)</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生产者，消费者【非常好的描述】"><span class="nav-number">2.</span> <span class="nav-text">生产者，消费者【非常好的描述】</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#生产者"><span class="nav-number">2.1.</span> <span class="nav-text">生产者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消费者"><span class="nav-number">2.2.</span> <span class="nav-text">消费者</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka的保证"><span class="nav-number">3.</span> <span class="nav-text">kafka的保证</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证数据不丢失"><span class="nav-number">3.1.</span> <span class="nav-text">如何保证数据不丢失</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#broker如何保证数据的不丢失"><span class="nav-number">3.1.1.</span> <span class="nav-text">broker如何保证数据的不丢失</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer如果保证数据得不丢失"><span class="nav-number">3.1.2.</span> <span class="nav-text">consumer如果保证数据得不丢失</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka的使用"><span class="nav-number">4.</span> <span class="nav-text">kafka的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka作为消息系统"><span class="nav-number">4.1.</span> <span class="nav-text">Kafka作为消息系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka-作为存储系统"><span class="nav-number">4.2.</span> <span class="nav-text">Kafka 作为存储系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka用做流处理"><span class="nav-number">4.3.</span> <span class="nav-text">Kafka用做流处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多种消费者模式"><span class="nav-number">5.</span> <span class="nav-text">多种消费者模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#生产消费者模式"><span class="nav-number">5.1.</span> <span class="nav-text">生产消费者模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#发布订阅模式"><span class="nav-number">5.2.</span> <span class="nav-text">发布订阅模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">306k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">4:38</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>
