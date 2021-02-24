@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]设计原理监控循环启动 sysmon当 Go 语言程序启动时，运行时会在第一个 Goroutine 中调用 runtime.main 启动主程序，该函数会在系统栈中创建新的线程：123456789func main() &amp;#123;	...	if GOARCH != &quot;wasm&quot; &amp;#123;		systemstack(func() &amp;#123;			newm(sysmon, nil)">
+<meta name="keywords" content="并发,GPM,Golang,sysmon,守护线程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang 系统监控 sysmon">
+<meta property="og:url" content="http://yoursite.com/2021/01/27/concurrent/Golang 系统监控 sysmon/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]设计原理监控循环启动 sysmon当 Go 语言程序启动时，运行时会在第一个 Goroutine 中调用 runtime.main 启动主程序，该函数会在系统栈中创建新的线程：123456789func main() &amp;#123;	...	if GOARCH != &quot;wasm&quot; &amp;#123;		systemstack(func() &amp;#123;			newm(sysmon, nil)">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-02-24T11:43:30.953Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Golang 系统监控 sysmon">
+<meta name="twitter:description" content="[TOC]设计原理监控循环启动 sysmon当 Go 语言程序启动时，运行时会在第一个 Goroutine 中调用 runtime.main 启动主程序，该函数会在系统栈中创建新的线程：123456789func main() &amp;#123;	...	if GOARCH != &quot;wasm&quot; &amp;#123;		systemstack(func() &amp;#123;			newm(sysmon, nil)">
+  <link rel="canonical" href="http://yoursite.com/2021/01/27/concurrent/Golang 系统监控 sysmon/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Golang 系统监控 sysmon | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/01/27/concurrent/Golang 系统监控 sysmon/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">Golang 系统监控 sysmon
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2021-01-27 15:05:46" itemprop="dateCreated datePublished" datetime="2021-01-27T15:05:46+08:00">2021-01-27</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/并发/" itemprop="url" rel="index"><span itemprop="name">并发</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.6k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>2 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="设计原理"><a href="#设计原理" class="headerlink" title="设计原理"></a>设计原理</h2><h2 id="监控循环"><a href="#监控循环" class="headerlink" title="监控循环"></a>监控循环</h2><h3 id="启动-sysmon"><a href="#启动-sysmon" class="headerlink" title="启动 sysmon"></a>启动 sysmon</h3><p>当 Go 语言程序启动时，运行时会在第一个 Goroutine 中调用 runtime.main 启动主程序，该函数会在系统栈中创建新的线程：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> GOARCH != <span class="string">"wasm"</span> &#123;</span><br><span class="line">		systemstack(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			newm(sysmon, <span class="literal">nil</span>)</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+
+
+<p><strong>runtime.newm -&gt; runtime.newm1 -&gt; runtime.newsproc -&gt; runtime.sysmon</strong></p>
+<ul>
+<li>在新创建的线程中，我们会执行存储在 runtime.m 中的 runtime.sysmon 启动系统监控.</li>
+<li>运行时执行系统监控不需要处理器，系统监控的 Goroutine 会直接在创建的线程上运行.</li>
+</ul>
+<p><strong>sysmon 会在循环中完成以下的工作：</strong></p>
+<ul>
+<li>检查死锁</li>
+<li>运行计时器 — 获取下一个需要被触发的计时器；</li>
+<li>轮询网络 — 获取需要处理的到期文件描述符；</li>
+<li>抢占处理器 — 抢占运行时间较长的或者处于系统调用的 Goroutine；</li>
+<li>垃圾回收 — 在满足条件时触发垃圾收集回收内存；</li>
+</ul>
+<h4 id="sysmon-循环休眠时间"><a href="#sysmon-循环休眠时间" class="headerlink" title="sysmon 循环休眠时间"></a>sysmon 循环休眠时间</h4><p>系统监控在每次循环开始时都会通过 <code>usleep</code> 挂起当前线程，该函数的参数是微秒，运行时会遵循以下的规则决定休眠时间：</p>
+<ul>
+<li>初始的休眠时间是 20μs；</li>
+<li>最长的休眠时间是 10ms；</li>
+<li>当系统监控在 50 个循环中都没有唤醒 Goroutine 时，休眠时间在每个循环都会倍增；</li>
+</ul>
+<h4 id="检查死锁"><a href="#检查死锁" class="headerlink" title="检查死锁"></a>检查死锁</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">checkdead</span><span class="params">()</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">for</span> _, _p_ := <span class="keyword">range</span> allp &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(_p_.timers) &gt; <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	throw(<span class="string">"all goroutines are asleep - deadlock!"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>省略</p>
+<h3 id="运行计时器"><a href="#运行计时器" class="headerlink" title="运行计时器"></a>运行计时器</h3><p>省略</p>
+<h3 id="轮询网络"><a href="#轮询网络" class="headerlink" title="轮询网络"></a>轮询网络</h3><p>如果上一次轮询网络已经过去了 10ms，那么系统监控还会在循环中轮询网络，检查是否有待执行的文件描述符：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sysmon</span><span class="params">()</span></span> &#123;</span><br><span class="line">    	lastpoll := <span class="keyword">int64</span>(atomic.Load64(&amp;sched.lastpoll))</span><br><span class="line">		<span class="keyword">if</span> netpollinited() &amp;&amp; lastpoll != <span class="number">0</span> &amp;&amp; lastpoll+<span class="number">10</span>*<span class="number">1000</span>*<span class="number">1000</span> &lt; now &#123;</span><br><span class="line">			atomic.Cas64(&amp;sched.lastpoll, <span class="keyword">uint64</span>(lastpoll), <span class="keyword">uint64</span>(now))</span><br><span class="line">            <span class="comment">// 非阻塞地调用 runtime.netpoll 检查待执行的文件描述符并通过 runtime.injectglist 将所有处于就绪状态的 Goroutine 加入全局运行队列中：</span></span><br><span class="line">			list := netpoll(<span class="number">0</span>) <span class="comment">// non-blocking - returns list of goroutines</span></span><br><span class="line">			<span class="keyword">if</span> !list.empty() &#123;</span><br><span class="line">				<span class="comment">// Need to decrement number of idle locked M's</span></span><br><span class="line">				<span class="comment">// (pretending that one more is running) before injectglist.</span></span><br><span class="line">				<span class="comment">// Otherwise it can lead to the following situation:</span></span><br><span class="line">				<span class="comment">// injectglist grabs all P's but before it starts M's to run the P's,</span></span><br><span class="line">				<span class="comment">// another M returns from syscall, finishes running its G,</span></span><br><span class="line">				<span class="comment">// observes that there is no work to do and no other running M's</span></span><br><span class="line">				<span class="comment">// and reports deadlock.</span></span><br><span class="line">				incidlelocked(<span class="number">-1</span>)</span><br><span class="line">				injectglist(&amp;list)</span><br><span class="line">				incidlelocked(<span class="number">1</span>)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该函数会将所有 Goroutine 的状态从 _Gwaiting 切换至 _Grunnable 并加入全局运行队列等待运行，如果当前程序中存在空闲的处理器，会通过 runtime.startm 启动线程来执行这些任务。</p>
+<h3 id="抢占处理器"><a href="#抢占处理器" class="headerlink" title="抢占处理器"></a>抢占处理器</h3><p>系统监控会在循环中调用 runtime.retake 抢占处于运行或者系统调用中的处理器，该函数会遍历运行时的全局处理器，每个处理器都存储了一个 runtime.sysmontick</p>
+<ul>
+<li><p>当处理器处于 _Prunning 或者 _Psyscall 状态时，如果上一次触发调度的时间已经过去了 10ms，我们会通过 <strong>runtime.preemptone</strong> 抢占当前处理器；</p>
+</li>
+<li><p>当处理器处于 _Psyscall 状态时，在满足以下两种情况下会调用 <strong>runtime.handoffp</strong> 让出处理器的使用权：</p>
+<ul>
+<li><p>当处理器的运行队列不为空或者不存在空闲处理器时2；</p>
+</li>
+<li><p>当系统调用时间超过了 10ms 时3；</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>系统监控通过在循环中抢占处理器来避免同一个 Goroutine 占用线程太长时间造成饥饿问题。</p>
+<h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><p>在最后，系统监控还会决定是否需要触发强制垃圾回收，runtime.sysmon 会构建 runtime.gcTrigger 并调用 runtime.gcTrigger.test 方法判断是否需要触发垃圾回收：</p>
+<p><strong>如果需要触发垃圾回收，我们会将用于垃圾回收的 Goroutine 加入全局队列，让调度器选择合适的处理器去执行。</strong></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>运行时通过系统监控来触发线程的抢占、网络的轮询和垃圾回收，保证 Go 语言运行时的可用性。系统监控能够很好地解决尾延迟的问题，减少调度器调度 Goroutine 的饥饿问题并保证计时器在尽可能准确的时间触发。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-sysmon/" target="_blank" rel="noopener">原文：系统监控</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/并发/" rel="tag"># 并发</a>
+            
+              <a href="/tags/GPM/" rel="tag"># GPM</a>
+            
+              <a href="/tags/Golang/" rel="tag"># Golang</a>
+            
+              <a href="/tags/sysmon/" rel="tag"># sysmon</a>
+            
+              <a href="/tags/守护线程/" rel="tag"># 守护线程</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2021/01/26/concurrent/Golang GPM/" rel="next" title="Golang GPM">
+                  <i class="fa fa-chevron-left"></i> Golang GPM
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2021/01/29/golang/Golang context/" rel="prev" title="Golang context">
+                  Golang context <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计原理"><span class="nav-number">1.</span> <span class="nav-text">设计原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监控循环"><span class="nav-number">2.</span> <span class="nav-text">监控循环</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#启动-sysmon"><span class="nav-number">2.1.</span> <span class="nav-text">启动 sysmon</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sysmon-循环休眠时间"><span class="nav-number">2.1.1.</span> <span class="nav-text">sysmon 循环休眠时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#检查死锁"><span class="nav-number">2.1.2.</span> <span class="nav-text">检查死锁</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行计时器"><span class="nav-number">2.2.</span> <span class="nav-text">运行计时器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#轮询网络"><span class="nav-number">2.3.</span> <span class="nav-text">轮询网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抢占处理器"><span class="nav-number">2.4.</span> <span class="nav-text">抢占处理器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#垃圾回收"><span class="nav-number">2.5.</span> <span class="nav-text">垃圾回收</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">404k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

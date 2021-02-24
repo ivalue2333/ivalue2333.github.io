@@ -224,7 +224,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/09/message queue/消息队列之入门/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -240,7 +240,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/" class="post-title-link" itemprop="url">【分布式系统实例】elasticsearch集群之概述</a>
+              <a href="/2020/11/09/message queue/消息队列之入门/" class="post-title-link" itemprop="url">消息队列之入门</a>
             
           </h1>
         
@@ -256,7 +256,7 @@
                 
               
 
-              <time title="创建时间：2020-08-19 20:45:09" itemprop="dateCreated datePublished" datetime="2020-08-19T20:45:09+08:00">2020-08-19</time>
+              <time title="创建时间：2020-11-09 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-09T19:40:37+08:00">2020-11-09</time>
             </span>
           
             
@@ -267,7 +267,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -277,7 +277,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
 
                 
                 
@@ -294,7 +294,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>24k</span>
+              <span>1.7k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -304,7 +304,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>21 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -317,16 +317,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="elasticsearch是什么"><a href="#elasticsearch是什么" class="headerlink" title="elasticsearch是什么"></a>elasticsearch是什么</h3><p>官网：<code>Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合：</code></p><ul>
-<li>使用 java 语言开发的一套开源的全文搜索引擎</li>
-<li>用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域</li>
-<li>底层基于 <a href="https://link.zhihu.com/?target=https%3A//lucene.apache.org/" target="_blank" rel="noopener">Lucene</a> 开源库开发，提供 restAPI，可以被任何语言调用</li>
-<li>支持分布式部署，可水平扩展</li>
-</ul>
+          <p>[TOC]</p><h2 id="两种模式"><a href="#两种模式" class="headerlink" title="两种模式"></a>两种模式</h2><h3 id="生产消费者模式（队列）"><a href="#生产消费者模式（队列）" class="headerlink" title="生产消费者模式（队列）"></a>生产消费者模式（队列）</h3><p>生产消费者模式，指的是由生产者将数据源源不断推送到消息中心，由不同的消费者从消息中心取出数据做自己的处理，在同一类别下，所有消费者拿到的都是同样的数据。<strong>是一种点对点的方式，消息不会被重复消费，可以粗暴的理解为消息被消费后就被标记删除或者已删除了，这是常见的消息队列通常的模式。比如说进程间通信，这种基于队列实现消息传输服务的。</strong></p>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之概述/#more" rel="contents">
+              <a class="btn" href="/2020/11/09/message queue/消息队列之入门/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -357,7 +352,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】mongo集群之概述/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/09/message queue/消息队列之kafka入门/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -373,7 +368,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2020/08/14/distribute/【分布式系统实例】mongo集群之概述/" class="post-title-link" itemprop="url">【分布式系统实例】mongo 集群之概述</a>
+              <a href="/2020/11/09/message queue/消息队列之kafka入门/" class="post-title-link" itemprop="url">消息队列之kafka 入门</a>
             
           </h1>
         
@@ -389,7 +384,7 @@
                 
               
 
-              <time title="创建时间：2020-08-14 19:59:02" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:02+08:00">2020-08-14</time>
+              <time title="创建时间：2020-11-09 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-09T19:40:37+08:00">2020-11-09</time>
             </span>
           
             
@@ -400,7 +395,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -410,7 +405,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
 
                 
                 
@@ -427,7 +422,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>8.8k</span>
+              <span>7.1k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -437,7 +432,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>8 分钟</span>
+              <span>6 分钟</span>
             </span>
           
 
@@ -450,15 +445,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[TOC]</p><h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h2><p>Mongodb一共有三种集群搭建的方式：</p><ul>
-<li>Replica Set（副本集）</li>
-<li>Sharding（切片）</li>
-<li>Master-Slaver（主从，<strong>目前已不推荐使用了</strong>）</li>
-</ul><p>其中，Sharding集群也是三种集群中最复杂的。副本集比起主从可以实现<strong>故障转移， 经常使用。</strong></p><p>MongoDB 目前已不推荐使用主从模式，取而代之的是副本集模式。副本集其实一种互为主从的关系，可理解为主主。副本集指将数据复制，多份保存，不同服务器保存同一份数据，在出现故障时自动切换。对应的是数据冗余、备份、镜像、读写分离、高可用性等关键词。</p>
+          <p>[TOC]</p><h2 id="Kafka基本概念"><a href="#Kafka基本概念" class="headerlink" title="Kafka基本概念"></a>Kafka基本概念</h2><p>Kafka是一个分布式流数据系统，使用Zookeeper进行集群的管理。与其他消息系统类似，整个系统由生产者、Broker Server和消费者三部分组成，生产者和消费者由开发人员编写，通过API连接到Broker Server进行数据操作。我们重点关注三个概念：</p><p>Kafka部分名词解释如下：</p>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2020/08/14/distribute/【分布式系统实例】mongo集群之概述/#more" rel="contents">
+              <a class="btn" href="/2020/11/09/message queue/消息队列之kafka入门/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -489,7 +480,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】mongo集群之集群搭建/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之pulsar和kafka的对比/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -505,7 +496,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2020/08/14/distribute/【分布式系统实例】mongo集群之集群搭建/" class="post-title-link" itemprop="url">【分布式系统实例】mongo集群之集群搭建</a>
+              <a href="/2020/11/05/message queue/消息队列之pulsar和kafka的对比/" class="post-title-link" itemprop="url">消息队列之 pulsar 和 kafka 的对比</a>
             
           </h1>
         
@@ -521,7 +512,7 @@
                 
               
 
-              <time title="创建时间：2020-08-14 19:59:02" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:02+08:00">2020-08-14</time>
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
             </span>
           
             
@@ -532,7 +523,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -542,7 +533,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
 
                 
                 
@@ -559,263 +550,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>1.5k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>[TOC]</p><h2 id="副本集（replica）"><a href="#副本集（replica）" class="headerlink" title="副本集（replica）"></a>副本集（replica）</h2><p>mongodb副本集是一组拥有相同数据的mongodb实例，主mongodb接受所有的写操作，所有的其他实例可以接受主实例的操作以保持数据同步。</p><h3 id="docker-搭建"><a href="#docker-搭建" class="headerlink" title="docker 搭建"></a>docker 搭建</h3><p>参看： go-mod/k8s/docker/mongo/replication</p><h3 id="验证主从同步"><a href="#验证主从同步" class="headerlink" title="验证主从同步"></a>验证主从同步</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入mymongo1: docker exec -it mymongo1 mongo</span></span><br><span class="line">use <span class="built_in">test</span></span><br><span class="line">db.people.insert(&#123;<span class="string">"name"</span>: <span class="string">"percy1"</span>, <span class="string">"age"</span>: 18&#125;)</span><br><span class="line">db.people.insert(&#123;<span class="string">"name"</span>: <span class="string">"percy2"</span>, <span class="string">"age"</span>: 19&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 进入mymongo2: docker exec -it mymongo1 mongo</span></span><br><span class="line">db.getMongo().setSlaveOk()</span><br><span class="line">use <span class="built_in">test</span></span><br><span class="line">mongoreplset:SECONDARY&gt; db.people.find()</span><br><span class="line">&#123; <span class="string">"_id"</span> : ObjectId(<span class="string">"5f3b810824e755927a408da7"</span>), <span class="string">"name"</span> : <span class="string">"percy1"</span>, <span class="string">"age"</span> : 18 &#125;</span><br><span class="line">&#123; <span class="string">"_id"</span> : ObjectId(<span class="string">"5f3b810924e755927a408da8"</span>), <span class="string">"name"</span> : <span class="string">"percy2"</span>, <span class="string">"age"</span> : 19 &#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/08/14/distribute/【分布式系统实例】mongo集群之集群搭建/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】redis集群之概述/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/2020/08/14/distribute/【分布式系统实例】redis集群之概述/" class="post-title-link" itemprop="url">【分布式系统实例】redis 集群之概述</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-08-14 19:59:01" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:01+08:00">2020-08-14</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>2.8k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>3 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>[TOC]</p><h2 id="关系"><a href="#关系" class="headerlink" title="关系"></a>关系</h2><p>cluster&gt;node(ip:port)&gt;slot(ip:port:slot)&gt;key</p><h2 id="如何搭建redis集群"><a href="#如何搭建redis集群" class="headerlink" title="如何搭建redis集群"></a>如何搭建redis集群</h2><p>省略</p><h2 id="redis集群slot"><a href="#redis集群slot" class="headerlink" title="redis集群slot"></a>redis集群slot</h2><p>Redis 集群使用数据分片（sharding）而非一致性哈希（consistency hashing）来实现： 一个 Redis 集群包含 16384 个哈希槽（hash slot）， 数据库中的每个键都属于这 16384 个哈希槽的其中一个， 集群使用公式 CRC16(key) % 16384 来计算键 key 属于哪个槽， 其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/08/14/distribute/【分布式系统实例】redis集群之概述/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/14/distribute/【分布式系统实例】redis集群之集群搭建/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/2020/08/14/distribute/【分布式系统实例】redis集群之集群搭建/" class="post-title-link" itemprop="url">【分布式系统实例】redis集群之集群搭建</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-08-14 19:59:01" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:01+08:00">2020-08-14</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>5k</span>
+              <span>5.3k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -838,11 +573,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[TOC]</p><h2 id="主从模式（master-slaver）"><a href="#主从模式（master-slaver）" class="headerlink" title="主从模式（master/slaver）"></a>主从模式（master/slaver）</h2><p>redis的主从模式，使用异步复制，slave节点异步从master节点复制数据，master节点提供读写服务，slave节点只提供读服务（这个是默认配置，可以通过修改配置文件 slave-read-only 控制）。<strong>master节点可以有多个从节点。</strong>配置一个slave节点只需要在redis.conf文件中指定 slaveof master-ip master-port 即可。</p>
+          <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>之前的文章，我们描述了Apache Pulsar能够成为企业级流和消息系统的原因。Pulsar的企业特性包括消息的持久化存储，多租户，多机房互联互备，加密和安全性等。我们经常被问到的一个问题是Apache Pulsar和Apache Kafka有什么不同。</p><p>在本系列的Pulsar和Kafka比较文章中，我们将引导您认识和了解消息系统中一些重要关注点，比如健壮性，高可用性和高带宽低延迟等。</p>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2020/08/14/distribute/【分布式系统实例】redis集群之集群搭建/#more" rel="contents">
+              <a class="btn" href="/2020/11/05/message queue/消息队列之pulsar和kafka的对比/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -873,7 +608,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/11/distribute/【分布式系统】分区/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -889,7 +624,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2020/08/11/distribute/【分布式系统】分区/" class="post-title-link" itemprop="url">【分布式系统】数据分区</a>
+              <a href="/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/" class="post-title-link" itemprop="url">消息队列之消息队列的消费语义和投递语义</a>
             
           </h1>
         
@@ -905,7 +640,7 @@
                 
               
 
-              <time title="创建时间：2020-08-11 10:49:39" itemprop="dateCreated datePublished" datetime="2020-08-11T10:49:39+08:00">2020-08-11</time>
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
             </span>
           
             
@@ -916,7 +651,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-30 14:12:49" itemprop="dateModified" datetime="2020-09-30T14:12:49+08:00">2020-09-30</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -926,7 +661,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
 
                 
                 
@@ -943,7 +678,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>3.7k</span>
+              <span>2.2k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -953,7 +688,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>3 分钟</span>
+              <span>2 分钟</span>
             </span>
           
 
@@ -966,11 +701,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[toc]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式数据处理系统第一个要解决的问题就是如何将数据进行拆分，利用多台计算机处理大规模数据。对于数据量很大的数据集，单机无法保存或者处理时，通过对数据集进行水平拆分，将不同的数据子集存放到不同的处理节点，这种对数据进行拆分的方式叫做 <strong>分区（partition）</strong>。</p><p>不同数据库中对分区的名称定义有所差异，<strong>有些称之为分区（partition），有些称之为分片（sharding），还有一些称之为区域（Region）</strong>，但是其含义都是基本相同的。需要注意的是，这里的分区跟 CAP 中的网络分区和单机的单机分区表没有关系。</p>
+          <p>[TOC]</p><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><h3 id="三种语义保证"><a href="#三种语义保证" class="headerlink" title="三种语义保证"></a>三种语义保证</h3><h4 id="At-most-once"><a href="#At-most-once" class="headerlink" title="At most once"></a>At most once</h4><p>消息可能会丢，但是绝对不会重复传递。</p><h4 id="At-least-once"><a href="#At-least-once" class="headerlink" title="At least once"></a>At least once</h4><p>消息绝对不会丢，但是可能重复传递。</p><h4 id="Exactly-once"><a href="#Exactly-once" class="headerlink" title="Exactly once"></a>Exactly once</h4><p>每条消息之传输一次仅被传输一次。</p><h3 id="消费语义与投递语义"><a href="#消费语义与投递语义" class="headerlink" title="消费语义与投递语义"></a>消费语义与投递语义</h3><p>所谓的消费语义，指的就是如下三种情况</p><ul>
+<li>如何保证消息最多消费一次</li>
+<li>如何保证消息至少消费一次</li>
+<li>如何保证消息恰好消费一次</li>
+</ul>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2020/08/11/distribute/【分布式系统】分区/#more" rel="contents">
+              <a class="btn" href="/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1001,7 +740,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/10/distribute/【分布式系统】负载均衡/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之kafka 的负载均衡/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -1017,7 +756,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/2020/08/10/distribute/【分布式系统】负载均衡/" class="post-title-link" itemprop="url">【分布式系统】负载均衡</a>
+              <a href="/2020/11/05/message queue/消息队列之kafka 的负载均衡/" class="post-title-link" itemprop="url">消息队列之kafka 的负载均衡</a>
             
           </h1>
         
@@ -1033,7 +772,7 @@
                 
               
 
-              <time title="创建时间：2020-08-10 20:23:12" itemprop="dateCreated datePublished" datetime="2020-08-10T20:23:12+08:00">2020-08-10</time>
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
             </span>
           
             
@@ -1044,7 +783,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -1054,7 +793,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
 
                 
                 
@@ -1071,135 +810,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>2.8k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>3 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="负载均衡-load-balance"><a href="#负载均衡-load-balance" class="headerlink" title="负载均衡 (load balance)"></a>负载均衡 (load balance)</h2><p>「负载均衡」是指，通过一定的算法使请求可以均匀的宠幸服务提供方，做到雨露均沾。市面上，软件硬件产品一大把，解决的最最核心的问题都是<strong>选谁</strong>。</p><p>按实现方式，可以分为硬件负载均衡（如 F5 、A10）、软件负载均衡（如 <strong>LVS、Nginx、HAProxy</strong>）、DNS 负载均衡。硬件负载均衡和 DNS 负载均衡我们不过多关注，重点看一下软件负载均衡。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/08/10/distribute/【分布式系统】负载均衡/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/09/redis/【redis】redis缓存常见概念/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/2020/08/09/redis/【redis】redis缓存常见概念/" class="post-title-link" itemprop="url">【redis】redis缓存常见概念</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-08-09 16:23:43" itemprop="dateCreated datePublished" datetime="2020-08-09T16:23:43+08:00">2020-08-09</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-02 14:23:11" itemprop="dateModified" datetime="2020-11-02T14:23:11+08:00">2020-11-02</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>1.2k</span>
+              <span>1.3k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -1222,276 +833,676 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[TOC]</p><h2 id="简单归纳"><a href="#简单归纳" class="headerlink" title="简单归纳"></a>简单归纳</h2><ul>
-<li>缓存雪崩： 同一时间大量 key 同时到期，导致 db 暴露于大量请求下</li>
-<li>缓存穿透：在 db 中不存在的 key 总是不会被缓存， 导致 db 暴露于大量请求下</li>
-<li>缓存击穿：热点 key 过期，导致 db 暴露于大量请求</li>
-</ul><h2 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h2><h3 id="具体的问题及原因"><a href="#具体的问题及原因" class="headerlink" title="具体的问题及原因"></a>具体的问题及原因</h3><p>由于大量的 key 同时到期（<strong>在同一时刻出现大面积的缓存过期</strong>），导致所有的请求在短时间内直接请求到了数据库，这对于数据库来说是极其危险的。</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/08/09/redis/【redis】redis缓存常见概念/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/02/redis/【redis】redis缓存穿透与布隆过滤器/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/2020/08/02/redis/【redis】redis缓存穿透与布隆过滤器/" class="post-title-link" itemprop="url">【redis】redis缓存穿透与布隆过滤器</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-08-02 20:56:19" itemprop="dateCreated datePublished" datetime="2020-08-02T20:56:19+08:00">2020-08-02</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-31 19:31:01" itemprop="dateModified" datetime="2020-10-31T19:31:01+08:00">2020-10-31</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据库/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>3.6k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>3 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>[TOC]</p><h2 id="从缓存穿透聊到布隆过滤器"><a href="#从缓存穿透聊到布隆过滤器" class="headerlink" title="从缓存穿透聊到布隆过滤器"></a>从缓存穿透聊到布隆过滤器</h2><p><strong>缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。</strong></p><p>简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？</p>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2020/08/02/redis/【redis】redis缓存穿透与布隆过滤器/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/05/http/【http】http2入门/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/2020/07/05/http/【http】http2入门/" class="post-title-link" itemprop="url">【http】http2入门</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2020-07-05 23:11:00" itemprop="dateCreated datePublished" datetime="2020-07-05T23:11:00+08:00">2020-07-05</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-30 20:57:52" itemprop="dateModified" datetime="2020-10-30T20:57:52+08:00">2020-10-30</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>3.4k</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>3 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h3 id="HTTP2的核心概念有哪些"><a href="#HTTP2的核心概念有哪些" class="headerlink" title="HTTP2的核心概念有哪些"></a>HTTP2的核心概念有哪些</h3><ul>
-<li>二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式</li>
-<li>请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧））</li>
-<li>服务器推送，一问多答（一次请求多次相应）</li>
-<li>头部压缩，相同的头在同一连接上，在再次请求时，不用显式地传递（客户端和服务端维护一个头索引表）</li>
+          <p>[TOC]</p><h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h2><ul>
+<li>ZooKeeper负责管理所有Broker服务器列表，并且建立了对应路径来对其进行管理/brokers/ids。每个Broker服务器在启动时，都会到ZooKeeper上进行注册，其节点路径为/broker/ids/[0…N]。</li>
+<li>Topic注册：Kafka当中，会将同一个Topic的消息分成多个区，分布到多个Broker上，<strong>这些分区信息和Broker的对应关系由ZooKeeper来维护。</strong></li>
+<li>每当一个Broker启动时，会首先完成Broker注册过程，在ZooKeeper的节点列表里保存Broker。</li>
+<li>Kafka的生产者会对ZooKeeper上的“Broker的新增与减少”、“Topic的新增和减少”和“Broker和Topic关联关系的变化”等事件<strong>注册Watcher监听</strong></li>
+<li>通过ZooKeeper的<strong>Watcher通知能够让生产者动态的获取Broker和Topic的变化情况</strong></li>
 </ul>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2020/07/05/http/【http】http2入门/#more" rel="contents">
+              <a class="btn" href="/2020/11/05/message queue/消息队列之kafka 的负载均衡/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之kafka 指令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/11/05/message queue/消息队列之kafka 指令/" class="post-title-link" itemprop="url">消息队列之kafka 指令</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>7.9k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>7 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><h3 id="消费组（一个分区）"><a href="#消费组（一个分区）" class="headerlink" title="消费组（一个分区）"></a>消费组（一个分区）</h3><h4 id="创建-topic"><a href="#创建-topic" class="headerlink" title="创建 topic"></a>创建 topic</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 1 --topic <span class="built_in">test</span></span><br></pre></td></tr></table></figure><h4 id="生产消息"><a href="#生产消息" class="headerlink" title="生产消息"></a>生产消息</h4>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/11/05/message queue/消息队列之kafka 指令/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之pulsar入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/11/05/message queue/消息队列之pulsar入门/" class="post-title-link" itemprop="url">消息队列之pulsar入门</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>560</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="topic"><a href="#topic" class="headerlink" title="topic"></a>topic</h2><h3 id="topic-名称"><a href="#topic-名称" class="headerlink" title="topic 名称"></a>topic 名称</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;persistent|non-persistent&#125;://property/cluster/namespace/topic</span><br></pre></td></tr></table></figure><table>
+<thead>
+<tr>
+<th align="left">Topic</th>
+<th align="left">默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">topic 类型</td>
+<td align="left"><code>persistent</code></td>
+</tr>
+<tr>
+<td align="left">租户</td>
+<td align="left"><code>public</code></td>
+</tr>
+<tr>
+<td align="left">命名空间</td>
+<td align="left"><code>default</code></td>
+</tr>
+</tbody></table>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/11/05/message queue/消息队列之pulsar入门/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/04/algorithm/算法之go-zero 一致性哈希的实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/11/04/algorithm/算法之go-zero 一致性哈希的实现/" class="post-title-link" itemprop="url">算法之go-zero 一致性哈希的实现</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-04 16:02:37" itemprop="dateCreated datePublished" datetime="2020-11-04T16:02:37+08:00">2020-11-04</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据结构与算法/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>4.1k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>4 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><h3 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">ConsistentHash <span class="keyword">struct</span> &#123;</span><br><span class="line">	hashFunc HashFunc</span><br><span class="line">	replicas <span class="keyword">int</span></span><br><span class="line">	<span class="comment">// keys 里面记录所有的 hash 值</span></span><br><span class="line">	<span class="comment">// hash 值 = (nodeRepr + i) 的结果做哈希运算</span></span><br><span class="line">	keys     []<span class="keyword">uint64</span></span><br><span class="line">	<span class="comment">// 记录一个 hash 值对应的 多个node, key 是 hash 值， val 是 node 数组</span></span><br><span class="line">	<span class="comment">// 这里使用开链法解决哈希冲突 (实际是数组)</span></span><br><span class="line">	ring     <span class="keyword">map</span>[<span class="keyword">uint64</span>][]<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	<span class="comment">// 记录 node 是否在一致性 hash 中, key 是 nodeRepr</span></span><br><span class="line">	nodes    <span class="keyword">map</span>[<span class="keyword">string</span>]lang.PlaceholderType</span><br><span class="line">	lock     sync.RWMutex</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/11/04/algorithm/算法之go-zero 一致性哈希的实现/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/03/algorithm/算法之延迟队列/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/11/03/algorithm/算法之延迟队列/" class="post-title-link" itemprop="url">算法之延迟队列</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-03 20:53:33" itemprop="dateCreated datePublished" datetime="2020-11-03T20:53:33+08:00">2020-11-03</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据结构与算法/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>4.5k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>4 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>延时队列相比于普通队列最大的区别就体现在其延时的属性上，普通队列的元素是先进先出，按入队顺序进行处理，而延时队列中的元素在入队时会指定一个延迟时间，表示其希望能够在经过该指定时间后处理。从某种意义上来讲，延迟队列的结构并不像一个队列，而更像是一种以时间为权重的有序堆结构。</p><h2 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h2><p>延迟队列的应用场景非常的广泛，比如说以下的场景：</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/11/03/algorithm/算法之延迟队列/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/02/redis/redis的数据类型/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/11/02/redis/redis的数据类型/" class="post-title-link" itemprop="url">redis的数据类型</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-02 14:30:59" itemprop="dateCreated datePublished" datetime="2020-11-02T14:30:59+08:00">2020-11-02</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>7 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>总体来说，用户侧的数据结构有 <code>string</code>, <code>hash</code>, <code>list</code>,  <code>set</code>,  <code>zset</code>。</p><p>实现测的数据结构有 <code>sds</code>,  <code>dict</code>, <code>linkedlist</code>,  <code>skiplist</code>, <code>ziplist</code>, <code>quicklist</code>, <code>intset</code></p><h2 id="用户侧的数据结构"><a href="#用户侧的数据结构" class="headerlink" title="用户侧的数据结构"></a>用户侧的数据结构</h2><h3 id="string"><a href="#string" class="headerlink" title="string"></a>string</h3><p>通过 key-value pair 的方式，存储字符串、整数、浮点数等对象。</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/11/02/redis/redis的数据类型/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1519,7 +1530,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1555,7 +1566,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1600,7 +1611,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -1841,7 +1856,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -1883,7 +1982,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -1892,12 +1991,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

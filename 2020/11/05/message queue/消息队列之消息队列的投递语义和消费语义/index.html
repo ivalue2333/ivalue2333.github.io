@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]概念三种语义保证At most once消息可能会丢，但是绝对不会重复传递。At least once消息绝对不会丢，但是可能重复传递。Exactly once每条消息之传输一次仅被传输一次。消费语义与投递语义所谓的消费语义，指的就是如下三种情况 如何保证消息最多消费一次 如何保证消息至少消费一次 如何保证消息恰好消费一次">
+<meta name="keywords" content="kafka,消息队列,消费语义,投递语义">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列之消息队列的消费语义和投递语义">
+<meta property="og:url" content="http://yoursite.com/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]概念三种语义保证At most once消息可能会丢，但是绝对不会重复传递。At least once消息绝对不会丢，但是可能重复传递。Exactly once每条消息之传输一次仅被传输一次。消费语义与投递语义所谓的消费语义，指的就是如下三种情况 如何保证消息最多消费一次 如何保证消息至少消费一次 如何保证消息恰好消费一次">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.122Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="消息队列之消息队列的消费语义和投递语义">
+<meta name="twitter:description" content="[TOC]概念三种语义保证At most once消息可能会丢，但是绝对不会重复传递。At least once消息绝对不会丢，但是可能重复传递。Exactly once每条消息之传输一次仅被传输一次。消费语义与投递语义所谓的消费语义，指的就是如下三种情况 如何保证消息最多消费一次 如何保证消息至少消费一次 如何保证消息恰好消费一次">
+  <link rel="canonical" href="http://yoursite.com/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>消息队列之消息队列的消费语义和投递语义 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/05/message queue/消息队列之消息队列的投递语义和消费语义/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">消息队列之消息队列的消费语义和投递语义
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/消息队列/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>2.2k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>2 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><h3 id="三种语义保证"><a href="#三种语义保证" class="headerlink" title="三种语义保证"></a>三种语义保证</h3><h4 id="At-most-once"><a href="#At-most-once" class="headerlink" title="At most once"></a>At most once</h4><p>消息可能会丢，但是绝对不会重复传递。</p><h4 id="At-least-once"><a href="#At-least-once" class="headerlink" title="At least once"></a>At least once</h4><p>消息绝对不会丢，但是可能重复传递。</p><h4 id="Exactly-once"><a href="#Exactly-once" class="headerlink" title="Exactly once"></a>Exactly once</h4><p>每条消息之传输一次仅被传输一次。</p><h3 id="消费语义与投递语义"><a href="#消费语义与投递语义" class="headerlink" title="消费语义与投递语义"></a>消费语义与投递语义</h3><p>所谓的消费语义，指的就是如下三种情况</p><ul>
+<li>如何保证消息最多消费一次</li>
+<li>如何保证消息至少消费一次</li>
+<li>如何保证消息恰好消费一次</li>
+</ul><a id="more"></a>
+
+
+
+
+
+<p>其实类似还有一个投递语义</p>
+<ul>
+<li>如何保证消息最多投递一次</li>
+<li>如何保证消息至少投递一次</li>
+<li>如何保证消息恰好投递一次</li>
+</ul>
+<h2 id="投递语义"><a href="#投递语义" class="headerlink" title="投递语义"></a>投递语义</h2><p>我们先做如下约定</p>
+<ul>
+<li><code>Producer</code>代表生产者</li>
+<li><code>Consumer</code>代表消费者</li>
+<li><code>Message Queue</code>代表消息队列</li>
+</ul>
+<p>我们先从投递语义开始讲起，因为要先把这个概念讲明白了，才能讲消费语义。恰巧，<code>kafka</code>实现了这三种语义，我们以<code>kafka</code>来说明。</p>
+<h3 id="如何保证消息最多投递一次"><a href="#如何保证消息最多投递一次" class="headerlink" title="如何保证消息最多投递一次?"></a>如何保证消息最多投递一次?</h3><p>简单，就是我已经投出去了，收没收到不管了，会存在消息丢失。</p>
+<p>我们在初始化<code>Producer</code>时可以通过配置<code>request.required.acks</code>不同的值,来实现不同的发送模式。这里将<code>request.required.acks</code>设为0，意思就是<code>Producer</code>不等待Leader确认，只管发出即可；最可能丢失消息。如果丢了消息，就是投递0次。如果没丢，就是投递1次。符合最多投递一次的含义。</p>
+<h3 id="如何保证消息至少投递一次"><a href="#如何保证消息至少投递一次" class="headerlink" title="如何保证消息至少投递一次?"></a>如何保证消息至少投递一次?</h3><p>这里将<code>request.required.acks</code>设为-1。<code>Producer</code>往<code>kafka</code>的<code>Leader（主）</code>节点发送消息后，会等<code>follower(从)</code>节点同步完数据以后，再给<code>Producer</code>返回ACK确认消息。但是这里是有几率出现重复消费的问题的。</p>
+<p>例如，<code>kafka</code>保存消息后，发送ACK前宕机，<code>Producer</code>认为消息未发送成功并重试，造成数据重复！<br>那么，在这种情况下，就会出现大于1次的投递情况，符合至少投递一次的含义。</p>
+<h3 id="如何保证消息恰好投递一次"><a href="#如何保证消息恰好投递一次" class="headerlink" title="如何保证消息恰好投递一次?"></a>如何保证消息恰好投递一次?</h3><p><code>kafka</code>在0.11.0.0版本之后支持恰好投递一次的语义。我们将<code>enable.idempotence</code>设置为ture,此时就会默认把<code>request.required.acks</code>设为-1，可以达到恰好投递一次的语义。</p>
+<p>为了实现<code>Producer</code>的幂等语义，Kafka引入了Producer ID（即PID）和Sequence Number。<code>kafka</code>为每个<code>Producer</code>分配一个pid，作为该<code>Producer</code>的唯一标识。<code>Producer</code>会为每一个&lt;topic,partition&gt;维护一个单调递增的seq。类似的，<code>Message Queue</code>也会为每个<strong>&lt;pid,topic,partition&gt;记录下最新的seq</strong>。当req_seq == message_seq+1时，<code>Message Queue</code>才会接受该消息。因为：</p>
+<ul>
+<li>(1)消息的seq比<code>Message Queue</code>的seq大一以上，说明中间有数据还没写入，即乱序了。</li>
+<li>(2)消息的seq比<code>Message Queue</code>的seq小，那么说明该消息已被保存。</li>
+</ul>
+<p><strong>这里参考了 tcp seq number 的设计，用来保证顺序和去重。</strong></p>
+<p>这里的幂等性需要客户端的支持，即客户端需要每次都带上自己的自增的 sequence number.</p>
+<h2 id="消费语义"><a href="#消费语义" class="headerlink" title="消费语义"></a>消费语义</h2><p>这里我们还是做一个定义如下所示</p>
+<ul>
+<li><code>consumer.poll()</code>表示消费者获取消息内容</li>
+<li><code>processMsg(message)</code>表示下游系统进行消费消息</li>
+<li><code>consumer.commit()</code>表示消费者往消息队列提交确认信息，消息队列接到确认消息，删除该消息。</li>
+</ul>
+<p>注意了，我是以<code>processMsg</code>函数，即处理消息的过程，定义为消费消息。</p>
+<h3 id="如何保证消息最多消费一次"><a href="#如何保证消息最多消费一次" class="headerlink" title="如何保证消息最多消费一次?"></a>如何保证消息最多消费一次?</h3><p><code>Producer</code>:满足最多投递一次的语义即可，即只管发消息，不需要等待消息队列返回确认消息。</p>
+<p><code>Message Queue</code>:接到消息后往内存中一放就行，不用持久化存储。</p>
+<p><code>Consumer</code>：拉取到消息以后，直接给消息队列返回确认消息即可。至于后续消费消息成功与否，无所谓的。即按照以下顺序执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">consumer.poll();</span><br><span class="line">consumer.commit();</span><br><span class="line">processMsg(message);</span><br></pre></td></tr></table></figure>
+
+<h3 id="如何保证消息至少消费一次"><a href="#如何保证消息至少消费一次" class="headerlink" title="如何保证消息至少消费一次?"></a>如何保证消息至少消费一次?</h3><p><code>Producer</code>:满足至少投递一次语义即可，即发送消息后，需要等待消息队列返回确认消息。如果超时没收到确认消息，则重发。</p>
+<p><code>Message Queue</code>:接到消息后，进行持久化存储，而后返回生产者确认消息。</p>
+<p><code>Consumer</code>：拉取到消息后，进行消费，消费成功后，再返回确认消息。即按照如下顺序执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">consumer.poll();</span><br><span class="line">processMsg(message);</span><br><span class="line">consumer.commit();</span><br></pre></td></tr></table></figure>
+
+<p>由于这里<code>Producer</code>满足的是至少投递一次语义，因此消息队列中是有重复消息的。所以我们的<code>Consumer</code>会出现重复消费的情形！</p>
+<h3 id="如何保证消息恰好消费一次"><a href="#如何保证消息恰好消费一次" class="headerlink" title="如何保证消息恰好消费一次?"></a>如何保证消息恰好消费一次?</h3><p>在保证至少消费一次的基础上，<code>processMsg</code>满足幂等性操作即可。</p>
+<h2 id="如何保证函数幂等性"><a href="#如何保证函数幂等性" class="headerlink" title="如何保证函数幂等性"></a>如何保证函数幂等性</h2><p>doc: blog/learn/幂等性</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.cnblogs.com/rjzheng/p/11050673.html" target="_blank" rel="noopener">【原创】消息队列的消费语义和投递语义</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/72328153" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/72328153</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+            
+              <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+            
+              <a href="/tags/消费语义/" rel="tag"># 消费语义</a>
+            
+              <a href="/tags/投递语义/" rel="tag"># 投递语义</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/11/05/message queue/消息队列之kafka 的负载均衡/" rel="next" title="消息队列之kafka 的负载均衡">
+                  <i class="fa fa-chevron-left"></i> 消息队列之kafka 的负载均衡
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/11/05/message queue/消息队列之pulsar和kafka的对比/" rel="prev" title="消息队列之 pulsar 和 kafka 的对比">
+                  消息队列之 pulsar 和 kafka 的对比 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#三种语义保证"><span class="nav-number">1.1.</span> <span class="nav-text">三种语义保证</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#At-most-once"><span class="nav-number">1.1.1.</span> <span class="nav-text">At most once</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#At-least-once"><span class="nav-number">1.1.2.</span> <span class="nav-text">At least once</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Exactly-once"><span class="nav-number">1.1.3.</span> <span class="nav-text">Exactly once</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消费语义与投递语义"><span class="nav-number">1.2.</span> <span class="nav-text">消费语义与投递语义</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投递语义"><span class="nav-number">2.</span> <span class="nav-text">投递语义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息最多投递一次"><span class="nav-number">2.1.</span> <span class="nav-text">如何保证消息最多投递一次?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息至少投递一次"><span class="nav-number">2.2.</span> <span class="nav-text">如何保证消息至少投递一次?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息恰好投递一次"><span class="nav-number">2.3.</span> <span class="nav-text">如何保证消息恰好投递一次?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消费语义"><span class="nav-number">3.</span> <span class="nav-text">消费语义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息最多消费一次"><span class="nav-number">3.1.</span> <span class="nav-text">如何保证消息最多消费一次?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息至少消费一次"><span class="nav-number">3.2.</span> <span class="nav-text">如何保证消息至少消费一次?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保证消息恰好消费一次"><span class="nav-number">3.3.</span> <span class="nav-text">如何保证消息恰好消费一次?</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何保证函数幂等性"><span class="nav-number">4.</span> <span class="nav-text">如何保证函数幂等性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">404k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

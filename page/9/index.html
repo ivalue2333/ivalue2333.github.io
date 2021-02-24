@@ -224,7 +224,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/软件命名原则/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/07/http/tcp之流量控制和拥塞控制/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -240,7 +240,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/1970/01/01/think in/软件命名原则/" class="post-title-link" itemprop="url">软件命名原则</a>
+              <a href="/2020/02/07/http/tcp之流量控制和拥塞控制/" class="post-title-link" itemprop="url">tcp之的流量控制和拥塞控制</a>
             
           </h1>
         
@@ -256,7 +256,7 @@
                 
               
 
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
+              <time title="创建时间：2020-02-07 17:20:19" itemprop="dateCreated datePublished" datetime="2020-02-07T17:20:19+08:00">2020-02-07</time>
             </span>
           
             
@@ -267,7 +267,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -277,7 +277,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/think-in/" itemprop="url" rel="index"><span itemprop="name">think in</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机网络/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a></span>
 
                 
                 
@@ -294,7 +294,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>2.2k</span>
+              <span>3.1k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -304,7 +304,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>2 分钟</span>
+              <span>3 分钟</span>
             </span>
           
 
@@ -317,11 +317,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="数据库接口的命名规范"><a href="#数据库接口的命名规范" class="headerlink" title="数据库接口的命名规范"></a>数据库接口的命名规范</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 统一采用 insert, delete, query, update, search 等动词，并且 error 始终作为最后一个返回值，以下interface 可以替换为具体的内容</span></span><br><span class="line"><span class="keyword">type</span> IStorageV1 <span class="keyword">interface</span> &#123;</span><br><span class="line">	XXXInsertOne(ctx context.Context, data <span class="keyword">interface</span>&#123;&#125;) (err error)</span><br><span class="line">	<span class="comment">//XXXInsertMany(ctx context.Context, dataList interface&#123;&#125;) (err error)</span></span><br><span class="line">	XXXDeleteOne(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;) (err error)</span><br><span class="line">	<span class="comment">//XXXDeleteMany(ctx context.Context, query interface&#123;&#125;) (err error)</span></span><br><span class="line">	XXXQueryOne(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;) (data *XXXInfo, err error)</span><br><span class="line">	XXXQueryMany(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;, skip, limit <span class="keyword">int64</span>) (data []*XXXInfo, err error)</span><br><span class="line">	<span class="comment">//XXXSearchMany(ctx context.Context, query interface&#123;&#125;, skip, limit int64) (err error)</span></span><br><span class="line">	XXXCount(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;) (count <span class="keyword">int64</span>, err error)</span><br><span class="line">	XXXUpdateOne(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;, data <span class="keyword">interface</span>&#123;&#125;) (err error)</span><br><span class="line">	<span class="comment">//XXXUpdateMany(ctx context.Context, query interface&#123;&#125;, data interface&#123;&#125;) (err error)</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 如果后面又不同的查询，可以通过 by 连接</span></span><br><span class="line"><span class="keyword">type</span> IStorageBy <span class="keyword">interface</span> &#123;</span><br><span class="line">	XXXQueryOneById(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;) (err error)</span><br><span class="line">	XXXCountById(ctx context.Context, query <span class="keyword">interface</span>&#123;&#125;) (count <span class="keyword">int</span>, err error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>拥塞控制就是防止过多的数据注入到网络中，这样可以使网络中的路由器或链路不致过载。拥塞控制所要做的都有一个前提，就是网络能承受现有的网络负荷。</p><p>流量控制往往指的是点对点通信量的控制，是个端到端的问题。流量控制所要做的就是控制发送端发送数据的速率，以便使接收端来得及接受。</p><h3 id="拥塞控制和流量控制的区别"><a href="#拥塞控制和流量控制的区别" class="headerlink" title="拥塞控制和流量控制的区别"></a>拥塞控制和流量控制的区别</h3>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/1970/01/01/think in/软件命名原则/#more" rel="contents">
+              <a class="btn" href="/2020/02/07/http/tcp之流量控制和拥塞控制/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -352,7 +352,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/http/【rpc】grpc与http2/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/04/concurrent/【并发】channel/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -368,7 +368,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/1970/01/01/http/【rpc】grpc与http2/" class="post-title-link" itemprop="url">【rpc】tp99</a>
+              <a href="/2020/02/04/concurrent/【并发】channel/" class="post-title-link" itemprop="url">【并发】channel</a>
             
           </h1>
         
@@ -384,7 +384,7 @@
                 
               
 
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
+              <time title="创建时间：2020-02-04 20:26:56" itemprop="dateCreated datePublished" datetime="2020-02-04T20:26:56+08:00">2020-02-04</time>
             </span>
           
             
@@ -395,7 +395,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-02 14:00:11" itemprop="dateModified" datetime="2020-11-02T14:00:11+08:00">2020-11-02</time>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
               </span>
             
           
@@ -405,7 +405,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机网络/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/并发/" itemprop="url" rel="index"><span itemprop="name">并发</span></a></span>
 
                 
                 
@@ -422,7 +422,519 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>62</span>
+              <span>11k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>10 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>TODO…</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Go语言设计团队的首任负责人<em>Rob Pike</em>对并发编程的一个建议是<strong>不要让计算通过共享内存来通讯，而应该让它们通过通讯来共享内存</strong>。 通道机制就是这种哲学的一个设计结果。</p><h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p><a href="https://github.com/golang/go/blob/e35876ec6591768edace6c6f3b12646899fd1b11/src/runtime/chan.go#L32" target="_blank" rel="noopener"><code>runtime.hchan</code></a>  表示 channel 结构体</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> hchan <span class="keyword">struct</span> &#123;</span><br><span class="line">	qcount   <span class="keyword">uint</span>           <span class="comment">// total data in the queue</span></span><br><span class="line">	dataqsiz <span class="keyword">uint</span>           <span class="comment">// size of the circular queue</span></span><br><span class="line">	buf      unsafe.Pointer <span class="comment">// points to an array of dataqsiz elements</span></span><br><span class="line">	elemsize <span class="keyword">uint16</span></span><br><span class="line">	closed   <span class="keyword">uint32</span></span><br><span class="line">	elemtype *_type <span class="comment">// element type</span></span><br><span class="line">	sendx    <span class="keyword">uint</span>   <span class="comment">// send index</span></span><br><span class="line">	recvx    <span class="keyword">uint</span>   <span class="comment">// receive index</span></span><br><span class="line">	recvq    waitq  <span class="comment">// list of recv waiters</span></span><br><span class="line">	sendq    waitq  <span class="comment">// list of send waiters</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// lock protects all fields in hchan, as well as several</span></span><br><span class="line">	<span class="comment">// fields in sudogs blocked on this channel.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// Do not change another G's status while holding this lock</span></span><br><span class="line">	<span class="comment">// (in particular, do not ready a G), as this can deadlock</span></span><br><span class="line">	<span class="comment">// with stack shrinking.</span></span><br><span class="line">	lock mutex</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> waitq <span class="keyword">struct</span> &#123;</span><br><span class="line">	first *sudog</span><br><span class="line">	last  *sudog</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> sudog <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// The following fields are protected by the hchan.lock of the</span></span><br><span class="line">	<span class="comment">// channel this sudog is blocking on. shrinkstack depends on</span></span><br><span class="line">	<span class="comment">// this for sudogs involved in channel ops.</span></span><br><span class="line"></span><br><span class="line">	g *g</span><br><span class="line"></span><br><span class="line">	<span class="comment">// isSelect indicates g is participating in a select, so</span></span><br><span class="line">	<span class="comment">// g.selectDone must be CAS'd to win the wake-up race.</span></span><br><span class="line">	isSelect <span class="keyword">bool</span></span><br><span class="line">	next     *sudog</span><br><span class="line">	prev     *sudog</span><br><span class="line">    <span class="comment">// ...其他字段省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/02/04/concurrent/【并发】channel/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/01/IO/【IO】套接字和文件描述符-下/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/02/01/IO/【IO】套接字和文件描述符-下/" class="post-title-link" itemprop="url">【IO】套接字和文件描述符-下</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-02-01 21:17:24" itemprop="dateCreated datePublished" datetime="2020-02-01T21:17:24+08:00">2020-02-01</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>416</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="文件描述符"><a href="#文件描述符" class="headerlink" title="文件描述符"></a>文件描述符</h2><p>内核（kernel）利用文件描述符（file descriptor）来访问文件。文件描述符在形式上是非负整数，实际上是一个索引值。打开现存文件或新建文件时，内核会返回一个文件描述符。读写文件也需要使用文件描述符来指定待读写的文件。</p><p>Linux 系统中，把一切都看做是文件，当进程打开现有文件或创建新文件时，内核向进程返回一个文件描述符，文件描述符就是内核为了高效管理已被打开的文件所创建的索引，用来指向被打开的文件，所有执行I/O操作的系统调用都会通过文件描述符。</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/02/01/IO/【IO】套接字和文件描述符-下/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/30/IO/【IO】套接字和文件描述符-上/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/01/30/IO/【IO】套接字和文件描述符-上/" class="post-title-link" itemprop="url">【IO】套接字和文件描述符-上</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-01-30 20:38:29" itemprop="dateCreated datePublished" datetime="2020-01-30T20:38:29+08:00">2020-01-30</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>7 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="套接字"><a href="#套接字" class="headerlink" title="套接字"></a>套接字</h2><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>套接字 Socket=（IP地址：端口号），套接字的表示方法是点分十进制的IP地址后面写上端口号，中间用冒号或逗号隔开。每一个传输层连接唯一地被通信两端的两个端点（即两个套接字）所确定。基于linux一切皆文件的思想。一个套接字就是一个文件，sockfd（套接字文件描述符）就是一种文件描述符。</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/01/30/IO/【IO】套接字和文件描述符-上/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/http/http之golang gin 框架的路由算法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/01/20/http/http之golang gin 框架的路由算法/" class="post-title-link" itemprop="url">http之golang gin 框架的路由算法</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-01-20 15:20:35" itemprop="dateCreated datePublished" datetime="2020-01-20T15:20:35+08:00">2020-01-20</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>1.5k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>1 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p><h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h2><p>todo… not good</p><p>gin 框架的路由，本质上是一个前缀树。每一种http method有一颗数，并且前缀树采用最长前缀来表示， 而不是简单的通过斜杠分隔。</p><h2 id="注册"><a href="#注册" class="headerlink" title="注册"></a>注册</h2><h3 id="获取树的根节点"><a href="#获取树的根节点" class="headerlink" title="获取树的根节点"></a>获取树的根节点</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注意这里使用的是数组，在数据量很小的时候， 遍历数组肯定是比使用哈希表更高效的方式，由于http method 的方法就只有有限的几种类型，所以数组时更高效的选择。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(trees methodTrees)</span> <span class="title">get</span><span class="params">(method <span class="keyword">string</span>)</span> *<span class="title">node</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, tree := <span class="keyword">range</span> trees &#123;</span><br><span class="line">		<span class="keyword">if</span> tree.method == method &#123;</span><br><span class="line">			<span class="keyword">return</span> tree.root</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2020/01/20/http/http之golang gin 框架的路由算法/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/14/learn/【学习】常见的执行速度/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2020/01/14/learn/【学习】常见的执行速度/" class="post-title-link" itemprop="url">【学习】常见的执行速度</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-01-14 17:26:53" itemprop="dateCreated datePublished" datetime="2020-01-14T17:26:53+08:00">2020-01-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>197</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -446,8 +958,8 @@
 
       
           
-            <p>todo …</p>
-<p><a href="http://hengyunabc.github.io/thinking-about-grpc-http2/" target="_blank" rel="noopener">http://hengyunabc.github.io/thinking-about-grpc-http2/</a></p>
+            <h2 id="常见的执行速度"><a href="#常见的执行速度" class="headerlink" title="常见的执行速度"></a>常见的执行速度</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1. 内网 ping 时间（阿里云内网）</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> time = 0.2 ms</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 2. 外网 ping 时间 （访问www.baidu.com）</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> time = 40 ms</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 3. 为什么dns采用udp协议</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> TCP通信过程太复杂并且开销大，一次TCP交换需要9个包： 三个连接包，四个断开包，一个request包，一个响应包。UDP通信过程简单，只需要一个查询包和一个响应包。</span></span><br></pre></td></tr></table></figure>
+
 
           
         
@@ -475,7 +987,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/算法与这个世界的基本原则-分类/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/03/http/http之服务框架入门/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -491,7 +1003,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/1970/01/01/think in/算法与这个世界的基本原则-分类/" class="post-title-link" itemprop="url">算法与这个世界的基本原则-分类</a>
+              <a href="/2020/01/03/http/http之服务框架入门/" class="post-title-link" itemprop="url">http之服务框架入门</a>
             
           </h1>
         
@@ -507,7 +1019,7 @@
                 
               
 
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
+              <time title="创建时间：2020-01-03 13:48:24" itemprop="dateCreated datePublished" datetime="2020-01-03T13:48:24+08:00">2020-01-03</time>
             </span>
           
             
@@ -518,7 +1030,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -528,7 +1040,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/think-in/" itemprop="url" rel="index"><span itemprop="name">think in</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a></span>
 
                 
                 
@@ -545,7 +1057,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>362</span>
+              <span>227</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -569,7 +1081,10 @@
 
       
           
-            <p>算法问题，我终于是悟透了（ARE U OK ?）。其实你遇到一个算法问题，首先不要想着如何去解决这个问题，先想一下这个问题是个什么问题(<strong>问题分类</strong>)，是回溯问题？是双指针问题？然后每一种问题都有固定的解题思路。总结就是先对问题分类，<strong>然后调用你的知识库</strong>，找到每种问题的解决方法。这其实就是更加提倡解决问题的思路，而不是如何去解决问题。推而广之，在工作也是这样，<strong>一个问题过来了，先分类</strong>，是沟通问题，还是排期问题，还是编程能力问题，然后再<strong>对每一个问题，调用已有的问题解决原则(这里提倡了达利奥的原则方法论)</strong>，然后才是开始解决问题。<br>当然，解决问题比这要复杂的多，比如背景，参与的人，等等，这里主要是两个核心观点<br>1，要先对问题分类。<br>2，对每一类问题(处于这种问题状态下)，调用已有的解决问题的框架(也可以称为原则，套路)，来解决问题。</p>
+            <p>TODO…</p>
+<p>Members of <code>AF_INET</code> address family are IPv4 addresses.</p>
+<p>Members of <code>AF_INET6</code> address family are IPv6 addresses.</p>
+<p>Members of <code>AF_UNIX</code> address family are names of Unix domain sockets (<code>/var/run/mysqld/mysqld.sock</code> is an example).</p>
 
           
         
@@ -597,7 +1112,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/other/投资/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/http/http之请求Content-Type/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="PercyG">
@@ -613,7 +1128,7 @@
         
           <h1 class="post-title" itemprop="name headline">
               
-              <a href="/1970/01/01/think in/other/投资/" class="post-title-link" itemprop="url">【other】投资</a>
+              <a href="/2019/12/24/http/http之请求Content-Type/" class="post-title-link" itemprop="url">http之请求Content-Type</a>
             
           </h1>
         
@@ -629,7 +1144,7 @@
                 
               
 
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
+              <time title="创建时间：2019-12-24 22:33:05" itemprop="dateCreated datePublished" datetime="2019-12-24T22:33:05+08:00">2019-12-24</time>
             </span>
           
             
@@ -640,7 +1155,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-10 23:18:08" itemprop="dateModified" datetime="2020-11-10T23:18:08+08:00">2020-11-10</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -650,7 +1165,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a></span>
 
                 
                 
@@ -667,533 +1182,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>68</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-            <h2 id="基本原则"><a href="#基本原则" class="headerlink" title="基本原则"></a>基本原则</h2><ol>
-<li><strong>不买自己不懂的东西</strong></li>
-<li>无限量化宽松，意味着黄金和股市的牛市， 买黄金和基金</li>
-<li>不追涨，除非是来涨的前三天</li>
-<li>低价时刻埋伏，并等待</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/other/招聘/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1970/01/01/think in/other/招聘/" class="post-title-link" itemprop="url">【other】招聘</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>69</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-            <h2 id="基本问题"><a href="#基本问题" class="headerlink" title="基本问题"></a>基本问题</h2><ol>
-<li>几个部门</li>
-<li>研发团队</li>
-<li>技术栈</li>
-<li>职位主要工作</li>
-<li>上下班时间</li>
-<li>招聘这个职位的原因</li>
-<li>五险一金</li>
-</ol>
-<h2 id="学习"><a href="#学习" class="headerlink" title="学习"></a>学习</h2><ul>
-<li>要看源码</li>
-<li>要懂原理</li>
-<li>要有实战经验</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/软件的入门方法/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1970/01/01/think in/软件的入门方法/" class="post-title-link" itemprop="url">软件的入门方法</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/think-in/" itemprop="url" rel="index"><span itemprop="name">think in</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>9</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-            <p>软件的入门方法</p>
-<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/61616127637b49ad80486f3ede15c7e3.png" alt></p>
-
-          
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/principle/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1970/01/01/principle/" class="post-title-link" itemprop="url">原则</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/原则/" itemprop="url" rel="index"><span itemprop="name">原则</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>146</span>
-            </span>
-          
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              
-              <span>1 分钟</span>
-            </span>
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-            <p>tag：多个，像搜索引擎一样的关键词</p>
-<p>分类：一个，在计算机科学，这个属于哪个类型</p>
-<p>目前分类有</p>
-<ul>
-<li>计算机基础</li>
-<li>golang</li>
-<li>并发</li>
-<li>数据库</li>
-<li>消息队列</li>
-<li>原则</li>
-<li>http</li>
-<li>计算机网络， 除 http 之外的的网络协议</li>
-<li>数据结构与算法</li>
-<li>分布式系统</li>
-<li>虚拟化</li>
-<li>翻译</li>
-<li>think in</li>
-<li>other</li>
-<li>一些小坑</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-      
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/1970/01/01/think in/other/房屋/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="PercyG">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/percy/images/percy.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog | percy">
-    </span>
-      <header class="post-header">
-
-        
-          <h1 class="post-title" itemprop="name headline">
-              
-              <a href="/1970/01/01/think in/other/房屋/" class="post-title-link" itemprop="url">【other】房屋</a>
-            
-          </h1>
-        
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：1970-01-01 00:00:00" itemprop="dateCreated datePublished" datetime="1970-01-01T00:00:00+08:00">1970-01-01</time>
-            </span>
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
-              </span>
-            
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">本文字数：</span>
-              
-              <span>2.7k</span>
+              <span>2.3k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -1216,17 +1205,267 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>[TOC]</p><h2 id="原则"><a href="#原则" class="headerlink" title="原则"></a>原则</h2><h3 id="基本原则"><a href="#基本原则" class="headerlink" title="基本原则"></a>基本原则</h3><ul>
-<li>能买限购的，不买不限购的，</li>
-<li>能买住宅，不买公寓</li>
-<li>能买大不买小</li>
-<li>如果总价一样，买位置好的</li>
-<li>如果位置一样，买有人住的</li>
-</ul><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><h3 id="容积率"><a href="#容积率" class="headerlink" title="容积率"></a>容积率</h3><p>容积率（Plot Ratio/Floor Area Ratio/Volume Fraction）是指一个小区的地上总建筑面积与净用地面积的比率。</p><h3 id="用地性质"><a href="#用地性质" class="headerlink" title="用地性质"></a>用地性质</h3>
+          <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Content-Type，内容类型。用于定义网络文件的类型和网页的编码，告知文件接收方文件的形式，文件的编码方式。</p><p>一种常见的误解是content-type只有POST请求才需要，或者说才可以设置，这是一种误解。所有类型的请求，包括POST，GET都可以设置请求Content-Type。</p><p>实际上Content-Type是一种约定，约定的双方定义了这种数据请求，解析，返回的格式。便于正确的解析数据。</p>
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/1970/01/01/think in/other/房屋/#more" rel="contents">
+              <a class="btn" href="/2019/12/24/http/http之请求Content-Type/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/21/http/http之请求参数/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/12/21/http/http之请求参数/" class="post-title-link" itemprop="url">http之请求参数</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-21 22:37:05" itemprop="dateCreated datePublished" datetime="2019-12-21T22:37:05+08:00">2019-12-21</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>7.4k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>7 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h2><h3 id="server代码-python"><a href="#server代码-python" class="headerlink" title="server代码(python)"></a>server代码(python)</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/env python</span><br><span class="line"># coding:utf-8</span><br><span class="line"></span><br><span class="line">import tornado.ioloop</span><br><span class="line">import tornado.web</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class MainHandler(tornado.web.RequestHandler):</span><br><span class="line"></span><br><span class="line">    def get(self):</span><br><span class="line">        print(&quot;method: &quot;, self.request.method)</span><br><span class="line">        print(&quot;Content-Type: &quot;, self.request.headers.get(&quot;Content-Type&quot;, &quot;No-Content-Type&quot;))</span><br><span class="line">        print(&quot;uri: &quot;, self.request.uri)</span><br><span class="line">        print(&quot;path: &quot;, self.request.path)</span><br><span class="line">        print(&quot;argument: &quot;, self.request.arguments)</span><br><span class="line">        print(&quot;body: &quot;, self.request.body)</span><br><span class="line"></span><br><span class="line">    def post(self):</span><br><span class="line">        print(&quot;method: &quot;, self.request.method)</span><br><span class="line">        print(&quot;Content-Type: &quot;, self.request.headers.get(&quot;Content-Type&quot;, &quot;No-Content-Type&quot;))</span><br><span class="line">        print(&quot;uri: &quot;, self.request.uri)</span><br><span class="line">        print(&quot;path: &quot;, self.request.path)</span><br><span class="line">        print(&quot;argument: &quot;, self.request.arguments)</span><br><span class="line">        print(&quot;body: &quot;, self.request.body)</span><br><span class="line"></span><br><span class="line">    def head(self):</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        主要测试file</span><br><span class="line">        :return:</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        print(&quot;method: &quot;, self.request.method)</span><br><span class="line">        print(&quot;Content-Type: &quot;, self.request.headers.get(&quot;Content-Type&quot;, &quot;No-Content-Type&quot;))</span><br><span class="line">        print(&quot;uri: &quot;, self.request.uri)</span><br><span class="line">        print(&quot;path: &quot;, self.request.path)</span><br><span class="line">        print(&quot;argument: &quot;, self.request.arguments)</span><br><span class="line">        print(&quot;body: &quot;, self.request.body)</span><br><span class="line">        print(&quot;body str: &quot;)</span><br><span class="line">        print(self.request.body.decode())</span><br><span class="line"></span><br><span class="line">        print(&apos;-&apos; * 20)</span><br><span class="line">        print(&quot;file:&quot;)</span><br><span class="line">        for _, l in self.request.files.items():</span><br><span class="line">            print(&apos;-&apos; * 10)</span><br><span class="line">            for f in l:</span><br><span class="line">                content = f.body</span><br><span class="line">                filename = str(f.filename)</span><br><span class="line">                print(&quot;filename: &quot;, filename)</span><br><span class="line">                print(&quot;content: &quot;, content)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">application = tornado.web.Application([</span><br><span class="line">    (r&quot;/main&quot;, MainHandler),</span><br><span class="line">])</span><br><span class="line"></span><br><span class="line">if __name__ == &quot;__main__&quot;:</span><br><span class="line">    application.listen(5001)</span><br><span class="line">    tornado.ioloop.IOLoop.instance().start()</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/12/21/http/http之请求参数/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+      
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/18/learn/【学习】从事故到了解 tornado/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">
+              
+              <a href="/2019/11/18/learn/【学习】从事故到了解 tornado/" class="post-title-link" itemprop="url">【学习】从事故到了解 tornado</a>
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-18 19:02:37" itemprop="dateCreated datePublished" datetime="2019-11-18T19:02:37+08:00">2019-11-18</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机基础/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>3.8k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>3 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="从robot-engine事故到了解-tornado"><a href="#从robot-engine事故到了解-tornado" class="headerlink" title="从robot-engine事故到了解 tornado"></a>从robot-engine事故到了解 tornado</h1><p>[TOC]</p><h2 id="robot-engine事故"><a href="#robot-engine事故" class="headerlink" title="robot-engine事故"></a>robot-engine事故</h2><h3 id="问题一：tornado-是多进程还是多线程？它能同时支持多少连接"><a href="#问题一：tornado-是多进程还是多线程？它能同时支持多少连接" class="headerlink" title="问题一：tornado 是多进程还是多线程？它能同时支持多少连接"></a>问题一：tornado 是多进程还是多线程？它能同时支持多少连接</h3><p>…</p><h3 id="线上事故"><a href="#线上事故" class="headerlink" title="线上事故"></a>线上事故</h3><p>作为一个 TB 的产品，我们的很多功能都支持通过导入导入 excel 来让用户<strong>批量修改</strong>数据，但是在一些情况下，我们的服务却会出现直接拒绝服务的情况</p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/11/18/learn/【学习】从事故到了解 tornado/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1254,7 +1493,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/12/">12</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1290,7 +1529,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1335,7 +1574,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -1576,7 +1819,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -1618,7 +1945,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -1627,12 +1954,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

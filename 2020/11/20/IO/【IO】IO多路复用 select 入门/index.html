@@ -56,7 +56,7 @@
 </script>
 
   <meta name="description" content="[TOC]概述使用select搭建的多路I/O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I/O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I/O状态。若每路程序中都没有数据到达，线程将阻塞在select上；否则select将已就绪">
-<meta name="keywords" content="入门,多路复用,select">
+<meta name="keywords" content="select,入门,多路复用">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【IO】select 入门">
 <meta property="og:url" content="http://yoursite.com/2020/11/20/IO/【IO】IO多路复用 select 入门/index.html">
@@ -64,7 +64,7 @@
 <meta property="og:description" content="[TOC]概述使用select搭建的多路I/O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I/O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I/O状态。若每路程序中都没有数据到达，线程将阻塞在select上；否则select将已就绪">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://s3.ax1x.com/2020/11/19/DKnEQ0.png">
-<meta property="og:updated_time" content="2020-11-21T09:34:34.766Z">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.071Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【IO】select 入门">
 <meta name="twitter:description" content="[TOC]概述使用select搭建的多路I/O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I/O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I/O状态。若每路程序中都没有数据到达，线程将阻塞在select上；否则select将已就绪">
@@ -273,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-21 17:34:34" itemprop="dateModified" datetime="2020-11-21T17:34:34+08:00">2020-11-21</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -381,11 +381,11 @@
           
           <div class="post-tags">
             
+              <a href="/tags/select/" rel="tag"># select</a>
+            
               <a href="/tags/入门/" rel="tag"># 入门</a>
             
               <a href="/tags/多路复用/" rel="tag"># 多路复用</a>
-            
-              <a href="/tags/select/" rel="tag"># select</a>
             
           </div>
         
@@ -395,8 +395,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/11/19/IO/【IO】IO多路复用入门/" rel="next" title="【IO】IO多路复用入门">
-                  <i class="fa fa-chevron-left"></i> 【IO】IO多路复用入门
+                <a href="/2020/11/19/IO/【IO】IO 入门/" rel="next" title="【IO】IO 入门">
+                  <i class="fa fa-chevron-left"></i> 【IO】IO 入门
                 </a>
               
             </div>
@@ -464,7 +464,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -509,7 +509,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -750,7 +754,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -809,7 +897,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -818,12 +906,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

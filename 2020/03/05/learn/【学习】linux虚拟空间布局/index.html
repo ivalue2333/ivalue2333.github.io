@@ -56,14 +56,14 @@
 </script>
 
   <meta name="description" content="在多任务操作系统中，每个进程都运行在属于自己的内存沙盘中。这个沙盘就是虚拟地址空间(Virtual Address Space)，在32位模式下它是一个4GB的内存地址块。在Linux系统中, 内核进程和用户进程所占的虚拟内存比例是1:3，而Windows系统为2:2(通过设置Large-Address-Aware Executables标志也可为1:3)。这并不意味着内核使用那么多物理内存，仅表">
-<meta name="keywords" content="堆栈,堆,计算机基础">
+<meta name="keywords" content="堆,堆栈,计算机基础">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【学习】linux虚拟空间布局">
 <meta property="og:url" content="http://yoursite.com/2020/03/05/learn/【学习】linux虚拟空间布局/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="在多任务操作系统中，每个进程都运行在属于自己的内存沙盘中。这个沙盘就是虚拟地址空间(Virtual Address Space)，在32位模式下它是一个4GB的内存地址块。在Linux系统中, 内核进程和用户进程所占的虚拟内存比例是1:3，而Windows系统为2:2(通过设置Large-Address-Aware Executables标志也可为1:3)。这并不意味着内核使用那么多物理内存，仅表">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.362Z">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.092Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【学习】linux虚拟空间布局">
 <meta name="twitter:description" content="在多任务操作系统中，每个进程都运行在属于自己的内存沙盘中。这个沙盘就是虚拟地址空间(Virtual Address Space)，在32位模式下它是一个4GB的内存地址块。在Linux系统中, 内核进程和用户进程所占的虚拟内存比例是1:3，而Windows系统为2:2(通过设置Large-Address-Aware Executables标志也可为1:3)。这并不意味着内核使用那么多物理内存，仅表">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -408,9 +408,9 @@
           
           <div class="post-tags">
             
-              <a href="/tags/堆栈/" rel="tag"># 堆栈</a>
-            
               <a href="/tags/堆/" rel="tag"># 堆</a>
+            
+              <a href="/tags/堆栈/" rel="tag"># 堆栈</a>
             
               <a href="/tags/计算机基础/" rel="tag"># 计算机基础</a>
             
@@ -422,8 +422,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/02/07/http/【tcp】关于tcp&udp协议/" rel="next" title="【http】关于 tcp & udp 协议">
-                  <i class="fa fa-chevron-left"></i> 【http】关于 tcp & udp 协议
+                <a href="/2020/02/07/http/tcp之tcp和udp协议对比/" rel="next" title="tcp之tcp和udp协议的对比">
+                  <i class="fa fa-chevron-left"></i> tcp之tcp和udp协议的对比
                 </a>
               
             </div>
@@ -432,8 +432,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2020/03/24/distribute/【虚拟化】开始使用kubectl【1】/" rel="prev" title="【虚拟化】开始使用kubectl【1】">
-                  【虚拟化】开始使用kubectl【1】 <i class="fa fa-chevron-right"></i>
+                <a href="/2020/03/24/distribute/【虚拟化】开始使用 k8s【1】/" rel="prev" title="【虚拟化】开始使用 k8s【1】">
+                  【虚拟化】开始使用 k8s【1】 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -491,7 +491,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -536,7 +536,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -777,7 +781,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -836,7 +924,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -845,12 +933,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

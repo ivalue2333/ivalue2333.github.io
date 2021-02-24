@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]概述索引模板: 就是把已经创建好的某个索引的参数设置(settings)和索引映射(mapping)保存下来作为模板, 在创建新索引时, 指定要使用的模板名, 就可以直接重用已经定义好的模板中的设置和映射.索引模板中的内容(1) settings: 指定index的配置信息, 比如分片数、副本数, tranlog同步条件、refresh策略等信息;">
+<meta name="keywords" content="分布式系统,elasticsearch,index template">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【分布式系统实例】elasticsearch索引模板">
+<meta property="og:url" content="http://yoursite.com/2020/12/12/distribute/【分布式系统实例】elasticsearch 索引模板/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]概述索引模板: 就是把已经创建好的某个索引的参数设置(settings)和索引映射(mapping)保存下来作为模板, 在创建新索引时, 指定要使用的模板名, 就可以直接重用已经定义好的模板中的设置和映射.索引模板中的内容(1) settings: 指定index的配置信息, 比如分片数、副本数, tranlog同步条件、refresh策略等信息;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.001Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【分布式系统实例】elasticsearch索引模板">
+<meta name="twitter:description" content="[TOC]概述索引模板: 就是把已经创建好的某个索引的参数设置(settings)和索引映射(mapping)保存下来作为模板, 在创建新索引时, 指定要使用的模板名, 就可以直接重用已经定义好的模板中的设置和映射.索引模板中的内容(1) settings: 指定index的配置信息, 比如分片数、副本数, tranlog同步条件、refresh策略等信息;">
+  <link rel="canonical" href="http://yoursite.com/2020/12/12/distribute/【分布式系统实例】elasticsearch 索引模板/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【分布式系统实例】elasticsearch索引模板 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/12/distribute/【分布式系统实例】elasticsearch 索引模板/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【分布式系统实例】elasticsearch索引模板
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-12-12 10:42:33" itemprop="dateCreated datePublished" datetime="2020-12-12T10:42:33+08:00">2020-12-12</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/分布式系统/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>4.1k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>4 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>索引模板: 就是把已经创建好的某个索引的参数设置(settings)和索引映射(mapping)保存下来作为模板, 在创建新索引时, 指定要使用的模板名, 就可以直接重用已经定义好的模板中的设置和映射.</p><h2 id="索引模板中的内容"><a href="#索引模板中的内容" class="headerlink" title="索引模板中的内容"></a>索引模板中的内容</h2><p>(1) settings: 指定index的配置信息, 比如分片数、副本数, tranlog同步条件、refresh策略等信息;</p><a id="more"></a>
+
+
+<p>(2) mappings: 指定index的内部构建信息, 主要有:</p>
+<ul>
+<li>properties:  最重要的配置, 是对索引结构和文档字段的设置.</li>
+</ul>
+<h2 id="索引模板的用途"><a href="#索引模板的用途" class="headerlink" title="索引模板的用途"></a>索引模板的用途</h2><p>索引模板一般用在时间序列相关的索引中。也就是说, 如果你需要每间隔一定的时间就建立一次索引, 你只需要配置好索引模板, 以后就可以直接使用这个模板中的设置, 不用每次都设置settings和mappings.</p>
+<p>索引模板一般与索引别名一起使用. 关于索引别名。</p>
+<h2 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h2><h3 id="创建索引模板"><a href="#创建索引模板" class="headerlink" title="创建索引模板"></a>创建索引模板</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">PUT _template/shop_template</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">"index_patterns"</span>: [<span class="string">"shop*"</span>, <span class="string">"bar*"</span>],       // 可以通过<span class="string">"shop*"</span>和<span class="string">"bar*"</span>来适配, template字段已过期</span><br><span class="line">    <span class="string">"order"</span>: 0,                // 模板的权重, 多个模板的时候优先匹配用, 值越大, 权重越高</span><br><span class="line">    <span class="string">"settings"</span>: &#123;</span><br><span class="line">        <span class="string">"number_of_shards"</span>: 1  // 分片数量, 可以定义其他配置项</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"aliases"</span>: &#123;</span><br><span class="line">        <span class="string">"alias_1"</span>: &#123;&#125;          // 索引对应的别名</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"mappings"</span>: &#123;</span><br><span class="line">        // ES 6.0开始只支持一种<span class="built_in">type</span>, 名称为“_doc”， 这里写法可能有问题，看下面的写法（version <span class="string">"7.5.2"</span>,）</span><br><span class="line">        <span class="string">"_doc"</span>: &#123;</span><br><span class="line">            <span class="string">"_source"</span>: &#123;            // 是否保存字段的原始值</span><br><span class="line">                <span class="string">"enabled"</span>: <span class="literal">false</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">"properties"</span>: &#123;        // 字段的映射</span><br><span class="line">                <span class="string">"@timestamp"</span>: &#123;    // 具体的字段映射</span><br><span class="line">                    <span class="string">"type"</span>: <span class="string">"date"</span>,           </span><br><span class="line">                    <span class="string">"format"</span>: <span class="string">"yyyy-MM-dd HH:mm:ss"</span></span><br><span class="line">                &#125;,</span><br><span class="line">                <span class="string">"@version"</span>: &#123;</span><br><span class="line">                    <span class="string">"index"</span>: <span class="string">"false"</span>,   // 设置为<span class="literal">false</span>, 不索引</span><br><span class="line">                    <span class="string">"type"</span>: <span class="string">"text"</span>      // text类型</span><br><span class="line">                &#125;,</span><br><span class="line">                <span class="string">"logLevel"</span>: &#123;</span><br><span class="line">                    <span class="string">"type"</span>: <span class="string">"long"</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="curl"><a href="#curl" class="headerlink" title="curl"></a>curl</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">curl -XPUT -H <span class="string">"Content-Type:application/json"</span> <span class="string">"localhost:9200/_template/shop_template"</span> --data <span class="string">'&#123;</span></span><br><span class="line"><span class="string">  "index_patterns": [</span></span><br><span class="line"><span class="string">    "shop*",</span></span><br><span class="line"><span class="string">    "bar*"</span></span><br><span class="line"><span class="string">  ],</span></span><br><span class="line"><span class="string">  "order": 0,</span></span><br><span class="line"><span class="string">  "settings": &#123;</span></span><br><span class="line"><span class="string">    "number_of_shards": 1</span></span><br><span class="line"><span class="string">  &#125;,</span></span><br><span class="line"><span class="string">  "aliases": &#123;</span></span><br><span class="line"><span class="string">    "alias_1": &#123;&#125;</span></span><br><span class="line"><span class="string">  &#125;,</span></span><br><span class="line"><span class="string">  "mappings": &#123;</span></span><br><span class="line"><span class="string">    "_source": &#123;</span></span><br><span class="line"><span class="string">      "enabled": false</span></span><br><span class="line"><span class="string">    &#125;,</span></span><br><span class="line"><span class="string">    "properties": &#123;</span></span><br><span class="line"><span class="string">      "@timestamp": &#123;</span></span><br><span class="line"><span class="string">        "type": "date",</span></span><br><span class="line"><span class="string">        "format": "yyyy-MM-dd HH:mm:ss"</span></span><br><span class="line"><span class="string">      &#125;,</span></span><br><span class="line"><span class="string">      "@version": &#123;</span></span><br><span class="line"><span class="string">        "index": "false",</span></span><br><span class="line"><span class="string">        "type": "text"</span></span><br><span class="line"><span class="string">      &#125;,</span></span><br><span class="line"><span class="string">      "logLevel": &#123;</span></span><br><span class="line"><span class="string">        "type": "long"</span></span><br><span class="line"><span class="string">      &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">  &#125;</span></span><br><span class="line"><span class="string">&#125;'</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="索引模板优先级"><a href="#索引模板优先级" class="headerlink" title="索引模板优先级"></a>索引模板优先级</h4><p>索引匹配了多个template, 当属性等配置出现不一致时, 以模板的权重(order属性的值)为准, 值越大越优先, order的默认值是0.</p>
+<h3 id="查看模板"><a href="#查看模板" class="headerlink" title="查看模板"></a>查看模板</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET _template                // 查看所有模板</span><br><span class="line">GET _template/temp*          // 查看与通配符相匹配的模板</span><br><span class="line">GET _template/temp1,temp2    // 查看多个模板</span><br><span class="line">GET _template/shop_template  // 查看指定模板</span><br></pre></td></tr></table></figure>
+
+<h4 id="curl-1"><a href="#curl-1" class="headerlink" title="curl"></a>curl</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl <span class="string">"localhost:9200/_template/shop_template?pretty"</span></span><br><span class="line"></span><br><span class="line">curl <span class="string">"localhost:9200/_template/not_esists?pretty"</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="删除索引模板"><a href="#删除索引模板" class="headerlink" title="删除索引模板"></a>删除索引模板</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DELETE _template/shop_template	// 删除上述创建的模板</span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果模板不存在那么会报错</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="如何使用索引模板"><a href="#如何使用索引模板" class="headerlink" title="如何使用索引模板"></a>如何使用索引模板</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 技术上来说，只要你创建了一个符合索引模板的index，那么这个index就会使用这个 index template</span></span><br><span class="line">curl -X PUT <span class="string">'localhost:9200/shop_goods'</span></span><br><span class="line"></span><br><span class="line">|&gt;<span class="comment"># curl 'localhost:9200/shop_goods?pretty'</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">"shop_goods"</span> : &#123;</span><br><span class="line">    <span class="string">"aliases"</span> : &#123;</span><br><span class="line">      <span class="string">"alias_1"</span> : &#123; &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"mappings"</span> : &#123;</span><br><span class="line">      <span class="string">"_source"</span> : &#123;</span><br><span class="line">        <span class="string">"enabled"</span> : <span class="literal">false</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="string">"properties"</span> : &#123;</span><br><span class="line">        <span class="string">"@timestamp"</span> : &#123;</span><br><span class="line">          <span class="string">"type"</span> : <span class="string">"date"</span>,</span><br><span class="line">          <span class="string">"format"</span> : <span class="string">"yyyy-MM-dd HH:mm:ss"</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">"@version"</span> : &#123;</span><br><span class="line">          <span class="string">"type"</span> : <span class="string">"text"</span>,</span><br><span class="line">          <span class="string">"index"</span> : <span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">"logLevel"</span> : &#123;</span><br><span class="line">          <span class="string">"type"</span> : <span class="string">"long"</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"settings"</span> : &#123;</span><br><span class="line">      <span class="string">"index"</span> : &#123;</span><br><span class="line">        <span class="string">"creation_date"</span> : <span class="string">"1607742161879"</span>,</span><br><span class="line">        <span class="string">"number_of_shards"</span> : <span class="string">"1"</span>,</span><br><span class="line">        <span class="string">"number_of_replicas"</span> : <span class="string">"1"</span>,</span><br><span class="line">        <span class="string">"uuid"</span> : <span class="string">"q0FmU7inStece1qctW7J2w"</span>,</span><br><span class="line">        <span class="string">"version"</span> : &#123;</span><br><span class="line">          <span class="string">"created"</span> : <span class="string">"7050299"</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">"provided_name"</span> : <span class="string">"shop_goods"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="features"><a href="#features" class="headerlink" title="features"></a>features</h2><ul>
+<li>Index Template 只是对于一个新创建的索引才起作用</li>
+<li>可以通过 order 参数来控制模板的优先级</li>
+<li>一个 Elasticsearch 可以设置多个 Index Template</li>
+</ul>
+<h2 id="模板的使用建议"><a href="#模板的使用建议" class="headerlink" title="模板的使用建议"></a>模板的使用建议</h2><h3 id="一个index中不能有多个type"><a href="#一个index中不能有多个type" class="headerlink" title="一个index中不能有多个type"></a>一个index中不能有多个type</h3><p>Elasticsearch 6.X版本中已经不支持在同一个index下创建多个type.</p>
+<h3 id="设置-source-false"><a href="#设置-source-false" class="headerlink" title="设置_source = false"></a>设置_source = false</h3><p>如果我们只关心查询的评分结果, 而不用查看原始文档的内容, 就设置<code>&quot;_source&quot;: {&quot;enabled&quot;: false}</code>.—— 这能节省磁盘空间并减少磁盘IO上的开销.</p>
+<p>我们可以把原始的数据存储在MySQL、HBase等数据库, 从ES中得到文档的ID之后, 再到相应的数据库中获取数据.</p>
+<h3 id="设置-all-false"><a href="#设置-all-false" class="headerlink" title="设置_all = false"></a>设置_all = false</h3><p>如果能够确切地知道要对哪个field做查询操作, 就设置<code>&quot;_all&quot;: {&quot;enabled&quot;: false}</code>.—— 这能实现性能提升, 并节省存储空间.<br>而在6.X版本开始, <code>_all</code>字段也不再支持了, ES官方建议我们通过<code>copy_to</code>自定义我们自己的all字段.</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.cnblogs.com/shoufeng/p/10641560.html" target="_blank" rel="noopener">ES 10 - 如何使用Elasticsearch的索引模板(index template)</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+            
+              <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+            
+              <a href="/tags/index-template/" rel="tag"># index template</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/12/12/distribute/【分布式系统实例】elasticsearch 索引mapping/" rel="next" title="【分布式系统实例】elasticsearch索引mapping">
+                  <i class="fa fa-chevron-left"></i> 【分布式系统实例】elasticsearch索引mapping
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/12/12/algorithm/算法之groupcache singleflight 防缓存崩溃算法/" rel="prev" title="算法之groupcache singleflight 防缓存崩溃算法">
+                  算法之groupcache singleflight 防缓存崩溃算法 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引模板中的内容"><span class="nav-number">2.</span> <span class="nav-text">索引模板中的内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引模板的用途"><span class="nav-number">3.</span> <span class="nav-text">索引模板的用途</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#指令"><span class="nav-number">4.</span> <span class="nav-text">指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建索引模板"><span class="nav-number">4.1.</span> <span class="nav-text">创建索引模板</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#curl"><span class="nav-number">4.1.1.</span> <span class="nav-text">curl</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#索引模板优先级"><span class="nav-number">4.1.2.</span> <span class="nav-text">索引模板优先级</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看模板"><span class="nav-number">4.2.</span> <span class="nav-text">查看模板</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#curl-1"><span class="nav-number">4.2.1.</span> <span class="nav-text">curl</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除索引模板"><span class="nav-number">4.3.</span> <span class="nav-text">删除索引模板</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何使用索引模板"><span class="nav-number">5.</span> <span class="nav-text">如何使用索引模板</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#features"><span class="nav-number">6.</span> <span class="nav-text">features</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模板的使用建议"><span class="nav-number">7.</span> <span class="nav-text">模板的使用建议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一个index中不能有多个type"><span class="nav-number">7.1.</span> <span class="nav-text">一个index中不能有多个type</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置-source-false"><span class="nav-number">7.2.</span> <span class="nav-text">设置_source = false</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置-all-false"><span class="nav-number">7.3.</span> <span class="nav-text">设置_all = false</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">404k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

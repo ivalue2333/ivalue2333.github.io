@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="generator" content="Hexo 3.9.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/percy/images/favicon.ico?v=7.3.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.3.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.3.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.3.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    save_scroll: false,
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    }
+  };
+</script>
+
+  <meta name="description" content="[TOC]概述kube-proxy 和 service配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 podIP:Port 来获取对应的服务。">
+<meta name="keywords" content="k8s,kubectl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【虚拟化】开始使用 k8s【2】">
+<meta property="og:url" content="http://yoursite.com/2020/10/16/distribute/【虚拟化】开始使用 k8s【2】/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC]概述kube-proxy 和 service配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 podIP:Port 来获取对应的服务。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png">
+<meta property="og:updated_time" content="2021-02-24T11:43:30.997Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【虚拟化】开始使用 k8s【2】">
+<meta name="twitter:description" content="[TOC]概述kube-proxy 和 service配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 podIP:Port 来获取对应的服务。">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png">
+  <link rel="canonical" href="http://yoursite.com/2020/10/16/distribute/【虚拟化】开始使用 k8s【2】/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>【虚拟化】开始使用 k8s【2】 | blog | percy</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <div class="container sidebar-position-left">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">blog | percy</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content page-post-detail">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/10/16/distribute/【虚拟化】开始使用 k8s【2】/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="PercyG">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/percy/images/percy.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+
+        
+          <h1 class="post-title" itemprop="name headline">【虚拟化】开始使用 k8s【2】
+
+            
+          </h1>
+        
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-10-16 17:10:22" itemprop="dateCreated datePublished" datetime="2020-10-16T17:10:22+08:00">2020-10-16</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/虚拟化/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">本文字数：</span>
+              
+              <span>6.9k</span>
+            </span>
+          
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              
+              <span>6 分钟</span>
+            </span>
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h2 id="kube-proxy-和-service"><a href="#kube-proxy-和-service" class="headerlink" title="kube-proxy 和 service"></a>kube-proxy 和 service</h2><p>配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 <code>podIP:Port</code> 来获取对应的服务。</p><a id="more"></a>
+
+<p>但是还有一个问题：<strong>pod 是经常变化的，每次更新 ip 地址都可能会发生变化</strong>，如果直接访问容器 ip 的话，会有很大的问题。而且进行扩展的时候，rc 中会有新的 pod 创建出来，出现新的 ip 地址，我们需要一种更灵活的方式来访问 pod 的服务。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用场景</span></span><br><span class="line">podIp=`kcpg robotserver-pro | awk <span class="string">'&#123;print $6&#125;'</span>` &amp;&amp; curl <span class="string">"<span class="variable">$&#123;podIp&#125;</span>:8050/ai_answer"</span> -X POST</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service-和-cluster-IP"><a href="#Service-和-cluster-IP" class="headerlink" title="Service 和 cluster IP"></a>Service 和 cluster IP</h3><p>针对这个问题，kubernetes 的解决方案是“服务”（service），每个服务都一个固定的虚拟 ip（这个 ip 也被称为 cluster IP），自动并且动态地绑定后面的 pod，所有的网络请求直接访问服务 ip，服务会自动向后端做转发。Service 除了提供稳定的对外访问方式之外，还能起到负载均衡（Load Balance）的功能，自动把请求流量分布到后端所有的服务上，服务可以做到对客户透明地进行水平扩展（scale）。</p>
+<p>而实现 service 这一功能的关键，就是 kube-proxy。kube-proxy 运行在每个节点上，监听 API Server 中服务对象的变化，通过管理 iptables 来实现网络的转发。</p>
+<blockquote>
+<p><strong>NOTE</strong>: kube-proxy 要求 NODE 节点操作系统中要具备 /sys/module/br_netfilter 文件，而且还要设置 bridge-nf-call-iptables=1，如果不满足要求，那么 kube-proxy 只是将检查信息记录到日志中，kube-proxy 仍然会正常运行，但是这样通过 Kube-proxy 设置的某些 iptables 规则就不会工作。</p>
+</blockquote>
+<p>kube-proxy 有两种实现 service 的方案：userspace 和 iptables</p>
+<ul>
+<li>userspace 是在用户空间监听一个端口，所有的 service 都转发到这个端口，然后 kube-proxy 在内部应用层对其进行转发。因为是在用户空间进行转发，所以效率也不高</li>
+<li>iptables 完全实现 iptables 来实现 service，是目前默认的方式，也是推荐的方式，效率很高（只有内核中 netfilter 一些损耗）。</li>
+</ul>
+<p>现在还有一种叫做 ipvs 的实现方案。</p>
+<p>这篇文章通过 iptables 模式运行 kube-proxy，后面的分析也是针对这个模式的，userspace 只是旧版本支持的模式，以后可能会放弃维护和支持。</p>
+<h3 id="kube-proxy-参数介绍"><a href="#kube-proxy-参数介绍" class="headerlink" title="kube-proxy 参数介绍"></a>kube-proxy 参数介绍</h3><p>…</p>
+<h2 id="实例启动和测试"><a href="#实例启动和测试" class="headerlink" title="实例启动和测试"></a>实例启动和测试</h2><h3 id="whoami-镜像"><a href="#whoami-镜像" class="headerlink" title="whoami 镜像"></a>whoami 镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># https://github.com/hypriot/rpi-whoami</span></span><br><span class="line">docker pull cizixs/whoami:v0.5</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h4><p>为了方便测试，我们创建一个 rc，里面有三个 pod。这个 pod 运行的是 <a href="https://github.com/cizixs/whoami" target="_blank" rel="noopener"><code>cizixs/whoami</code> 容器</a>，它是一个简单的 HTTP 服务器，监听在 3000 端口，访问它会返回容器的 hostname。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># cat whoami-rc.yml</span></span><br></pre></td></tr></table></figure>
+
+<p>创建部署， <code>kubectl create -f ./whoami-rc.yml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicationController</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">        env:</span> <span class="string">dev</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">        image:</span> <span class="string">cizixs/whoami:v0.5</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">        - containerPort:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">        env:</span></span><br><span class="line"><span class="attr">          - name:</span> <span class="string">MESSAGE</span></span><br><span class="line"><span class="attr">            value:</span> <span class="string">viola</span></span><br></pre></td></tr></table></figure>
+
+<p>我们为每个 pod 设置了两个 label：<code>app=whoami</code> 和 <code>env=dev</code>，这两个标签很重要，也是后面服务进行绑定 pod 的关键。</p>
+<p>为了使用 service，我们还要定义另外一个文件，并通过 <code>kubectl create -f ./whoami-svc.yml</code> 来创建出来对象：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">    - port:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">      targetPort:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">      protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">    env:</span> <span class="string">dev</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>selector</code> 告诉 kubernetes 这个 service 和后端哪些 pod 绑定在一起，这里包含的键值对会对所有 pod 的 <code>labels</code> 进行匹配，只要完全匹配，service 就会把 pod 作为后端。也就是说，service 和 rc 并不是对应的关系，一个 service 可能会使用多个 rc 管理的 pod 作为后端应用。</p>
+<p><code>ports</code> 字段指定服务的端口信息：</p>
+<ul>
+<li><code>port</code>：虚拟 ip 要绑定的 port，每个 service 会创建出来一个虚拟 ip，通过访问 <code>vip:port</code> 就能获取服务的内容。这个 port 可以用户随机选取，因为每个服务都有自己的 vip，也不用担心冲突的情况</li>
+<li><code>targetPort</code>：pod 中暴露出来的 port，这是运行的容器中具体暴露出来的端口，一定不能写错</li>
+<li><code>protocol</code>：提供服务的协议类型，可以是 <code>TCP</code> 或者 <code>UDP</code></li>
+</ul>
+<p>创建之后可以列出 service ，发现我们创建的 service 已经分配了一个虚拟 ip (10.108.161.211)，这个虚拟 ip 地址是不会变化的（除非 service 被删除）。查看 service 的详情可以看到它的 endpoints 列出，对应了具体提供服务的 pod 地址和端口。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">|&gt;<span class="comment"># kc get svc | grep whoami</span></span><br><span class="line">whoami                                            ClusterIP      10.108.161.211   &lt;none&gt;                                                 3000/TCP                                       90s</span><br><span class="line"></span><br><span class="line"><span class="comment"># endpoints 中就是 pod 的ip + port，而这是易变的</span></span><br><span class="line">|&gt;<span class="comment"># kc describe svc whoami</span></span><br><span class="line">Name:              whoami</span><br><span class="line">Namespace:         <span class="built_in">test</span>-ks</span><br><span class="line">Labels:            name=whoami</span><br><span class="line">Annotations:       &lt;none&gt;</span><br><span class="line">Selector:          app=whoami,env=dev</span><br><span class="line">Type:              ClusterIP</span><br><span class="line">IP:                10.108.161.211</span><br><span class="line">Port:              &lt;<span class="built_in">unset</span>&gt;  3000/TCP</span><br><span class="line">TargetPort:        3000/TCP</span><br><span class="line">Endpoints:         10.244.0.111:3000,10.244.0.112:3000,10.244.0.113:3000</span><br><span class="line">Session Affinity:  None</span><br><span class="line">Events:            &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>默认的 service 类型是 <code>ClusterIP</code>，这个也可以从上面输出看出来。在这种情况下，只能从集群内部访问这个 IP，不能直接从集群外部访问服务。如果想对外提供服务，我们后面会讲解决方案。</p>
+<p>测试一下，访问 service 服务的时候可以看到它会随机地访问后端的 pod，给出不同的返回：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 直接通过 pod ip + port 访问</span></span><br><span class="line">|&gt;<span class="comment"># curl "10.244.10.130:3000"</span></span><br><span class="line">viola from whoami-hj7g8</span><br><span class="line"></span><br><span class="line"><span class="comment"># vip:port 访问 service，然后访问到 pod</span></span><br><span class="line"></span><br><span class="line">root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-8fpqp</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-c0x6h</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-8fpqp</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-dc9ds</span><br></pre></td></tr></table></figure>
+
+<p><strong>NOTE</strong>: 需要注意的是，服务分配的 cluster IP 是一个虚拟 ip，如果你尝试 <code>ping</code> 这个 IP 会发现它没有任何响应，这也是刚接触 kubernetes service 的人经常会犯的错误。实际上，这个虚拟 IP 只有和它的 port 一起的时候才有作用，直接访问它，或者想访问该 IP 的其他端口都是徒劳。</p>
+<h3 id="外部能够访问的服务"><a href="#外部能够访问的服务" class="headerlink" title="外部能够访问的服务"></a>外部能够访问的服务</h3><p>上面创建的服务只能在集群内部访问，这在生产环境中还不能直接使用。如果希望有一个能直接对外使用的服务，可以使用 <code>NodePort</code> 或者 <code>LoadBalancer</code> 类型的 Service。我们先说说 <code>NodePort</code>，它的意思是在所有 worker 节点上暴露一个端口，这样外部可以直接通过访问 <code>nodeIP:Port</code> 来访问应用。</p>
+<p>我们先把刚才创建的服务删除：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># kubectl delete rc whoami</span></span><br><span class="line">replicationcontroller <span class="string">"whoami"</span> deleted</span><br><span class="line"></span><br><span class="line">[root@localhost ~]<span class="comment"># kubectl delete svc whoami</span></span><br><span class="line">service <span class="string">"whoami"</span> deleted</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动-1"><a href="#启动-1" class="headerlink" title="启动"></a>启动</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh install2.sh <span class="variable">$&#123;ns&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>nodePort</code> 类型的服务会在所有的 worker 节点（运行了 kube-proxy）上统一暴露出端口对外提供服务，也就是说外部可以任意选择一个节点进行访问。比如我本地集群有三个节点：<code>172.17.8.100</code>、<code>172.17.8.101</code> 和 <code>172.17.8.102</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.100:31647</span></span><br><span class="line">viola from whoami-mc2fg</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.101:31647</span></span><br><span class="line">viola from whoami-8zc3d</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.102:31647</span></span><br><span class="line">viola from whoami-z6skj</span><br></pre></td></tr></table></figure>
+
+<p>有了 <code>nodePort</code>，用户可以通过外部的 Load Balance 或者路由器把流量转发到任意的节点，对外提供服务的同时，也可以做到负载均衡的效果。</p>
+<p><code>nodePort</code> 类型的服务并不影响原来虚拟 IP 的访问方式，内部节点依然可以通过 <code>vip:port</code> 的方式进行访问。</p>
+<h2 id="创建服务（原理解析）"><a href="#创建服务（原理解析）" class="headerlink" title="创建服务（原理解析）"></a>创建服务（原理解析）</h2><p>在 Kubernetes 中创建一个新的 Service 对象需要两大模块同时协作，其中一个模块是控制器，它需要在每次客户端创建新的 Service 对象时，生成其他用于暴露一组 Pod 的 Kubernetes 对象，也就是 Endpoint 对象；另一个模块是 kube-proxy，它运行在 Kubernetes 集群中的每一个节点上，会根据 Service 和 Endpoint 的变动改变节点上 iptables 或者 ipvs 中保存的规则。</p>
+<ul>
+<li>控制器， 用于生成 endpoints 对象</li>
+<li>kube-proxy</li>
+</ul>
+<h3 id="控制器"><a href="#控制器" class="headerlink" title="控制器"></a>控制器</h3><p>控制器模块其实总共有两个部分监听了 Service 变动的事件，其中一个是 <code>ServiceController</code>、另一个是 <code>EndpointController</code>，我们分别来看两者如何应对 Service 的变动。</p>
+<h4 id="EndpointController"><a href="#EndpointController" class="headerlink" title="EndpointController"></a>EndpointController</h4><p>EndpointController 本身并没有通过 Informer 监听 Endpoint 资源的变动，但是它却同时订阅了 Service 和 Pod 资源的增删事件，对于 Service 资源来讲，EndpointController 会通过以下的方式进行处理：</p>
+<p>EndpointController 中的 syncService 方法是用于创建和删除 Endpoint 资源最重要的方法，在这个方法中我们会根据 <strong>Service 对象规格中的选择器 Selector 获取集群中存在的所有 Pod，并将 Service 和 Pod 上的端口进行映射生成一个 EndpointPort 结构体</strong>：</p>
+<h3 id="kube-proxy"><a href="#kube-proxy" class="headerlink" title="kube-proxy"></a>kube-proxy</h3><p>在 Kubernetes 集群中的每一个节点都运行着一个 kube-proxy 进程，这个进程会负责监听 Kubernetes 主节点中 Service 的增加和删除事件并修改运行代理的配置，为节点内的客户端提供流量的转发和负载均衡等功能，但是当前 kube-proxy 的代理模式目前来看有三种：</p>
+<h4 id="iptable"><a href="#iptable" class="headerlink" title="iptable"></a>iptable</h4><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png" alt></p>
+<p>iptables 作为一种代理模式，它同样实现了 OnServiceUpdate、OnEndpointsUpdate 等方法，这两个方法会分别调用相应的变更追踪对象。</p>
+<p>主要功能就是根据 <code>Service</code> 和 <code>Endpoint</code> 对象的变更生成一条一条的 iptables 规则.</p>
+<p>当我们使用 iptables 的方式启动节点上的代理时，所有的流量都会先经过 PREROUTING 或者 OUTPUT 链，随后进入 Kubernetes 自定义的链入口 KUBE-SERVICES、单个 Service 对应的链 KUBE-SVC-XXXX 以及每个 Pod 对应的链 KUBE-SEP-XXXX，经过这些链的处理，最终才能够访问当一个服务的真实 IP 地址。</p>
+<p>当我们使用 iptables 的方式启动节点上的代理时，所有的流量都会先经过 <code>PREROUTING</code> 或者 <code>OUTPUT</code> 链，随后进入 Kubernetes 自定义的链入口 KUBE-SERVICES、单个 Service 对应的链 <code>KUBE-SVC-XXXX</code> 以及每个 Pod 对应的链 <code>KUBE-SEP-XXXX</code>，经过这些链的处理，最终才能够访问当一个服务的真实 IP 地址。</p>
+<h4 id="ipvs"><a href="#ipvs" class="headerlink" title="ipvs"></a>ipvs</h4><p>ipvs 就是用于解决在大量 Service 时，iptables 规则同步变得不可用的性能问题。与 iptables 比较像的是，ipvs 的实现虽然也基于 netfilter 的钩子函数，<strong>但是它却使用哈希表作为底层的数据结构并且工作在内核态</strong>，这也就是说 ipvs 在重定向流量和同步代理规则有着更好的性能。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>Kubernetes 中的 Service 将一组 Pod 以统一的形式对外暴露成一个服务，它利用运行在内核空间的 iptables 或者 ipvs 高效地转发来自节点内部和外部的流量。除此之外，作为非常重要的 Kubernetes 对象，Service 不仅在逻辑上提供了微服务的概念，还引入 LoadBalancer 类型的 Service 无缝对接云服务商提供的复杂资源。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p> <a href="https://cizixs.com/2017/03/30/kubernetes-introduction-service-and-kube-proxy/" target="_blank" rel="noopener">主要的参考</a></p>
+<p><a href="https://draveness.me/kubernetes-service/" target="_blank" rel="noopener">service 原理</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+            
+              <a href="/tags/kubectl/" rel="tag"># kubectl</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2020/09/11/garbage collection/【gc】常见的垃圾搜集算法/" rel="next" title="【gc】常见的垃圾搜集算法">
+                  <i class="fa fa-chevron-left"></i> 【gc】常见的垃圾搜集算法
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/10/19/distribute/【分布式系统】指标/" rel="prev" title="【分布式系统】指标">
+                  【分布式系统】指标 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/percy/images/percy.jpg"
+      alt="PercyG">
+  <p class="site-author-name" itemprop="name">PercyG</p>
+  <div class="site-description motion-element" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">116</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="https://github.com/ivalue2333" title="GitHub &rarr; https://github.com/ivalue2333" rel="noopener" target="_blank">GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        <a href="mailto:1372254949@qq.com" title="E-Mail &rarr; mailto:1372254949@qq.com" rel="noopener" target="_blank">E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+        </div>
+      </div>
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kube-proxy-和-service"><span class="nav-number">2.</span> <span class="nav-text">kube-proxy 和 service</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Service-和-cluster-IP"><span class="nav-number">2.1.</span> <span class="nav-text">Service 和 cluster IP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kube-proxy-参数介绍"><span class="nav-number">2.2.</span> <span class="nav-text">kube-proxy 参数介绍</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实例启动和测试"><span class="nav-number">3.</span> <span class="nav-text">实例启动和测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#whoami-镜像"><span class="nav-number">3.1.</span> <span class="nav-text">whoami 镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#启动"><span class="nav-number">3.1.1.</span> <span class="nav-text">启动</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#外部能够访问的服务"><span class="nav-number">3.2.</span> <span class="nav-text">外部能够访问的服务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#启动-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">启动</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建服务（原理解析）"><span class="nav-number">4.</span> <span class="nav-text">创建服务（原理解析）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#控制器"><span class="nav-number">4.1.</span> <span class="nav-text">控制器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EndpointController"><span class="nav-number">4.1.1.</span> <span class="nav-text">EndpointController</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kube-proxy"><span class="nav-number">4.2.</span> <span class="nav-text">kube-proxy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#iptable"><span class="nav-number">4.2.1.</span> <span class="nav-text">iptable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ipvs"><span class="nav-number">4.2.2.</span> <span class="nav-text">ipvs</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">4.2.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">percy.iota.com</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">404k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:07</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+      </div>
+
+    
+
+  </div>
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+<script src="/js/utils.js?v=7.3.0"></script>
+  <script src="/js/motion.js?v=7.3.0"></script>
+
+
+  <script src="/js/affix.js?v=7.3.0"></script>
+  <script src="/js/schemes/pisces.js?v=7.3.0"></script>
+
+
+
+<script src="/js/next-boot.js?v=7.3.0"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+  
+  <script src="/js/scrollspy.js?v=7.3.0"></script>
+<script src="/js/post-details.js?v=7.3.0"></script>
+
+
+</body>
+</html>

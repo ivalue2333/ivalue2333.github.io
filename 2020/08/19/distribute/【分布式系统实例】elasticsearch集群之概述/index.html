@@ -67,7 +67,7 @@
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/ac61d59cc952484a9609f685bd48cd38.jpg">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/04c02a0d8fab47fca87ccbe4a8980797.jpg">
 <meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/b674a4895ca54eb7a1dd1c53ca68fc2b.jpg">
-<meta property="og:updated_time" content="2020-08-29T14:16:00.343Z">
+<meta property="og:updated_time" content="2021-02-24T11:43:30.970Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【分布式系统实例】elasticsearch集群之概述">
 <meta name="twitter:description" content="[TOC]概述基本概念elasticsearch是什么官网：Elasticsearch 是一个实时的分布式搜索分析引擎，它能让你以前所未有的速度和规模，去探索你的数据。 它被用作全文检索、结构化搜索、分析以及这三个功能的组合： 使用 java 语言开发的一套开源的全文搜索引擎 用于搜索、日志管理、安全分析、指标分析、业务分析、应用性能监控等多个领域 底层基于 Lucene 开源库开发，提供 res">
@@ -276,7 +276,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-08-29 22:16:00" itemprop="dateModified" datetime="2020-08-29T22:16:00+08:00">2020-08-29</time>
+                <time title="修改时间：2021-02-24 19:43:30" itemprop="dateModified" datetime="2021-02-24T19:43:30+08:00">2021-02-24</time>
               </span>
             
           
@@ -303,7 +303,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>24k</span>
+              <span>21k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -313,7 +313,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>21 分钟</span>
+              <span>19 分钟</span>
             </span>
           
 
@@ -362,6 +362,10 @@
 <li>每个索引有自己的 Settings 用于定义不同的数据分布，也就是索引使用分片的情况</li>
 </ul>
 <h3 id="类型（type）"><a href="#类型（type）" class="headerlink" title="类型（type）"></a>类型（type）</h3><p>Elasticsearch 7.x 版本已废弃 type 的概念，默认所有 index 只具备 _doc 一个类型，因此该概念可以不用深究。</p>
+<h4 id="为什么现在要移除type？"><a href="#为什么现在要移除type？" class="headerlink" title="为什么现在要移除type？"></a>为什么现在要移除type？</h4><ul>
+<li>在关系型数据库中table是独立的（独立存储），但es中同一个index中不同type是存储在同一个索引中的（lucene的索引文件），因此不同type中相同名字的字段的定义（mapping）必须一致。</li>
+<li>不同类型的“记录”存储在同一个index中，会影响lucene的压缩性能。</li>
+</ul>
 <h3 id="分片（Shard）"><a href="#分片（Shard）" class="headerlink" title="分片（Shard）"></a>分片（Shard）</h3><ul>
 <li>分片是物理空间概念，索引中的数据都分布在分片上</li>
 <li>一个分片就是运行的一个 Lucene 的实例</li>
@@ -380,28 +384,8 @@
 </ul>
 <h4 id="一个文档主要的元信息"><a href="#一个文档主要的元信息" class="headerlink" title="一个文档主要的元信息"></a>一个文档主要的元信息</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1. _index: 文档所属的索引名</span><br><span class="line">2. _type: 文档所属的类型名</span><br><span class="line">3. _id: 文档的唯一ID</span><br><span class="line">4. _source: 文档存储的 Json 数据</span><br><span class="line">5. _version：文档的版本信息</span><br><span class="line">6. _score: 相关性打分</span><br></pre></td></tr></table></figure>
 
-<h3 id="Mapping"><a href="#Mapping" class="headerlink" title="Mapping"></a>Mapping</h3><h4 id="新增-index-并且设置-mapping"><a href="#新增-index-并且设置-mapping" class="headerlink" title="新增 index 并且设置 mapping"></a>新增 index 并且设置 mapping</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT 'localhost:9200/weather'</span><br><span class="line">curl -XPUT -H "Content-Type:application/json" "http://127.0.0.1:9200/weather/_mapping?pretty" -d '&#123;</span><br><span class="line">  "properties": &#123;</span><br><span class="line">    "id": &#123;</span><br><span class="line">      "type": "long",</span><br><span class="line">      "index": false</span><br><span class="line">    &#125;,</span><br><span class="line">    "name": &#123;</span><br><span class="line">      "type": "text",</span><br><span class="line">      "index_options": "positions",</span><br><span class="line">      "copy_to": "fullName",</span><br><span class="line">      "fields": &#123;</span><br><span class="line">        "english_comment": &#123;</span><br><span class="line">          "type": "text",</span><br><span class="line">          "analyzer": "english",</span><br><span class="line">          "search_analyzer": "english"</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    "phone": &#123;</span><br><span class="line">      "type": "keyword",</span><br><span class="line">      "null_value": "NULL"</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;'</span><br></pre></td></tr></table></figure>
-
-<h4 id="查询mapping"><a href="#查询mapping" class="headerlink" title="查询mapping"></a>查询mapping</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl 'localhost:9200/weather/_mapping?pretty'</span><br></pre></td></tr></table></figure>
-
-<p>Mapping 主要用于定义索引的字段名称和数据类型以及倒排索引等相关配置，Mapping 可以系统自动推断生成，也可以由用户自己定义，下面我们看一个简单 Mapping 的格式：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">//该索引包含三个字段</span><br><span class="line">//id，类型是 long，不支持索引搜索</span><br><span class="line">//name，类型是 text，并定义了索引级别，以及自定义的分词器</span><br><span class="line">//phone，类型是 keyword，对于值为空的情况可以使用"NULL"字符串来搜索</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"mappings"</span> : &#123;</span><br><span class="line">      <span class="attr">"properties"</span> : &#123;</span><br><span class="line">        <span class="attr">"id"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"long"</span>,</span><br><span class="line">          <span class="attr">"index"</span>: <span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"name"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"text"</span>,</span><br><span class="line">          <span class="attr">"index_options"</span>: <span class="string">"positions"</span>,</span><br><span class="line">          <span class="attr">"copy_to"</span>: <span class="string">"fullName"</span>,</span><br><span class="line">          <span class="attr">"fields"</span>: &#123;</span><br><span class="line">            <span class="attr">"english_comment"</span>:&#123;</span><br><span class="line">              <span class="attr">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">              <span class="attr">"analyzer"</span>: <span class="string">"english"</span>,</span><br><span class="line">              <span class="attr">"search_analyzer"</span>: <span class="string">"english"</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"phone"</span> : &#123;</span><br><span class="line">          <span class="attr">"type"</span> : <span class="string">"keyword"</span>,</span><br><span class="line">          <span class="attr">"null_value"</span>: <span class="string">"NULL"</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="字段的属性"><a href="#字段的属性" class="headerlink" title="字段的属性"></a>字段的属性</h4><h5 id="type"><a href="#type" class="headerlink" title="type"></a>type</h5><p>type：字段的数据类型，并没有提供专门数组类型，通过 TEXT 字段实现，Elasticsearch 主要支持以下几种数据类型：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- Text：默认情况下会进行分词</span><br><span class="line">- Keyword：不会进行分词，全文本匹配</span><br><span class="line">- Date：日期类型</span><br><span class="line">- Integer/Floating：整数/浮点数</span><br><span class="line">- Boolean：布尔类型</span><br><span class="line">- IPv4 &amp; IPv6</span><br><span class="line">- 特殊类型：geo_point &amp; geo_shape &amp; percolator</span><br></pre></td></tr></table></figure>
-
-<h5 id="index"><a href="#index" class="headerlink" title="index"></a>index</h5><p>index：表示该字段是否可以被搜索，是否需要建立倒排索引</p>
-<h3 id="Index-Template"><a href="#Index-Template" class="headerlink" title="Index Template"></a>Index Template</h3><p>帮助你设定 Mappings 和 Settings，并按照一定的规则，自动匹配到新创建的索引之上。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">PUT _template/test_template</span><br><span class="line">&#123;</span><br><span class="line">  &quot;index_patterns&quot;: [&quot;test*&quot;],  // 什么样的 index 会使用这个模板</span><br><span class="line">  &quot;order&quot;: 1,                   // 设置模板的优先级</span><br><span class="line">  &quot;settings&quot;: &#123; </span><br><span class="line">    &quot;number_of_shards&quot;: 1,      // shard 的数量</span><br><span class="line">    &quot;number_of_replicas&quot;: 2     //replication 的数量</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">    &quot;date_detection&quot;: false,   //字符串的日期类型是否自动转换</span><br><span class="line">    &quot;numeric_detection&quot;: true  //字符串的数字类型是否自动转换</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>Index Template 只是对于一个新创建的索引才起作用</li>
-<li>可以通过 order 参数来控制模板的优先级</li>
-<li>一个 Elasticsearch 可以设置多个 Index Template</li>
-<li>创建一个索引时，按照以下顺序配置其 Settings 和 Mappings，后面的覆盖前面的配置</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- ES 默认的 Settings 和 Mappings</span><br><span class="line">- order 数值低的 Index Template</span><br><span class="line">- order 数值高的 Index Template</span><br><span class="line">- 用户对于当前索引指定的 Settings 和 Mappings</span><br></pre></td></tr></table></figure>
-
+<h3 id="Mapping-（索引映射）"><a href="#Mapping-（索引映射）" class="headerlink" title="Mapping （索引映射）"></a>Mapping （索引映射）</h3><p>见 elasticesearch 索引mapping</p>
+<h3 id="Index-Template-（索引模板）"><a href="#Index-Template-（索引模板）" class="headerlink" title="Index Template （索引模板）"></a>Index Template （索引模板）</h3><p>见 elasticesearch 索引模板</p>
 <h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget https://mirrors.huaweicloud.com/elasticsearch/7.7.0/elasticsearch-7.7.0-windows-x86_64.zip</span><br><span class="line">unzip elasticsearch-5.5.1.zip</span><br><span class="line">cd elasticsearch-5.5.1/ </span><br><span class="line">elasticsearch</span><br></pre></td></tr></table></figure>
 
 <h2 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h2><h3 id="集群信息查询"><a href="#集群信息查询" class="headerlink" title="集群信息查询"></a>集群信息查询</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET 'http://localhost:9200/_cat/indices?v'</span><br></pre></td></tr></table></figure>
@@ -600,8 +584,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/08/14/distribute/【分布式系统实例】mongo集群之概述/" rel="next" title="【分布式系统实例】mongo 集群之概述">
-                  <i class="fa fa-chevron-left"></i> 【分布式系统实例】mongo 集群之概述
+                <a href="/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之集群搭建/" rel="next" title="【分布式系统实例】elasticsearch集群之集群搭建">
+                  <i class="fa fa-chevron-left"></i> 【分布式系统实例】elasticsearch集群之集群搭建
                 </a>
               
             </div>
@@ -610,8 +594,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2020/08/19/distribute/【分布式系统实例】elasticsearch集群之集群搭建/" rel="prev" title="【分布式系统实例】elasticsearch集群之集群搭建">
-                  【分布式系统实例】elasticsearch集群之集群搭建 <i class="fa fa-chevron-right"></i>
+                <a href="/2020/08/21/golang/【golang】逃逸分析/" rel="prev" title="【golang】逃逸分析">
+                  【golang】逃逸分析 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -669,7 +653,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -714,7 +698,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -955,7 +943,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -996,7 +1068,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">2.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#elasticsearch是什么"><span class="nav-number">2.1.</span> <span class="nav-text">elasticsearch是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群（cluster）和节点（node）"><span class="nav-number">2.2.</span> <span class="nav-text">集群（cluster）和节点（node）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三种类型的节点"><span class="nav-number">2.2.1.</span> <span class="nav-text">三种类型的节点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Master-eligible-节点："><span class="nav-number">2.2.1.1.</span> <span class="nav-text">Master-eligible 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-节点："><span class="nav-number">2.2.1.2.</span> <span class="nav-text">Data 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Coordinating-节点"><span class="nav-number">2.2.1.3.</span> <span class="nav-text">Coordinating 节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何启动节点"><span class="nav-number">2.2.2.</span> <span class="nav-text">如何启动节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#索引（Index）-gt-table"><span class="nav-number">2.3.</span> <span class="nav-text">索引（Index）-&gt; table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类型（type）"><span class="nav-number">2.4.</span> <span class="nav-text">类型（type）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分片（Shard）"><span class="nav-number">2.5.</span> <span class="nav-text">分片（Shard）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#副本分片（分片副本）"><span class="nav-number">2.5.1.</span> <span class="nav-text">副本分片（分片副本）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#设置分片"><span class="nav-number">2.5.2.</span> <span class="nav-text">设置分片</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文档（Document）"><span class="nav-number">2.6.</span> <span class="nav-text">文档（Document）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一个文档主要的元信息"><span class="nav-number">2.6.1.</span> <span class="nav-text">一个文档主要的元信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mapping"><span class="nav-number">2.7.</span> <span class="nav-text">Mapping</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#新增-index-并且设置-mapping"><span class="nav-number">2.7.1.</span> <span class="nav-text">新增 index 并且设置 mapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询mapping"><span class="nav-number">2.7.2.</span> <span class="nav-text">查询mapping</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字段的属性"><span class="nav-number">2.7.3.</span> <span class="nav-text">字段的属性</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#type"><span class="nav-number">2.7.3.1.</span> <span class="nav-text">type</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#index"><span class="nav-number">2.7.3.2.</span> <span class="nav-text">index</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Index-Template"><span class="nav-number">2.8.</span> <span class="nav-text">Index Template</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">3.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#windows"><span class="nav-number">3.1.</span> <span class="nav-text">windows</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本操作"><span class="nav-number">4.</span> <span class="nav-text">基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#集群信息查询"><span class="nav-number">4.1.</span> <span class="nav-text">集群信息查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新建和删除-Index"><span class="nav-number">4.2.</span> <span class="nav-text">新建和删除 Index</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#index-操作"><span class="nav-number">4.3.</span> <span class="nav-text">index 操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#新增"><span class="nav-number">4.3.1.</span> <span class="nav-text">新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询"><span class="nav-number">4.3.2.</span> <span class="nav-text">查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除记录"><span class="nav-number">4.4.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新记录"><span class="nav-number">4.5.</span> <span class="nav-text">更新记录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本高级查询"><span class="nav-number">5.</span> <span class="nav-text">基本高级查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返回所有记录"><span class="nav-number">5.1.</span> <span class="nav-text">返回所有记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询和过滤的区别"><span class="nav-number">5.2.</span> <span class="nav-text">查询和过滤的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何选择查询与过滤"><span class="nav-number">5.2.1.</span> <span class="nav-text">如何选择查询与过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询和过滤的区别"><span class="nav-number">5.2.2.</span> <span class="nav-text">bool 查询和过滤的区别</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤"><span class="nav-number">5.3.</span> <span class="nav-text">过滤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#term-过滤"><span class="nav-number">5.3.1.</span> <span class="nav-text">term 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#terms-过滤"><span class="nav-number">5.3.2.</span> <span class="nav-text">terms 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#range-过滤"><span class="nav-number">5.3.3.</span> <span class="nav-text">range 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#exists-和-missing-过滤"><span class="nav-number">5.3.4.</span> <span class="nav-text">exists 和 missing 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-过滤"><span class="nav-number">5.3.5.</span> <span class="nav-text">bool 过滤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-1"><span class="nav-number">5.4.</span> <span class="nav-text">查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#match-查询"><span class="nav-number">5.4.1.</span> <span class="nav-text">match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#multi-match-查询"><span class="nav-number">5.4.2.</span> <span class="nav-text">multi_match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询"><span class="nav-number">5.4.3.</span> <span class="nav-text">bool 查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#嵌套查询（内部对象和嵌套对象）"><span class="nav-number">5.5.</span> <span class="nav-text">嵌套查询（内部对象和嵌套对象）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#object新增"><span class="nav-number">5.5.1.</span> <span class="nav-text">object新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#object查询"><span class="nav-number">5.5.2.</span> <span class="nav-text">object查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nested-查询"><span class="nav-number">5.5.3.</span> <span class="nav-text">nested 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">5.5.4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分页查询"><span class="nav-number">5.6.</span> <span class="nav-text">分页查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Query-阶段"><span class="nav-number">5.6.1.</span> <span class="nav-text">Query 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fetch-阶段"><span class="nav-number">5.6.2.</span> <span class="nav-text">Fetch 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#深度分页的问题"><span class="nav-number">5.6.3.</span> <span class="nav-text">深度分页的问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深翻页的解决之道（游标查询scroll）"><span class="nav-number">5.7.</span> <span class="nav-text">深翻页的解决之道（游标查询scroll）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化"><span class="nav-number">5.7.1.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#scroll-1m"><span class="nav-number">5.7.1.1.</span> <span class="nav-text">scroll=1m</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#遍历"><span class="nav-number">5.7.2.</span> <span class="nav-text">遍历</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Scroll-Scan"><span class="nav-number">5.7.3.</span> <span class="nav-text">Scroll-Scan</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kibana-查询"><span class="nav-number">6.</span> <span class="nav-text">Kibana 查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查询原理"><span class="nav-number">7.</span> <span class="nav-text">查询原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分片及副本"><span class="nav-number">7.1.</span> <span class="nav-text">分片及副本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Index流程"><span class="nav-number">7.2.</span> <span class="nav-text">创建Index流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署层架构"><span class="nav-number">7.3.</span> <span class="nav-text">部署层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#混合部署-左图-Data-Node和Transport-Node-结合"><span class="nav-number">7.3.1.</span> <span class="nav-text">混合部署(左图) Data Node和Transport Node 结合</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势"><span class="nav-number">7.3.1.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势"><span class="nav-number">7.3.1.2.</span> <span class="nav-text">劣势</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分层部署-右图"><span class="nav-number">7.3.2.</span> <span class="nav-text">分层部署(右图)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势-1"><span class="nav-number">7.3.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势-1"><span class="nav-number">7.3.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据层架构"><span class="nav-number">7.4.</span> <span class="nav-text">数据层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据存储"><span class="nav-number">7.4.1.</span> <span class="nav-text">数据存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#副本-Replica"><span class="nav-number">7.4.2.</span> <span class="nav-text">副本(Replica)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#副本-Replica-的目的有三个："><span class="nav-number">7.4.2.1.</span> <span class="nav-text">副本(Replica)的目的有三个：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Replica-的问题"><span class="nav-number">7.4.2.2.</span> <span class="nav-text">Replica 的问题</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式数据系统架构"><span class="nav-number">8.</span> <span class="nav-text">分布式数据系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于本地文件系统的分布式系统"><span class="nav-number">8.1.</span> <span class="nav-text">基于本地文件系统的分布式系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于分布式文件系统的分布式系统-共享存储-存储和计算分离"><span class="nav-number">8.2.</span> <span class="nav-text">基于分布式文件系统的分布式系统(共享存储)-存储和计算分离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优势-2"><span class="nav-number">8.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#劣势-2"><span class="nav-number">8.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考-1"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">2.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#elasticsearch是什么"><span class="nav-number">2.1.</span> <span class="nav-text">elasticsearch是什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集群（cluster）和节点（node）"><span class="nav-number">2.2.</span> <span class="nav-text">集群（cluster）和节点（node）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#三种类型的节点"><span class="nav-number">2.2.1.</span> <span class="nav-text">三种类型的节点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Master-eligible-节点："><span class="nav-number">2.2.1.1.</span> <span class="nav-text">Master-eligible 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Data-节点："><span class="nav-number">2.2.1.2.</span> <span class="nav-text">Data 节点：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Coordinating-节点"><span class="nav-number">2.2.1.3.</span> <span class="nav-text">Coordinating 节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何启动节点"><span class="nav-number">2.2.2.</span> <span class="nav-text">如何启动节点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#索引（Index）-gt-table"><span class="nav-number">2.3.</span> <span class="nav-text">索引（Index）-&gt; table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类型（type）"><span class="nav-number">2.4.</span> <span class="nav-text">类型（type）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#为什么现在要移除type？"><span class="nav-number">2.4.1.</span> <span class="nav-text">为什么现在要移除type？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分片（Shard）"><span class="nav-number">2.5.</span> <span class="nav-text">分片（Shard）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#副本分片（分片副本）"><span class="nav-number">2.5.1.</span> <span class="nav-text">副本分片（分片副本）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#设置分片"><span class="nav-number">2.5.2.</span> <span class="nav-text">设置分片</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文档（Document）"><span class="nav-number">2.6.</span> <span class="nav-text">文档（Document）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一个文档主要的元信息"><span class="nav-number">2.6.1.</span> <span class="nav-text">一个文档主要的元信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mapping-（索引映射）"><span class="nav-number">2.7.</span> <span class="nav-text">Mapping （索引映射）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Index-Template-（索引模板）"><span class="nav-number">2.8.</span> <span class="nav-text">Index Template （索引模板）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">3.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#windows"><span class="nav-number">3.1.</span> <span class="nav-text">windows</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本操作"><span class="nav-number">4.</span> <span class="nav-text">基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#集群信息查询"><span class="nav-number">4.1.</span> <span class="nav-text">集群信息查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新建和删除-Index"><span class="nav-number">4.2.</span> <span class="nav-text">新建和删除 Index</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#index-操作"><span class="nav-number">4.3.</span> <span class="nav-text">index 操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#新增"><span class="nav-number">4.3.1.</span> <span class="nav-text">新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查询"><span class="nav-number">4.3.2.</span> <span class="nav-text">查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除记录"><span class="nav-number">4.4.</span> <span class="nav-text">删除记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新记录"><span class="nav-number">4.5.</span> <span class="nav-text">更新记录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本高级查询"><span class="nav-number">5.</span> <span class="nav-text">基本高级查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返回所有记录"><span class="nav-number">5.1.</span> <span class="nav-text">返回所有记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询和过滤的区别"><span class="nav-number">5.2.</span> <span class="nav-text">查询和过滤的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何选择查询与过滤"><span class="nav-number">5.2.1.</span> <span class="nav-text">如何选择查询与过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询和过滤的区别"><span class="nav-number">5.2.2.</span> <span class="nav-text">bool 查询和过滤的区别</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤"><span class="nav-number">5.3.</span> <span class="nav-text">过滤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#term-过滤"><span class="nav-number">5.3.1.</span> <span class="nav-text">term 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#terms-过滤"><span class="nav-number">5.3.2.</span> <span class="nav-text">terms 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#range-过滤"><span class="nav-number">5.3.3.</span> <span class="nav-text">range 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#exists-和-missing-过滤"><span class="nav-number">5.3.4.</span> <span class="nav-text">exists 和 missing 过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-过滤"><span class="nav-number">5.3.5.</span> <span class="nav-text">bool 过滤</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查询-1"><span class="nav-number">5.4.</span> <span class="nav-text">查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#match-查询"><span class="nav-number">5.4.1.</span> <span class="nav-text">match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#multi-match-查询"><span class="nav-number">5.4.2.</span> <span class="nav-text">multi_match 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bool-查询"><span class="nav-number">5.4.3.</span> <span class="nav-text">bool 查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#嵌套查询（内部对象和嵌套对象）"><span class="nav-number">5.5.</span> <span class="nav-text">嵌套查询（内部对象和嵌套对象）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#object新增"><span class="nav-number">5.5.1.</span> <span class="nav-text">object新增</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#object查询"><span class="nav-number">5.5.2.</span> <span class="nav-text">object查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nested-查询"><span class="nav-number">5.5.3.</span> <span class="nav-text">nested 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">5.5.4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分页查询"><span class="nav-number">5.6.</span> <span class="nav-text">分页查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Query-阶段"><span class="nav-number">5.6.1.</span> <span class="nav-text">Query 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fetch-阶段"><span class="nav-number">5.6.2.</span> <span class="nav-text">Fetch 阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#深度分页的问题"><span class="nav-number">5.6.3.</span> <span class="nav-text">深度分页的问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深翻页的解决之道（游标查询scroll）"><span class="nav-number">5.7.</span> <span class="nav-text">深翻页的解决之道（游标查询scroll）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化"><span class="nav-number">5.7.1.</span> <span class="nav-text">初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#scroll-1m"><span class="nav-number">5.7.1.1.</span> <span class="nav-text">scroll=1m</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#遍历"><span class="nav-number">5.7.2.</span> <span class="nav-text">遍历</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Scroll-Scan"><span class="nav-number">5.7.3.</span> <span class="nav-text">Scroll-Scan</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kibana-查询"><span class="nav-number">6.</span> <span class="nav-text">Kibana 查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查询原理"><span class="nav-number">7.</span> <span class="nav-text">查询原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分片及副本"><span class="nav-number">7.1.</span> <span class="nav-text">分片及副本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Index流程"><span class="nav-number">7.2.</span> <span class="nav-text">创建Index流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署层架构"><span class="nav-number">7.3.</span> <span class="nav-text">部署层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#混合部署-左图-Data-Node和Transport-Node-结合"><span class="nav-number">7.3.1.</span> <span class="nav-text">混合部署(左图) Data Node和Transport Node 结合</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势"><span class="nav-number">7.3.1.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势"><span class="nav-number">7.3.1.2.</span> <span class="nav-text">劣势</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分层部署-右图"><span class="nav-number">7.3.2.</span> <span class="nav-text">分层部署(右图)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优势-1"><span class="nav-number">7.3.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#劣势-1"><span class="nav-number">7.3.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据层架构"><span class="nav-number">7.4.</span> <span class="nav-text">数据层架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据存储"><span class="nav-number">7.4.1.</span> <span class="nav-text">数据存储</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#副本-Replica"><span class="nav-number">7.4.2.</span> <span class="nav-text">副本(Replica)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#副本-Replica-的目的有三个："><span class="nav-number">7.4.2.1.</span> <span class="nav-text">副本(Replica)的目的有三个：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Replica-的问题"><span class="nav-number">7.4.2.2.</span> <span class="nav-text">Replica 的问题</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式数据系统架构"><span class="nav-number">8.</span> <span class="nav-text">分布式数据系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于本地文件系统的分布式系统"><span class="nav-number">8.1.</span> <span class="nav-text">基于本地文件系统的分布式系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于分布式文件系统的分布式系统-共享存储-存储和计算分离"><span class="nav-number">8.2.</span> <span class="nav-text">基于分布式文件系统的分布式系统(共享存储)-存储和计算分离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优势-2"><span class="nav-number">8.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#劣势-2"><span class="nav-number">8.2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考-1"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -1014,7 +1086,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -1023,12 +1095,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

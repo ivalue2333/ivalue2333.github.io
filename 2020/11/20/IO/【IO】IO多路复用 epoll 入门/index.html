@@ -56,14 +56,14 @@
 </script>
 
   <meta name="description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
-<meta name="keywords" content="epoll,入门,多路复用">
+<meta name="keywords" content="入门,多路复用,epoll">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【IO】epoll 入门">
 <meta property="og:url" content="http://yoursite.com/2020/11/20/IO/【IO】IO多路复用 epoll 入门/index.html">
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-11-21T09:40:14.567Z">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.077Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【IO】epoll 入门">
 <meta name="twitter:description" content="[TOC]概述网页逐渐替代了纸质媒体，成为了人们获取信息的主要渠道，每时每刻都有许多人在通过网页获取每日的最新资讯，从网页的角度出发，虽然连接的数量可能非常多，但并非每路连接都时时在与服务器交互信息，换言之，对某个网页的服务器来说，多路连接中活跃用户的数量可能远远小于连接的总数。假如使用select或poll模型搭建此种类型的服务器，对服务器而言，大部分的时间都浪费在了毫无意义的轮询中，真正处理请">
@@ -271,7 +271,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-21 17:40:14" itemprop="dateModified" datetime="2020-11-21T17:40:14+08:00">2020-11-21</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -298,7 +298,7 @@
               
                 <span class="post-meta-item-text">本文字数：</span>
               
-              <span>4.8k</span>
+              <span>6.3k</span>
             </span>
           
             <span class="post-meta-item" title="阅读时长">
@@ -308,7 +308,7 @@
               
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
               
-              <span>4 分钟</span>
+              <span>6 分钟</span>
             </span>
           
 
@@ -327,7 +327,12 @@
 <p>Linux系统中通常使用epoll模型搭建这种活跃连接较少的服务器，相比select/poll的主动查询，<strong>epoll模型采用基于事件的通知方式，事先为建立连接的文件描述符注册事件，一旦该文件描述符就绪，内核会采用类似callback的回调机制，将文件描述符加入到epoll的指定的文件描述符集中，之后进程再根据该集合中文件描述符的数量，对客户端请求逐一进行处理。</strong></p>
 <p>虽然epoll机制中返回的同样是就绪文件描述符的数量，但epoll中的文件描述符集只存储了就绪的文件描述符，服务器进程无需再扫描所有已连接的文件描述符；且epoll机制使用内存映射机制（类似共享内存），不必再将内核中的文件描述符集复制到内存空间；此外，epoll机制不受进程可打开最大文件描述符数量的限制（只与系统内存有关），可连接远超过默认FD_SETSIZE的进程。</p>
 <p>linux系统中提供了几个与实现epoll机制相关的系统调用——epoll_create()、epoll_ctl()和epoll_wait()，下面将对这些系统调用逐一进行讲解。</p>
-<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><h3 id="epoll-create"><a href="#epoll-create" class="headerlink" title="epoll_create"></a>epoll_create</h3><p>epoll_create()函数用于创建一个epoll句柄，并请求内核为该实例后期需存储的文件描述符及对应事件预先分配存储空间，该函数存在于函数库sys/poll.h中，其声明如下：</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// epoll 的 API 非常简洁，涉及到的只有 3 个系统调用：</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/epoll.h&gt;  </span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>; <span class="comment">// int epoll_create1(int flags);</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd, struct epoll_event *event)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>其中，epoll_create 创建一个 epoll 实例并返回 epollfd；</p>
+<p>epoll_ctl 注册 file descriptor 等待的 I/O 事件(比如 EPOLLIN、EPOLLOUT 等) 到 epoll 实例上；</p>
+<p>epoll_wait 则是阻塞监听 epoll 实例上所有的 file descriptor 的 I/O 事件，<strong>它接收一个用户空间上的一块内存地址 (events 数组)，kernel 会在有 I/O 事件发生的时候把文件描述符列表复制到这块内存地址上，然后 epoll_wait 解除阻塞并返回，最后用户空间上的程序就可以对相应的 fd 进行读写了</strong>：</p>
+<h3 id="epoll-create"><a href="#epoll-create" class="headerlink" title="epoll_create"></a>epoll_create</h3><p>epoll_create()函数用于创建一个epoll句柄，并请求内核为该实例后期需存储的文件描述符及对应事件预先分配存储空间，该函数存在于函数库sys/poll.h中，其声明如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>;</span><br></pre></td></tr></table></figure>
 
 <p>函数中的参数size为在该epoll中<strong>可监听的文件描述符的最大个数</strong>，若该函数调用成功，将返回一个用于引用epoll的句柄；若调用失败，则返回-1，并设置errno。</p>
@@ -365,6 +370,10 @@
 <li>参数timeout的单位为毫秒，用于设置epoll_wait()的工作方式：若设置为0则立即返回，设置为-1则使epoll无限期等待，设置为大于0的值表示epoll等待一定的时长。</li>
 </ul>
 <p>若epoll_wait()函数调用成功时返回就绪文件描述符的数量；若等待超时后并无就绪文件描述符则返回0；若调用失败则返回-1，并设置errno。</p>
+<h2 id="epoll-的原理"><a href="#epoll-的原理" class="headerlink" title="epoll 的原理"></a>epoll 的原理</h2><p>在实现上 epoll 采用红黑树来存储所有监听的 fd，而红黑树本身插入和删除性能比较稳定，时间复杂度 O(logN)。通过 epoll_ctl 函数添加进来的 fd 都会被放在红黑树的某个节点内，所以，重复添加是没有用的。当把 fd 添加进来的时候时候会完成关键的一步：<strong>该 fd 会与相应的设备（网卡）驱动程序建立回调关系，也就是在内核中断处理程序为它注册一个回调函数，在 fd 相应的事件触发（中断）之后（设备就绪了），内核就会调用这个回调函数，该回调函数在内核中被称为： ep_poll_callback ，这个回调函数其实就是把这个 fd 添加到 rdllist 这个双向链表（就绪链表）中。epoll_wait 实际上就是去检查 rdllist 双向链表中是否有就绪的 fd，当 rdllist 为空（无就绪 fd）时挂起当前进程，直到 rdllist 非空时进程才被唤醒并返回。</strong></p>
+<p>相比于 select&amp;poll 调用时会将全部监听的 fd 从用户态空间拷贝至内核态空间并线性扫描一遍找出就绪的 fd 再返回到用户态，epoll_wait 则是直接返回已就绪 fd，因此 epoll 的 I/O 性能不会像 select&amp;poll 那样随着监听的 fd 数量增加而出现线性衰减，是一个非常高效的 I/O 事件驱动技术。</p>
+<p>由于使用 epoll 的 I/O 多路复用需要用户进程自己负责 I/O 读写，从用户进程的角度看，读写过程是阻塞的，所以 select&amp;poll&amp;epoll 本质上都是同步 I/O 模型，而像 Windows 的 IOCP 这一类的异步 I/O，只需要在调用 WSARecv 或 WSASend 方法读写数据的时候把用户空间的内存 buffer 提交给 kernel，kernel 负责数据在用户空间和内核空间拷贝，完成之后就会通知用户进程，整个过程不需要用户进程参与，所以是真正的异步 I/O。</p>
+<p>epoll 在 Linux kernel 里并没有使用 mmap 来做用户空间和内核空间的内存共享，所以那些说 epoll 使用了 mmap 的文章都是误解。</p>
 <h2 id="epoll-的工作模式"><a href="#epoll-的工作模式" class="headerlink" title="epoll 的工作模式"></a>epoll 的工作模式</h2><p>epoll有两种工作模式，分别为边缘触发（Edge Triggered）模式和水平触发（LevelTriggered）模式。</p>
 <p><strong>所谓边缘触发，指只有当文件描述符就绪时会触发通知，即便此次通知后系统执行I/O操作只读取了部分数据，文件描述符中仍有数据剩余，也不会再有通知递达，直到该文件描述符从当前的就绪态变为非就绪态，再由非就绪态再次变为就绪态，才会触发第二次通知；此外，接收缓冲区大小为5字节，也就是说ET模式下若只进行一次I/O操作，每次只能接收到5字节的数据。因此系统在收到就绪通知后，应尽量多次地执行I/O操作，直到无法再读出数据为止。</strong></p>
 <p><strong>而水平触发与边缘触发有所不同，即便就绪通知已发送，内核仍会多次检测文件描述符状态，只要文件描述符为就绪态，内核就会继续发送通知。</strong></p>
@@ -403,11 +412,11 @@
           
           <div class="post-tags">
             
-              <a href="/tags/epoll/" rel="tag"># epoll</a>
-            
               <a href="/tags/入门/" rel="tag"># 入门</a>
             
               <a href="/tags/多路复用/" rel="tag"># 多路复用</a>
+            
+              <a href="/tags/epoll/" rel="tag"># epoll</a>
             
           </div>
         
@@ -486,7 +495,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -531,7 +540,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -772,7 +785,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -813,7 +910,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用"><span class="nav-number">2.</span> <span class="nav-text">系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-create"><span class="nav-number">2.1.</span> <span class="nav-text">epoll_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-ctl"><span class="nav-number">2.2.</span> <span class="nav-text">epoll_ctl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-wait"><span class="nav-number">2.3.</span> <span class="nav-text">epoll_wait</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-的工作模式"><span class="nav-number">3.</span> <span class="nav-text">epoll 的工作模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fcntl"><span class="nav-number">3.1.</span> <span class="nav-text">fcntl</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fcntl-常见指令"><span class="nav-number">3.1.1.</span> <span class="nav-text">fcntl 常见指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用fcntl对文件加锁"><span class="nav-number">3.1.2.</span> <span class="nav-text">使用fcntl对文件加锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-配合多进程或线程池"><span class="nav-number">4.</span> <span class="nav-text">epoll 配合多进程或线程池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用"><span class="nav-number">2.</span> <span class="nav-text">系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-create"><span class="nav-number">2.1.</span> <span class="nav-text">epoll_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-ctl"><span class="nav-number">2.2.</span> <span class="nav-text">epoll_ctl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-wait"><span class="nav-number">2.3.</span> <span class="nav-text">epoll_wait</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-的原理"><span class="nav-number">3.</span> <span class="nav-text">epoll 的原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-的工作模式"><span class="nav-number">4.</span> <span class="nav-text">epoll 的工作模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fcntl"><span class="nav-number">4.1.</span> <span class="nav-text">fcntl</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fcntl-常见指令"><span class="nav-number">4.1.1.</span> <span class="nav-text">fcntl 常见指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用fcntl对文件加锁"><span class="nav-number">4.1.2.</span> <span class="nav-text">使用fcntl对文件加锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#epoll-配合多进程或线程池"><span class="nav-number">5.</span> <span class="nav-text">epoll 配合多进程或线程池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -831,7 +928,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -840,12 +937,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         

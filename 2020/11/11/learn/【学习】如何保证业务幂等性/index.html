@@ -63,12 +63,12 @@
 <meta property="og:site_name" content="blog | percy">
 <meta property="og:description" content="[TOC]什么是幂等性幂等性是系统服务对外一种承诺，承诺只要调用接口成功，外部多次调用对系统的影响是一致的。声明为幂等的服务会认为外部调用失败是常态，并且失败之后必然会有重试（如何保证重复请求的幂等性）。什么情况下需要幂等以SQL为例：1234567891011121314# 无论执行多少次都不会改变状态，是天然的幂等。SELECT col1 FROM tab1 WHER col2=2;# 无论执">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://s1.ax1x.com/2020/11/10/BLosYj.md.png">
-<meta property="og:updated_time" content="2020-11-10T12:35:19.737Z">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/10/BLosYj.png">
+<meta property="og:updated_time" content="2021-02-24T11:43:31.111Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【学习】如何保证业务的幂等性">
 <meta name="twitter:description" content="[TOC]什么是幂等性幂等性是系统服务对外一种承诺，承诺只要调用接口成功，外部多次调用对系统的影响是一致的。声明为幂等的服务会认为外部调用失败是常态，并且失败之后必然会有重试（如何保证重复请求的幂等性）。什么情况下需要幂等以SQL为例：1234567891011121314# 无论执行多少次都不会改变状态，是天然的幂等。SELECT col1 FROM tab1 WHER col2=2;# 无论执">
-<meta name="twitter:image" content="https://s1.ax1x.com/2020/11/10/BLosYj.md.png">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/11/10/BLosYj.png">
   <link rel="canonical" href="http://yoursite.com/2020/11/11/learn/【学习】如何保证业务幂等性/">
 
 
@@ -273,7 +273,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-10 20:35:19" itemprop="dateModified" datetime="2020-11-10T20:35:19+08:00">2020-11-10</time>
+                <time title="修改时间：2021-02-24 19:43:31" itemprop="dateModified" datetime="2021-02-24T19:43:31+08:00">2021-02-24</time>
               </span>
             
           
@@ -345,7 +345,7 @@
 <p>客户端每次在需要更新前，先到数据库查询当前goods的版本，然后在更新商品数量的同时，将当时的版本也传过来来，比如当库存版本为<strong>1</strong>时，将商品的数量减一。客户端在重试时，传递的参数还是库存版本为<strong>1</strong>， 但是如果之前已经更新成功了，那么这个重试就不会成功。<strong>乐观锁主要使用于处理读多写少的问题。</strong></p>
 <h3 id="唯一主键（insert）"><a href="#唯一主键（insert）" class="headerlink" title="唯一主键（insert）"></a>唯一主键（insert）</h3><p>这个机制是利用了数据库的主键唯一约束的特性，解决了在insert场景时幂等问题。如果是分库分表场景下，路由规则要保证相同请求下，落地在同一个数据库和同一表中，要不然数据库主键约束就不起效果了，因为是不同的数据库和表主键不相关。</p>
 <h3 id="防重表-（update，-insert）"><a href="#防重表-（update，-insert）" class="headerlink" title="防重表 （update， insert）"></a>防重表 （update， insert）</h3><p>例如一个支付系统，多增加一个<code>支付去重表，支付去重表以 orderNo 为唯一id</code>， 当请求过来时，先向这个支付去重表插入一条记录，插入成功，表示没有支付过，可以继续走支付流程，插入失败（orderNo唯一键冲突）。</p>
-<p><a href="https://imgchr.com/i/BLosYj" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/10/BLosYj.md.png" alt="BLosYj.md.png"></a></p>
+<p><a href="https://imgchr.com/i/BLosYj" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2020/11/10/BLosYj.png" alt="BLosYj.png"></a></p>
 <h3 id="分布式锁-（update-insert）"><a href="#分布式锁-（update-insert）" class="headerlink" title="分布式锁 （update, insert）"></a>分布式锁 （update, insert）</h3><p>和防重表一样的逻辑，对一个资源加锁。比如对 orderNo 加锁，一旦加锁成功后，其他的请求都无法获得这把锁。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://segmentfault.com/a/1190000020172463" target="_blank" rel="noopener">如何保证接口的幂等性</a></p>
 <p><a href="https://gongfukangee.github.io/2019/03/25/Idempotence/" target="_blank" rel="noopener">如何保证业务幂等性</a></p>
@@ -376,8 +376,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2020/11/09/message queue/【消息队列】kafka入门/" rel="next" title="【消息队列】kafka 入门">
-                  <i class="fa fa-chevron-left"></i> 【消息队列】kafka 入门
+                <a href="/2020/11/09/message queue/消息队列之入门/" rel="next" title="消息队列之入门">
+                  <i class="fa fa-chevron-left"></i> 消息队列之入门
                 </a>
               
             </div>
@@ -386,8 +386,8 @@
 
             <div class="post-nav-prev post-nav-item">
               
-                <a href="/2020/11/19/IO/【IO】IO多路复用入门/" rel="prev" title="【IO】IO多路复用入门">
-                  【IO】IO多路复用入门 <i class="fa fa-chevron-right"></i>
+                <a href="/2020/11/19/IO/【IO】IO 入门/" rel="prev" title="【IO】IO 入门">
+                  【IO】IO 入门 <i class="fa fa-chevron-right"></i>
                 </a>
               
             </div>
@@ -445,7 +445,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">88</span>
+          <span class="site-state-item-count">116</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -490,7 +490,11 @@
         
           
         
-        <span class="site-state-item-count">15</span>
+          
+        
+          
+        
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -731,7 +735,91 @@
         
           
         
-        <span class="site-state-item-count">113</span>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">155</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
@@ -790,7 +878,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
@@ -799,12 +887,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">306k</span>
+    <span title="站点总字数">404k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">4:38</span>
+    <span title="站点阅读时长">6:07</span>
 </div>
 
         
