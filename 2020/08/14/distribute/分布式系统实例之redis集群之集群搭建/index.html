@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 主从模式（master&#x2F;slaver）redis的主从模式，使用异步复制，slave节点异步从master节点复制数据，master节点提供读写服务，slave节点只提供读服务（这个是默认配置，可以通过修改配置文件 slave-read-only 控制）。master节点可以有多个从节点。配置一个slave节点只需要在redis.conf文件中指定 slaveof maste">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统实例之redis集群之集群搭建">
+<meta property="og:url" content="http://example.com/2020/08/14/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8Bredis%E9%9B%86%E7%BE%A4%E4%B9%8B%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 主从模式（master&#x2F;slaver）redis的主从模式，使用异步复制，slave节点异步从master节点复制数据，master节点提供读写服务，slave节点只提供读服务（这个是默认配置，可以通过修改配置文件 slave-read-only 控制）。master节点可以有多个从节点。配置一个slave节点只需要在redis.conf文件中指定 slaveof maste">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-08-14T11:59:01.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.780Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="分布式系统">
+<meta property="article:tag" content="实例">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/08/14/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8Bredis%E9%9B%86%E7%BE%A4%E4%B9%8B%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分布式系统实例之redis集群之集群搭建 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/08/14/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8Bredis%E9%9B%86%E7%BE%A4%E4%B9%8B%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式系统实例之redis集群之集群搭建
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-14 19:59:01" itemprop="dateCreated datePublished" datetime="2020-08-14T19:59:01+08:00">2020-08-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="主从模式（master-x2F-slaver）"><a href="#主从模式（master-x2F-slaver）" class="headerlink" title="主从模式（master&#x2F;slaver）"></a>主从模式（master&#x2F;slaver）</h2><p>redis的主从模式，使用异步复制，slave节点异步从master节点复制数据，master节点提供读写服务，slave节点只提供读服务（这个是默认配置，可以通过修改配置文件 slave-read-only 控制）。<strong>master节点可以有多个从节点。</strong>配置一个slave节点只需要在redis.conf文件中指定 slaveof master-ip master-port 即可。</p>
+<h3 id="从节点开启主从复制，有3种方式："><a href="#从节点开启主从复制，有3种方式：" class="headerlink" title="从节点开启主从复制，有3种方式："></a>从节点开启主从复制，有3种方式：</h3><p><code>slaveof 192.168.81.135 6379</code></p>
+<ul>
+<li><strong>配置文件</strong><ul>
+<li>在从服务器的配置文件中加入：slaveof<masterip><masterport></li>
+</ul>
+</li>
+<li><strong>启动命令</strong><ul>
+<li>redis-server启动命令后加入：slaveof<masterip><masterport></li>
+</ul>
+</li>
+<li><strong>客户端命令</strong><ul>
+<li>Redis服务器启动后直接通过客户端执行命令：slaveof<masterip><masterport>，则该Redis实例成为从节点。</li>
+</ul>
+</li>
+</ul>
+<h3 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h3><h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p><code>vi master-6739.conf</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">bind 0.0.0.0</span><br><span class="line">port 6379</span><br><span class="line">logfile &quot;6379.log&quot;</span><br><span class="line">dbfilename &quot;dump-6379.rdb&quot;</span><br><span class="line">daemonize yes</span><br><span class="line">rdbcompression yes</span><br></pre></td></tr></table></figure>
+
+<p><code>vi slave-6380.conf</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">bind 0.0.0.0</span><br><span class="line">port 6380</span><br><span class="line">logfile &quot;6380.log&quot;</span><br><span class="line">dbfilename &quot;dump-6380.rdb&quot;</span><br><span class="line">daemonize yes</span><br><span class="line">rdbcompression yes</span><br><span class="line">slaveof 192.168.81.135 6379</span><br></pre></td></tr></table></figure>
+
+<p><em>master-6739.conf，为主节点配置文件，slave-6380.conf，slave-6381.conf为从节点配置文件</em><br><em>在从节点的配置文件中使用：slaveof 指定master节点</em></p>
+<h4 id="docker-部署"><a href="#docker-部署" class="headerlink" title="docker 部署"></a>docker 部署</h4><p>参看： go-mod&#x2F;k8s&#x2F;docker&#x2F;redis</p>
+<h3 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">|root@zjk-qa-k8s-node010 /data/percy/redis-5.0.9</span><br><span class="line">|&gt;# src/redis-cli -p 7379</span><br><span class="line">127.0.0.1:7379&gt; set name percy</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:7379&gt; exit</span><br><span class="line">|root@zjk-qa-k8s-node010 /data/percy/redis-5.0.9</span><br><span class="line">|&gt;# src/redis-cli -p 7380</span><br><span class="line">127.0.0.1:7380&gt; get name</span><br><span class="line">&quot;percy&quot;</span><br><span class="line">127.0.0.1:7380&gt; set name2 percy2</span><br><span class="line">(error) READONLY You can&#x27;t write against a read only replica.  </span><br><span class="line">127.0.0.1:7380&gt; </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>主节点写入的数据，从节点可以读取</li>
+<li>从节点默认不能写数据</li>
+</ul>
+<h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><h4 id="数据丢失"><a href="#数据丢失" class="headerlink" title="数据丢失"></a>数据丢失</h4><p>master服务挂了之后，重启服务后，slave节点会与master节点进行一次完整的重同步操作，所以由于master节点没有持久化，就导致slave节点上的数据也会丢失掉。所以在配置了Redis的主从模式的时候，应该打开主服务器的持久化功能。到这，redis的主从模式就已经完成了。</p>
+<h4 id="谈谈我认为主从模式的必要性："><a href="#谈谈我认为主从模式的必要性：" class="headerlink" title="谈谈我认为主从模式的必要性："></a>谈谈我认为主从模式的必要性：</h4><p>主从模式的一个作用是备份数据，这样当一个节点损坏（指不可恢复的硬件损坏）时，数据因为有备份，可以方便恢复。<br>另一个作用是负载均衡，所有客户端都访问一个节点肯定会影响Redis工作效率，有了主从以后，查询操作就可以通过查询从节点来完成。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><ul>
+<li><p>一个Master可以有多个Slaves </p>
+</li>
+<li><p>默认配置下，master节点可以进行读和写，slave节点只能进行读操作，写操作被禁止 不要修改配置让slave节点支持写操作，没有意义，</p>
+<ul>
+<li><p>原因一，写入的数据不会被同步到其他节点；</p>
+</li>
+<li><p>原因二，当master节点修改同一条数据后，slave节点的数据会被覆盖掉</p>
+</li>
+</ul>
+</li>
+<li><p>slave节点挂了不影响其他slave节点的读和master节点的读和写，重新启动后会将数据从master节点同步过来 </p>
+</li>
+<li><p>master节点挂了以后，不影响slave节点的读，Redis将不再提供写服务，master节点启动后Redis将重新对外提供写服务。 </p>
+</li>
+<li><p>master节点挂了以后，不会将slave节点重新选一个master</p>
+</li>
+</ul>
+<h4 id="主从节点的缺点"><a href="#主从节点的缺点" class="headerlink" title="主从节点的缺点"></a>主从节点的缺点</h4><p>master节点挂了以后，redis就不能对外提供写服务了，因为剩下的slave不能成为master<br>这个缺点影响是很大的，尤其是对生产环境来说，是一刻都不能停止服务的，所以一般的生产坏境是不会单单只有主从模式的。所以有了下面的sentinel模式。</p>
+<h2 id="sentinel模式-（哨兵模式）"><a href="#sentinel模式-（哨兵模式）" class="headerlink" title="sentinel模式 （哨兵模式）"></a>sentinel模式 （哨兵模式）</h2><p>Redis哨兵模式，用现在流行的话可以说就是一个“哨兵机器人”，给“哨兵机器人”进行相应的配置之后，这个”机器人”可以7*24小时工作，它能能够自动帮助你做一些事情，如监控，提醒，自动处理故障等。</p>
+<p>Redis 的 Sentinel 系统用于管理多个 Redis 服务器（instance），Redis 的 Sentinel 为Redis提供了高可用性。使用哨兵模式创建一个可以不用人为干预而应对各种故障的Redis部署。</p>
+<p>该系统执行以下三个任务：</p>
+<ul>
+<li>监控（Monitoring）：Sentinel会不断地检查你的主服务器和从服务器是否允许正常。</li>
+<li>提醒（Notification）：当被监控的某个Redis服务器出现问题时，Sentinel可以通过API向管理员或者其他应用程序发送通知。</li>
+<li>自动故障迁移（Automatic failover）: <ul>
+<li>（1）当一个主服务器不能正常工作时，Sentinel会开始一次自动故障迁移操作，他会将失效主服务器的其中一个从服务器升级为新的主服务器，并让失效主服务器的其他从服务器改为复制新的主服务器</li>
+<li>（2）客户端试图连接失败的主服务器时，集群也会向客服端返回新主服务器的地址，集群可以使用新主服务器代替失效服务器。</li>
+</ul>
+</li>
+</ul>
+<h3 id="sentinel的分布式特性"><a href="#sentinel的分布式特性" class="headerlink" title="sentinel的分布式特性"></a>sentinel的分布式特性</h3><p>Redis Sentinel 是一个分布式系统， 你可以在一个架构中运行多个 Sentinel 进程（progress）， 这些进程使用流言协议（gossip protocols)来接收关于主服务器是否下线的信息， 并使用投票协议（agreement protocols）来决定是否执行自动故障迁移， 以及选择哪个从服务器作为新的主服务器。</p>
+<p>单个sentinel进程来监控redis集群是不可靠的，当sentinel进程宕掉后(sentinel本身也有单点问题，single-point-of-failure)整个集群系统将无法按照预期的方式运行。所以有必要将sentinel集群，一个健壮的部署至少需要三个哨兵实例。</p>
+<h3 id="docker-部署-1"><a href="#docker-部署-1" class="headerlink" title="docker 部署"></a>docker 部署</h3><p>参看： go-mod&#x2F;k8s&#x2F;docker&#x2F;redis</p>
+<h3 id="效果-1"><a href="#效果-1" class="headerlink" title="效果"></a>效果</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">|&gt;# redis-cli -h 127.0.0.1 -p 27379 info sentinel</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Sentinel</span></span><br><span class="line">sentinel_masters:1</span><br><span class="line">sentinel_tilt:0</span><br><span class="line">sentinel_running_scripts:0</span><br><span class="line">sentinel_scripts_queue_length:0</span><br><span class="line">sentinel_simulate_failure_flags:0</span><br><span class="line">master0:name=mymaster,status=ok,address=127.0.0.1:7379,slaves=2,sentinels=1</span><br></pre></td></tr></table></figure>
+
+<h3 id="故障转移"><a href="#故障转移" class="headerlink" title="故障转移"></a>故障转移</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">shutdown 主节点</span></span><br><span class="line">|&gt;# redis-cli -p 7379</span><br><span class="line">127.0.0.1:7379&gt; shutdown</span><br><span class="line">not connected&gt; exit</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">7380 切换为了主节点， 可以写入数据</span></span><br><span class="line">|&gt;# redis-cli -p 7380</span><br><span class="line">127.0.0.1:7380&gt; set age 12</span><br></pre></td></tr></table></figure>
+
+<h2 id="cluster模式"><a href="#cluster模式" class="headerlink" title="cluster模式"></a>cluster模式</h2><p>Redis Cluster是Redis官方的一个高可用分布式解决方案。Redis Cluster中共有2 ^ 14（16384）个槽，创建集群后，需要将这些槽均分给各个节点。</p>
+<p>cluster可以说是sentinel和主从模式的结合体，通过cluster可以实现主从和master重选功能，所以如果配置两个副本三个分片的话，就需要六个Redis实例。 </p>
+<p>因为Redis的数据是根据一定规则分配到cluster的不同机器的，当数据量过大时，可以新增机器进行扩容这种模式适合数据量巨大的缓存要求，当数据量不是很大使用sentinel即可。</p>
+<h3 id="节点配置"><a href="#节点配置" class="headerlink" title="节点配置"></a>节点配置</h3><table>
+<thead>
+<tr>
+<th>节点名称</th>
+<th>端口号</th>
+<th>主&#x2F;从节点</th>
+<th>复制的节点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>redis-7005</td>
+<td>7005</td>
+<td>主节点</td>
+<td>—</td>
+</tr>
+<tr>
+<td>redis-7004</td>
+<td>7004</td>
+<td>主节点</td>
+<td>—</td>
+</tr>
+<tr>
+<td>redis-7003</td>
+<td>7003</td>
+<td>主节点</td>
+<td>—</td>
+</tr>
+<tr>
+<td>redis-7002</td>
+<td>7002</td>
+<td>从节点</td>
+<td>redis-7003</td>
+</tr>
+<tr>
+<td>redis-7001</td>
+<td>7001</td>
+<td>从节点</td>
+<td>redis-7005</td>
+</tr>
+<tr>
+<td>redis-7000</td>
+<td>7000</td>
+<td>从节点</td>
+<td>redis-7004</td>
+</tr>
+</tbody></table>
+<h3 id="docker-部署-2"><a href="#docker-部署-2" class="headerlink" title="docker 部署"></a>docker 部署</h3><p>参看： go-mod&#x2F;k8s&#x2F;docker&#x2F;redis&#x2F;cluster&#x2F;v2</p>
+<h4 id="查看启动"><a href="#查看启动" class="headerlink" title="查看启动"></a>查看启动</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|&gt;# docker logs 026b1864a49c</span><br><span class="line">1:C 18 Aug 2020 03:37:00.175 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo</span><br><span class="line">1:C 18 Aug 2020 03:37:00.175 # Redis version=6.0.6, bits=64, commit=00000000, modified=0, pid=1, just started</span><br><span class="line">1:C 18 Aug 2020 03:37:00.175 # Configuration loaded</span><br><span class="line">1:M 18 Aug 2020 03:37:00.176 * No cluster configuration found, I&#x27;m 4efdfb5b0dadeec44d23f97038e5d29a01e000b0</span><br></pre></td></tr></table></figure>
+
+<p>可以看到Redis在集群模式下启动，因为初始的时候没有集群配置，所以自动创建了配置(文件名就是在redis-6379.conf中指定的)。</p>
+<p>然后来看一下自动创建的及集群配置。这个文件记录了集群的初始状态，前面那个很长的字符串就是节点ID。</p>
+<h3 id="cluster-模式下的-smart-client"><a href="#cluster-模式下的-smart-client" class="headerlink" title="cluster 模式下的 smart client"></a>cluster 模式下的 smart client</h3><p>可以看到 set name 时， 不管你在哪个节点， cluster 都会告诉你，正确的节点是哪一个，并且不会帮你执行这个操作， client 必须 聪明的拿到正确节点的地址，然后连接上正确的节点上去执行 set get.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">|root@zjk-qa-k8s-node010 /tmp/percy/v2</span><br><span class="line">|&gt;# redis-cli -p 7000</span><br><span class="line">127.0.0.1:7000&gt; set name percy</span><br><span class="line">(error) MOVED 5798 127.0.0.1:7001</span><br><span class="line">127.0.0.1:7000&gt; </span><br><span class="line">|root@zjk-qa-k8s-node010 /tmp/percy/v2</span><br><span class="line">|&gt;# redis-cli -p 7001</span><br><span class="line">127.0.0.1:7001&gt; set name percy</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:7001&gt; </span><br><span class="line">|root@zjk-qa-k8s-node010 /tmp/percy/v2</span><br><span class="line">|&gt;# redis-cli -p 7002</span><br><span class="line">127.0.0.1:7002&gt; get name</span><br><span class="line">(error) MOVED 5798 127.0.0.1:7001</span><br><span class="line">127.0.0.1:7002&gt; </span><br><span class="line">|root@zjk-qa-k8s-node010 /tmp/percy/v2</span><br><span class="line">|&gt;# redis-cli -p 7001</span><br><span class="line">127.0.0.1:7001&gt; get name</span><br><span class="line">&quot;percy&quot;</span><br><span class="line">127.0.0.1:7001&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000022702973">redis主从及哨兵</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_35457078/article/details/100999417">docker搭建redis集群</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="tag"># 分布式系统</a>
+              <a href="/tags/%E5%AE%9E%E4%BE%8B/" rel="tag"># 实例</a>
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/11/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B9%8B%E5%88%86%E5%8C%BA/" rel="prev" title="分布式系统之数据分区">
+      <i class="fa fa-chevron-left"></i> 分布式系统之数据分区
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/14/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8Bredis%E9%9B%86%E7%BE%A4%E4%B9%8B%E6%A6%82%E8%BF%B0/" rel="next" title="分布式系统实例之redis 集群之概述">
+      分布式系统实例之redis 集群之概述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F%EF%BC%88master-x2F-slaver%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">主从模式（master&#x2F;slaver）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E8%8A%82%E7%82%B9%E5%BC%80%E5%90%AF%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%EF%BC%8C%E6%9C%893%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">从节点开启主从复制，有3种方式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">1.2.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">1.2.1.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#docker-%E9%83%A8%E7%BD%B2"><span class="nav-number">1.2.2.</span> <span class="nav-text">docker 部署</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%88%E6%9E%9C"><span class="nav-number">1.3.</span> <span class="nav-text">效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.4.</span> <span class="nav-text">问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1"><span class="nav-number">1.4.1.</span> <span class="nav-text">数据丢失</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%88%E8%B0%88%E6%88%91%E8%AE%A4%E4%B8%BA%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%BF%85%E8%A6%81%E6%80%A7%EF%BC%9A"><span class="nav-number">1.4.2.</span> <span class="nav-text">谈谈我认为主从模式的必要性：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E8%8A%82%E7%82%B9%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.4.4.</span> <span class="nav-text">主从节点的缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sentinel%E6%A8%A1%E5%BC%8F-%EF%BC%88%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">sentinel模式 （哨兵模式）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sentinel%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E7%89%B9%E6%80%A7"><span class="nav-number">2.1.</span> <span class="nav-text">sentinel的分布式特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-%E9%83%A8%E7%BD%B2-1"><span class="nav-number">2.2.</span> <span class="nav-text">docker 部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%88%E6%9E%9C-1"><span class="nav-number">2.3.</span> <span class="nav-text">效果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="nav-number">2.4.</span> <span class="nav-text">故障转移</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cluster%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">cluster模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.</span> <span class="nav-text">节点配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-%E9%83%A8%E7%BD%B2-2"><span class="nav-number">3.2.</span> <span class="nav-text">docker 部署</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%90%AF%E5%8A%A8"><span class="nav-number">3.2.1.</span> <span class="nav-text">查看启动</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cluster-%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84-smart-client"><span class="nav-number">3.3.</span> <span class="nav-text">cluster 模式下的 smart client</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

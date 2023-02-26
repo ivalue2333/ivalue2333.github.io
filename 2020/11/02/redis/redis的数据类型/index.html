@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述总体来说，用户侧的数据结构有 string, hash, list,  set,  zset。 实现测的数据结构有 sds,  dict, linkedlist,  skiplist, ziplist, quicklist, intset 用户侧的数据结构string通过 key-value pair 的方式，存储字符串、整数、浮点数等对象。 12345678# string指令s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis的数据类型">
+<meta property="og:url" content="http://example.com/2020/11/02/redis/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述总体来说，用户侧的数据结构有 string, hash, list,  set,  zset。 实现测的数据结构有 sds,  dict, linkedlist,  skiplist, ziplist, quicklist, intset 用户侧的数据结构string通过 key-value pair 的方式，存储字符串、整数、浮点数等对象。 12345678# string指令s">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://image-static.segmentfault.com/312/003/3120031942-5cef4094c634c_articlex">
+<meta property="article:published_time" content="2020-11-02T06:30:59.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.796Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="数据类型">
+<meta property="article:tag" content="数据结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://image-static.segmentfault.com/312/003/3120031942-5cef4094c634c_articlex">
+
+<link rel="canonical" href="http://example.com/2020/11/02/redis/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>redis的数据类型 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/02/redis/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          redis的数据类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-02 14:30:59" itemprop="dateCreated datePublished" datetime="2020-11-02T14:30:59+08:00">2020-11-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>总体来说，用户侧的数据结构有 <code>string</code>, <code>hash</code>, <code>list</code>,  <code>set</code>,  <code>zset</code>。</p>
+<p>实现测的数据结构有 <code>sds</code>,  <code>dict</code>, <code>linkedlist</code>,  <code>skiplist</code>, <code>ziplist</code>, <code>quicklist</code>, <code>intset</code></p>
+<h2 id="用户侧的数据结构"><a href="#用户侧的数据结构" class="headerlink" title="用户侧的数据结构"></a>用户侧的数据结构</h2><h3 id="string"><a href="#string" class="headerlink" title="string"></a>string</h3><p>通过 key-value pair 的方式，存储字符串、整数、浮点数等对象。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">string指令</span></span><br><span class="line">set string_demo percy</span><br><span class="line">set string_demo 100</span><br><span class="line">set string_demo 3.14159</span><br><span class="line">get string_demo</span><br><span class="line">strlen string_demo</span><br><span class="line">type string_demo</span><br><span class="line">object encoding string_demo</span><br></pre></td></tr></table></figure>
+
+<h3 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h3><p>存储的是一系列 key-value 对。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">hash</span>指令</span></span><br><span class="line">hset hash_demo name percy</span><br><span class="line">hmset hash_demo age 12 school swjtu</span><br><span class="line">hget hash_demo school</span><br><span class="line">hlen hash_demo</span><br><span class="line">type hash_demo</span><br><span class="line">object encoding hash_demo</span><br></pre></td></tr></table></figure>
+
+<h3 id="list"><a href="#list" class="headerlink" title="list"></a>list</h3><p>List 对象概念上可以理解为 Python 中的 list、Java 中的 List、Golang 中的 slice 等。之所以说概念上，是因为这几者底层实现上其实并不相同，只是都是对一组数据的集合的抽象。<strong>Redis 中 list 对象可以插入数据到 list 头或尾上，由于其底层实现是一个双向链表（某些场景下不是），所以插入两端都是 O(1) 的。</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">list指令</span></span><br><span class="line">rpush list_demo 2</span><br><span class="line">rpush list_demo 3</span><br><span class="line">lpush list_demo 1</span><br><span class="line">lrange list_demo 0 -1</span><br><span class="line">llen list_demo </span><br><span class="line">type list_demo</span><br><span class="line">object encoding list_demo</span><br></pre></td></tr></table></figure>
+
+<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><p>Set 对象有点像是 Python 里的 set，其存储的是多个互不相同的元素。由于 set 底层使用 hash table 存储（同上，某些场景下不是），所以其大部分操作都是 O(1) 的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">set</span>指令</span></span><br><span class="line">sadd set_demo 1</span><br><span class="line">sadd set_demo 2, 3</span><br><span class="line">smembers set_demo</span><br><span class="line">scard set_demo</span><br><span class="line">type set_demo</span><br><span class="line">object encoding set_demo</span><br></pre></td></tr></table></figure>
+
+<h3 id="zset"><a href="#zset" class="headerlink" title="zset"></a>zset</h3><p>zset 是有序集合，同 set 相似的是，其内部存储的元素也是不允许重复的。不同的是，set 中存储的元素是无序的，但是 zset 存储的元素是有序的。通过为 zset 中每个元素设置一个 score，zset 根据元素的 score 排序。ZRANGE key start stop [WITHSCORES]。其中成员的位置按 <code>score</code> 值递增(从小到大)来排序。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">zset指令</span></span><br><span class="line">zadd zset_demo 2 b</span><br><span class="line">zadd zset_demo 3 c</span><br><span class="line">zadd zset_demo 1 a</span><br><span class="line">zrange zset_demo 0 -1 withscores</span><br><span class="line">zcard zset_demo</span><br><span class="line">type zset_demo</span><br><span class="line">object encoding zset_demo</span><br></pre></td></tr></table></figure>
+
+<h2 id="实现侧的数据结构"><a href="#实现侧的数据结构" class="headerlink" title="实现侧的数据结构"></a>实现侧的数据结构</h2><p>Redis 是通过 C 语言实现的，由于 C 语言的朴素，Redis 并没有直接实现上面提到的数据结构，而是通过构件了一系列基础的数据结构，经过对象系统对下层结构的封装，来实现上层面向用户的各种结构。</p>
+<h3 id="SDS"><a href="#SDS" class="headerlink" title="SDS"></a>SDS</h3><p>SDS 是「 simple dynamic string 」的缩写，是对 C 字符串的抽象。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">attribute__</span> ((__<span class="title">packed__</span>)) <span class="title">sdshdr64</span> &#123;</span></span><br><span class="line">    <span class="comment">// 记录buf数组中已使用字节的数量， 等于 SDS 保存字符串的长度</span></span><br><span class="line">    <span class="type">uint64_t</span> len; <span class="comment">/* used */</span></span><br><span class="line">    <span class="type">uint64_t</span> alloc; <span class="comment">/* excluding the header and null terminator */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> flags; <span class="comment">/* 3 lsb of type, 5 unused bits */</span></span><br><span class="line">    <span class="type">char</span> buf[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>相比 C char array，sds 有以下优点：</p>
+<ul>
+<li>获取字符串长度效率更优。C 字符串只是一个 ‘\0’ 结尾的 char 数组，如果需要获取字符串长度，需要遍历整个数组，遍历操作时间复杂度为 O(N)。而 sds len 属性记录了本身的长度，获取长度只需要 O(1) 复杂度。</li>
+<li>避免数组长度溢出。</li>
+<li>减少内存分配次数。sds 会通过预申请内存，在连接字符串等操作时，减少对内存的申请操作。</li>
+</ul>
+<h3 id="dict"><a href="#dict" class="headerlink" title="dict"></a>dict</h3><p>在 Redis 中，dict 通过一个 dict 结构实现，底层通过一个 hashtable 存储数据。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 哈希表元素, dictEntry 是每个 key-value 对存储的结构，其 next 指针用于在 hash 冲突时，将多个 entry 连接一起</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> &#123;</span></span><br><span class="line">    <span class="type">void</span> *key;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">void</span> *val;</span><br><span class="line">        <span class="type">uint64_t</span> u64;</span><br><span class="line">        <span class="type">int64_t</span> s64;</span><br><span class="line">        <span class="type">double</span> d;</span><br><span class="line">    &#125; v;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> *<span class="title">next</span>;</span></span><br><span class="line">&#125; dictEntry;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 哈希表</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictht</span> &#123;</span></span><br><span class="line">    dictEntry **table;       <span class="comment">// hash table 实际存储的位置</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> size;      <span class="comment">// table 的大小</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> sizemask;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> used;      <span class="comment">// 已经使用的长度</span></span><br><span class="line">&#125; dictht;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 哈希表类型，用于实现多态</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictType</span> &#123;</span></span><br><span class="line">    <span class="comment">// 计算哈希值</span></span><br><span class="line">    <span class="type">uint64_t</span> (*hashFunction)(<span class="type">const</span> <span class="type">void</span> *key);</span><br><span class="line">    <span class="comment">// 复制 key</span></span><br><span class="line">    <span class="type">void</span> *(*keyDup)(<span class="type">void</span> *privdata, <span class="type">const</span> <span class="type">void</span> *key);</span><br><span class="line">    <span class="comment">// 复制 value</span></span><br><span class="line">    <span class="type">void</span> *(*valDup)(<span class="type">void</span> *privdata, <span class="type">const</span> <span class="type">void</span> *obj);</span><br><span class="line">    <span class="comment">// 比较 key</span></span><br><span class="line">    <span class="type">int</span> (*keyCompare)(<span class="type">void</span> *privdata, <span class="type">const</span> <span class="type">void</span> *key1, <span class="type">const</span> <span class="type">void</span> *key2);</span><br><span class="line">    <span class="comment">// 销毁 key</span></span><br><span class="line">    <span class="type">void</span> (*keyDestructor)(<span class="type">void</span> *privdata, <span class="type">void</span> *key);</span><br><span class="line">    <span class="comment">// 销毁 value</span></span><br><span class="line">    <span class="type">void</span> (*valDestructor)(<span class="type">void</span> *privdata, <span class="type">void</span> *obj);</span><br><span class="line">&#125; dictType;</span><br><span class="line"></span><br><span class="line"><span class="comment">// dict 的定义</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dict</span> &#123;</span></span><br><span class="line">    dictType *type; <span class="comment">// 哈希表类型</span></span><br><span class="line">    <span class="type">void</span> *privdata;</span><br><span class="line">    dictht ht[<span class="number">2</span>]; <span class="comment">// 两个哈希表，用于渐进式扩容</span></span><br><span class="line">    <span class="type">long</span> rehashidx; <span class="comment">/* rehashing not in progress if rehashidx == -1 */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> iterators; <span class="comment">/* number of iterators currently running */</span></span><br><span class="line">&#125; dict;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>dictType 是一个包含一组针对不同类型 entry 特定操作函数的结构体。不同类型的 entry 通过不一样的实现，来达到多态的目的。</li>
+<li>prevdata 保存了需要传给 dictType 里的函数的特定参数（如上函数签名的 prevdata 指针）</li>
+<li>ht 是包含两个 dictht 对象的数组，ht[0] 存储数据，ht[1] 在 rehash 的时候会用到（这里只提一下，dict rehash 过程下次单写）</li>
+<li>rehashidx 记录 rehash 进度，这里不做过多介绍。</li>
+</ol>
+<h3 id="linkedlist"><a href="#linkedlist" class="headerlink" title="linkedlist"></a>linkedlist</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span></span><br><span class="line">    <span class="type">void</span> *value;</span><br><span class="line">&#125; listNode;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listIter</span> &#123;</span></span><br><span class="line">    listNode *next;</span><br><span class="line">    <span class="type">int</span> direction;</span><br><span class="line">&#125; listIter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line">    listNode *head;</span><br><span class="line">    listNode *tail;</span><br><span class="line">    <span class="type">void</span> *(*dup)(<span class="type">void</span> *ptr);</span><br><span class="line">    <span class="type">void</span> (*<span class="built_in">free</span>)(<span class="type">void</span> *ptr);</span><br><span class="line">    <span class="type">int</span> (*match)(<span class="type">void</span> *ptr, <span class="type">void</span> *key);</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> len;</span><br><span class="line">&#125; <span class="built_in">list</span>;</span><br></pre></td></tr></table></figure>
+
+<p>list 结构通过 head、tail 记录了链表头尾指针，配合每个节点的 next、prev（双向链表），方便从头或者从尾遍历等操作。</p>
+<h3 id="skiplist"><a href="#skiplist" class="headerlink" title="skiplist"></a>skiplist</h3><p>kiplist（跳跃表） 是一种有序的结构，通过在每个节点中维护多个指向其他节点的指针来实现快速访问节点的目的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">    sds ele;</span><br><span class="line">    <span class="type">double</span> score;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">&#125; zskiplistNode;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span>  <span class="comment">// 头、尾指针</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> length;                 <span class="comment">// 长度</span></span><br><span class="line">    <span class="type">int</span> level;</span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
+
+<h3 id="ziplist"><a href="#ziplist" class="headerlink" title="ziplist"></a>ziplist</h3><p>ziplist是一个经过特殊<strong>编码的双向链表</strong>，它的设计目标就是为了提高存储效率（<strong>ziplist由于是一整块连续内存，所以存储效率很高。</strong>）。ziplist可以用于存储字符串或整数，其中整数是按真正的二进制表示进行编码的，而不是编码成字符串序列。它能以O(1)的时间复杂度在表的两端提供push和pop操作。 ziplist 没有结构体定义，下面只是描述下 ziplist 的内存结构</p>
+<p><zlbytes><zltail><zllen><entry>…<entry><zlend></p>
+<p><img src="https://image-static.segmentfault.com/312/003/3120031942-5cef4094c634c_articlex"></p>
+<p>各个部分在内存上是前后相邻的，它们分别的含义如下：</p>
+<ul>
+<li><zllen>: 16bit， 表示ziplist中数据项（entry）的个数。</li>
+<li><entry>: 表示真正存放数据的数据项，长度不定。一个数据项（entry）也有它自己的内部结构，这个稍后再解释。</li>
+</ul>
+<p>entry的构成，<prevrawlen><len><data></p>
+<ul>
+<li><code>&lt;prevrawlen&gt;</code>: 表示前一个数据项占用的总字节数。这个字段的用处是为了让ziplist能够从后向前遍历（从后一项的位置，只需向前偏移prevrawlen个字节，就找到了前一项）。这个字段采用变长编码。</li>
+<li><code>&lt;len&gt;</code>: 表示当前数据项的数据长度（即<code>&lt;data&gt;</code>部分的长度）。也采用变长编码。</li>
+</ul>
+<h3 id="quicklist"><a href="#quicklist" class="headerlink" title="quicklist"></a>quicklist</h3><p>A doubly linked list of ziplists。 quicklist 是一个双向链表，而且是一个ziplist的双向链表。我们知道，双向链表是由多个节点（Node）组成的。这个描述的意思是：quicklist的每个节点都是一个ziplist。</p>
+<p>quicklist的结构为什么这样设计呢？总结起来，大概又是一个空间和时间的折中：</p>
+<ul>
+<li>双向链表便于在表的两端进行push和pop操作，但是它的内存开销比较大。首先，它在每个节点上除了要保存数据之外，还要额外保存两个指针；其次，双向链表的各个节点是单独的内存块，地址不连续，节点多了容易产生内存碎片。</li>
+<li>ziplist由于是一整块连续内存，所以存储效率很高。但是，它不利于修改操作，每次数据变动都会引发一次内存的realloc。特别是当ziplist长度很长的时候，一次realloc可能会导致大批量的数据拷贝，进一步降低性能。</li>
+</ul>
+<p>于是，结合了双向链表和ziplist的优点，quicklist就应运而生了。</p>
+<p>不过，这也带来了一个新问题：到底一个quicklist节点包含多长的ziplist合适呢？比如，<strong>同样是存储12个数据项，既可以是一个quicklist包含3个节点，而每个节点的ziplist又包含4个数据项，也可以是一个quicklist包含6个节点，而每个节点的ziplist又包含2个数据项。</strong></p>
+<h3 id="intset"><a href="#intset" class="headerlink" title="intset"></a>intset</h3><p>当 set 中只包含整数元素时且元素不多时，底层的数据结构便是 intset。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">intset</span> &#123;</span></span><br><span class="line">    <span class="type">uint32_t</span> encoding;</span><br><span class="line">    <span class="type">uint32_t</span> length;</span><br><span class="line">    <span class="type">int8_t</span> contents[];</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
+
+<p>其中 contents 数组用于存储数据，intset 按照存储数字的大小有序排列在 contents 数组中。length 属性记录集合中元素的个数。encoding 记录 contents 数组中存储的元素的类型：</p>
+<ul>
+<li><code>INTSET_ENC_INT16</code> 存储 int16 类型整数</li>
+<li><code>INTSET_ENC_INT32</code> 存储 int32 类型整数</li>
+<li><code>INTSET_ENC_INT64</code> 存储 int64 类型整数</li>
+</ul>
+<p>当新增元素到 intset 中时，如果新元素比现有元素类型长时，比如向 INTSET_ENC_INT16 编码的 intset 插入一个 32 位整数时，intset 需要先升级（upgrade），才能添加元素。所谓 upgrade 是将此 intset 的 enconding 更新为更长 bit 的编码格式上。当 intset 升级后不会降级，哪怕删除长 bit 元素后剩下全是短 bit 元素。</p>
+<h2 id="Redis-是如何通过底层结构构建上层数据类型的"><a href="#Redis-是如何通过底层结构构建上层数据类型的" class="headerlink" title="Redis 是如何通过底层结构构建上层数据类型的"></a>Redis 是如何通过底层结构构建上层数据类型的</h2><p>Redis 不直接实现上层的数据类型，是为了方便在不同场景下可以替换下层合适的数据结构，同时对上层使用屏蔽下层实现细节。在不同场景下，面对性能和内存占用不同而使用不同的下层结构支持同一个上层对象。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisObject</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> type:<span class="number">4</span>;       <span class="comment">// 类型</span></span><br><span class="line">    <span class="type">unsigned</span> encoding:<span class="number">4</span>;   <span class="comment">// 编码</span></span><br><span class="line">    <span class="type">unsigned</span> lru:LRU_BITS; <span class="comment">/* LRU time (relative to global lru_clock) or</span></span><br><span class="line"><span class="comment">                            * LFU data (least significant 8 bits frequency</span></span><br><span class="line"><span class="comment">                            * and most significant 16 bits access time). */</span></span><br><span class="line">    <span class="type">int</span> refcount;</span><br><span class="line">    <span class="type">void</span> *ptr;             <span class="comment">// 指向底层实现数据结构的指针</span></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<p>如上结构，<code>type</code> 属性记录了对象的类型，对应上层面向用户的那些数据类型（string&#x2F;list&#x2F;hash 等）。对应的类型，可以通过在 redis-cli 中调用 <code>TYPE key</code> 查看每个 key 对应的类型。</p>
+<p>而 encoding 则对应着这个 redisObject 下层使用的数据类型（如上 sds&#x2F;ziplist&#x2F;dict 等），对应的下层结构，可以通过在 redis-cli 中调用 <code>OBJECT ENCODING key</code> 查看每个 key 对应的底层实现的数据结构。</p>
+<h3 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h3><p>redis 优先会选择最优的数据结构来存储数据，但是当存储的数据不满足对应的条件时。</p>
+<h3 id="string-–-gt-int-x2F-raw-x2F-embstr"><a href="#string-–-gt-int-x2F-raw-x2F-embstr" class="headerlink" title="string –&gt; int&#x2F;raw&#x2F;embstr"></a>string –&gt; int&#x2F;raw&#x2F;embstr</h3><p>string 类型在不同场景下，下层分别由 int&#x2F;raw&#x2F;embstr 编码方式来实现（ embstr 是经过优化的用于保存短字符串的编码方式）。</p>
+<ol>
+<li>如果 value 是一个整数，且整数长度在 8 bytes 以内，则 string 对象的编码类型为 int，redisObject 的 ptr 指针将指向一个 long 型对象。</li>
+<li>如果 value 是一个字符串值，且长度大于 32 字节，则 string 对象编码类型为 raw，对应 redisObject 的 ptr 指针将指向一个 sds 对象。</li>
+<li>如果 value 是一个字符串值，且长度小于等于 32 字节，则会通过 embstr 编码保存。</li>
+</ol>
+<h3 id="list-–-gt-ziplist-quicklist-x2F-linkedlist-x2F"><a href="#list-–-gt-ziplist-quicklist-x2F-linkedlist-x2F" class="headerlink" title="list –&gt; ziplist(quicklist)&#x2F;linkedlist&#x2F;"></a>list –&gt; ziplist(quicklist)&#x2F;linkedlist&#x2F;</h3><ol>
+<li>当 list 中所有元素长度都小于 <code>list-max-ziplist-value</code> 字节，且元素数量少于 <code>list-max-ziplist-entries</code> 时，底层会选择使用 ziplist。</li>
+<li>否则，使用 linkedlist。</li>
+</ol>
+<h3 id="hash-–-gt-ziplist-x2F-hashtable-dict"><a href="#hash-–-gt-ziplist-x2F-hashtable-dict" class="headerlink" title="hash –&gt; ziplist&#x2F;hashtable(dict)"></a>hash –&gt; ziplist&#x2F;hashtable(dict)</h3><ol>
+<li>当 hash 对象所有 key-value pair 长度都小于 <code>hash-max-ziplist-value</code>，且 key-value pair 数量小于 <code>hash-max-ziplist-entries</code> 时，底层会使用 ziplist 保存 hash 对象。</li>
+<li>否则，使用 hashtable。</li>
+</ol>
+<h3 id="set-–-gt-intset-x2F-hashtable-dict"><a href="#set-–-gt-intset-x2F-hashtable-dict" class="headerlink" title="set –&gt; intset&#x2F;hashtable(dict)"></a>set –&gt; intset&#x2F;hashtable(dict)</h3><ol>
+<li>当 set 所有元素都是整数对象，且元素数量小于 <code>set-max-intset-entries</code> 时，使用 intset 作为底层编码方式。</li>
+<li>否则，使用 hashtable。</li>
+</ol>
+<h3 id="zset-–-gt-ziplist-x2F-skiplist"><a href="#zset-–-gt-ziplist-x2F-skiplist" class="headerlink" title="zset –&gt; ziplist&#x2F;skiplist"></a>zset –&gt; ziplist&#x2F;skiplist</h3><p>当 zset 保存的元素小于 zset-max-ziplist-entries 个，且所有元素长度都小于 zset-max-ziplist-value 字节时，zset 底层通过 ziplist 存储。<br>否则，使用 skiplist 存储。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>简单总结了下 Redis 用户端常用的数据结构，以及底层抽象的各种数据结构，以及二者是如何组合起来的。</p>
+<p>Redis 面向用户侧的各种数据结构，并不直接实现，而是通过对象系统，在特定的条件下选择特定的底层结构，以在效率和存储空间之间平衡。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://xlzd.me/2018/09/01/redis-data-structure-overview/">大部分的参考</a></p>
+<p><a target="_blank" rel="noopener" href="http://zhangtielei.com/posts/server.html">详细分析redis数据结构</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" rel="tag"># 数据类型</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/02/redis/redis%E7%9A%84%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5%E5%8F%8A%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="prev" title="redis的过期策略及源码分析">
+      <i class="fa fa-chevron-left"></i> redis的过期策略及源码分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/02/redis/redis%E7%9A%84%E5%86%85%E5%AD%98%E6%B7%98%E6%B1%B0%E6%9C%BA%E5%88%B6/" rel="next" title="redis的内存淘汰机制">
+      redis的内存淘汰机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E4%BE%A7%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">用户侧的数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#string"><span class="nav-number">2.1.</span> <span class="nav-text">string</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hash"><span class="nav-number">2.2.</span> <span class="nav-text">hash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#list"><span class="nav-number">2.3.</span> <span class="nav-text">list</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#set"><span class="nav-number">2.4.</span> <span class="nav-text">set</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zset"><span class="nav-number">2.5.</span> <span class="nav-text">zset</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E4%BE%A7%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">实现侧的数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SDS"><span class="nav-number">3.1.</span> <span class="nav-text">SDS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dict"><span class="nav-number">3.2.</span> <span class="nav-text">dict</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linkedlist"><span class="nav-number">3.3.</span> <span class="nav-text">linkedlist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#skiplist"><span class="nav-number">3.4.</span> <span class="nav-text">skiplist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ziplist"><span class="nav-number">3.5.</span> <span class="nav-text">ziplist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#quicklist"><span class="nav-number">3.6.</span> <span class="nav-text">quicklist</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#intset"><span class="nav-number">3.7.</span> <span class="nav-text">intset</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis-%E6%98%AF%E5%A6%82%E4%BD%95%E9%80%9A%E8%BF%87%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84%E6%9E%84%E5%BB%BA%E4%B8%8A%E5%B1%82%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%9A%84"><span class="nav-number">4.</span> <span class="nav-text">Redis 是如何通过底层结构构建上层数据类型的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%87%E7%BA%A7"><span class="nav-number">4.1.</span> <span class="nav-text">升级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#string-%E2%80%93-gt-int-x2F-raw-x2F-embstr"><span class="nav-number">4.2.</span> <span class="nav-text">string –&gt; int&#x2F;raw&#x2F;embstr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#list-%E2%80%93-gt-ziplist-quicklist-x2F-linkedlist-x2F"><span class="nav-number">4.3.</span> <span class="nav-text">list –&gt; ziplist(quicklist)&#x2F;linkedlist&#x2F;</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hash-%E2%80%93-gt-ziplist-x2F-hashtable-dict"><span class="nav-number">4.4.</span> <span class="nav-text">hash –&gt; ziplist&#x2F;hashtable(dict)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#set-%E2%80%93-gt-intset-x2F-hashtable-dict"><span class="nav-number">4.5.</span> <span class="nav-text">set –&gt; intset&#x2F;hashtable(dict)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zset-%E2%80%93-gt-ziplist-x2F-skiplist"><span class="nav-number">4.6.</span> <span class="nav-text">zset –&gt; ziplist&#x2F;skiplist</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

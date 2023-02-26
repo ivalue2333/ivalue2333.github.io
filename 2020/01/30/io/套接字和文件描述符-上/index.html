@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 套接字概念套接字 Socket&#x3D;（IP地址：端口号），套接字的表示方法是点分十进制的IP地址后面写上端口号，中间用冒号或逗号隔开。每一个传输层连接唯一地被通信两端的两个端点（即两个套接字）所确定。基于linux一切皆文件的思想。一个套接字就是一个文件，sockfd（套接字文件描述符）就是一种文件描述符。 通过下面可知。服务端，在启动时，会创建一个套接字文件（监听套接字），系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="套接字和文件描述符-上">
+<meta property="og:url" content="http://example.com/2020/01/30/io/%E5%A5%97%E6%8E%A5%E5%AD%97%E5%92%8C%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6-%E4%B8%8A/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 套接字概念套接字 Socket&#x3D;（IP地址：端口号），套接字的表示方法是点分十进制的IP地址后面写上端口号，中间用冒号或逗号隔开。每一个传输层连接唯一地被通信两端的两个端点（即两个套接字）所确定。基于linux一切皆文件的思想。一个套接字就是一个文件，sockfd（套接字文件描述符）就是一种文件描述符。 通过下面可知。服务端，在启动时，会创建一个套接字文件（监听套接字），系统">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.ax1x.com/2020/02/02/1JcI0A.gif">
+<meta property="article:published_time" content="2020-01-30T12:38:29.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.774Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="套接字">
+<meta property="article:tag" content="文件描述符">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.ax1x.com/2020/02/02/1JcI0A.gif">
+
+<link rel="canonical" href="http://example.com/2020/01/30/io/%E5%A5%97%E6%8E%A5%E5%AD%97%E5%92%8C%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6-%E4%B8%8A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>套接字和文件描述符-上 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/01/30/io/%E5%A5%97%E6%8E%A5%E5%AD%97%E5%92%8C%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6-%E4%B8%8A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          套接字和文件描述符-上
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-30 20:38:29" itemprop="dateCreated datePublished" datetime="2020-01-30T20:38:29+08:00">2020-01-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="套接字"><a href="#套接字" class="headerlink" title="套接字"></a>套接字</h2><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>套接字 Socket&#x3D;（IP地址：端口号），套接字的表示方法是点分十进制的IP地址后面写上端口号，中间用冒号或逗号隔开。每一个传输层连接唯一地被通信两端的两个端点（即两个套接字）所确定。基于linux一切皆文件的思想。一个套接字就是一个文件，sockfd（套接字文件描述符）就是一种文件描述符。</p>
+<p>通过下面可知。服务端，在启动时，会创建一个套接字文件（<strong>监听套接字</strong>），系统返回一个套接字文件描述符。当服务端的accept()函数返回时，也就是当某一个客户端调用connect()时，这时。在服务端的主机上还会再生成一个套接字文件（<strong>已连接套接字</strong>），这个文件用于当前的服务端和客户端连接的信息传递。而服务端最开始创建的那个套接字文件，则是继续等待新的请求的到来。</p>
+<p>从内核的角度来看，一个套接字就是通信的一个端点。一个连接由它两端的套接了地址唯一确定，这对套接字地址叫做套接字对（socket pair）。<strong>一个套接字对实际上是由两个已连接套接字构成</strong>。</p>
+<h3 id="C-语言套接字编程"><a href="#C-语言套接字编程" class="headerlink" title="C 语言套接字编程"></a>C 语言套接字编程</h3><h4 id="创建套接字-socket-函数"><a href="#创建套接字-socket-函数" class="headerlink" title="创建套接字-socket()函数"></a>创建套接字-socket()函数</h4><p><strong>可以看到，文件描述符在编程中，就是用一个整数来表示！</strong></p>
+<blockquote>
+<p>int socket(int domain, int type, int protocol);</p>
+</blockquote>
+<p>socket函数对应于普通文件的打开操作。普通文件的打开操作返回一个文件描述字，而socket()用于创建一个socket描述符（socket descriptor， 一般记为sockfd，它是一个int型的数值，相当于一个文件的引用），它唯一标识一个socket。</p>
+<ul>
+<li>domain：即协议域，又称为协议族（family）。常用的协议族有，AF_INET、AF_INET6、AF_LOCAL（或称AF_UNIX，Unix域socket）、AF_ROUTE等等。协议族决定了socket的地址类型，在通信中必须采用对应的地址，如AF_INET决定了要用ipv4地址（32位的）与端口号（16位的）的组合、AF_UNIX决定了要用一个绝对路径名作为地址。</li>
+<li>type：指定socket类型。</li>
+<li>protocol：故名思意，就是指定协议。常用的协议有，IPPROTO_TCP、IPPTOTO_UDP、IPPROTO_SCTP、IPPROTO_TIPC等，它们分别对应TCP传输协议、UDP传输协议、STCP传输协议、TIPC传输协议。</li>
+</ul>
+<h4 id="绑定套接字-bind-函数"><a href="#绑定套接字-bind-函数" class="headerlink" title="绑定套接字-bind()函数"></a>绑定套接字-bind()函数</h4><blockquote>
+<p>int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);</p>
+</blockquote>
+<ul>
+<li>sockfd：即socket描述字，它是通过socket()函数创建了，唯一标识一个socket。bind()函数就是将给这个描述字绑定一个名字。</li>
+<li>addr：一个const struct sockaddr *指针，指向要绑定给sockfd的协议地址。这个地址结构根据地址创建socket时的地址协议族的不同而不同。<strong>端口号就是在这个参数中传入的</strong>。</li>
+<li>addrlen：对应的是地址的长度。</li>
+</ul>
+<p>通常服务器在启动的时候都会绑定一个众所周知的地址（如ip地址+端口号），用于提供服务，客户就可以通过它来接连服务器；而客户端就不用指定，有系统自动分配一个端口号和自身的ip地址组合。这就是为什么通常服务器端在listen之前会调用bind()，而客户端就不会调用，而是在connect()时由系统随机生成一个。</p>
+<h4 id="监听端口-listen-函数"><a href="#监听端口-listen-函数" class="headerlink" title="监听端口-listen()函数"></a>监听端口-listen()函数</h4><blockquote>
+<p>int listen(int sockfd, int backlog);</p>
+</blockquote>
+<ul>
+<li>sockfd：即socket描述字。</li>
+<li>backlog: 设定等待连接的等待队列的长度。</li>
+</ul>
+<p>刚开始理解listen函数会有一个误区，就是认为其操作是在等在一个新的connect的到来，其实不是这样的，真正等待connect的是accept操作，listen的操作就是当有较多的client发起connect时，server端不能及时的处理已经建立的连接，这时就会将connect连接放在等待队列中缓存起来。这个等待队列的长度有listen中的backlog参数来设定。listen和accept函数是服务器模式特有的函数，客户端不需要这个函数。当listen运行成功时，返回0；运行失败时，返回值位-1。<strong>listen的主要作用是缓冲队列</strong>。</p>
+<h4 id="接受请求-accept-函数"><a href="#接受请求-accept-函数" class="headerlink" title="接受请求-accept()函数"></a>接受请求-accept()函数</h4><blockquote>
+<p>int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);</p>
+</blockquote>
+<ul>
+<li>sockfd：即socket描述字。</li>
+</ul>
+<p>accept函数的第一个参数为服务器的socket描述字，第二个参数为指向struct sockaddr *的指针，用于返回客户端的协议地址，第三个参数为协议地址的长度。如果accpet成功（从阻塞状态返回），那么其返回值是由内核自动生成的一个全新的文件描述符，代表与返回客户的TCP连接。通过对该文件描述符操作，可以向client端发送和接收数据。同时之前socket创建的sockfd，则继续监听有没有新的连接到达本地端口。返回大于0的文件描述符则表示accept成功，否则失败。</p>
+<h4 id="客户端连接-connect-函数"><a href="#客户端连接-connect-函数" class="headerlink" title="客户端连接-connect()函数"></a>客户端连接-connect()函数</h4><blockquote>
+<p>int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);</p>
+</blockquote>
+<p>客户端通过调用connect函数来建立与TCP服务器的连接。</p>
+<p>connect函数的第一个参数即为</p>
+<ul>
+<li>sockfd：客户端的socket描述字，</li>
+<li>addr：服务器的socket地址</li>
+<li>addrlen：socket地址的长度。</li>
+</ul>
+<h4 id="数据处理-read-、write-等函数"><a href="#数据处理-read-、write-等函数" class="headerlink" title="数据处理-read()、write()等函数"></a>数据处理-read()、write()等函数</h4><blockquote>
+<p>ssize_t read(int fd, void *buf, size_t count);</p>
+<p>ssize_t write(int fd, const void *buf, size_t count);</p>
+</blockquote>
+<p>read函数是负责从fd中读取内容.当读成功时，read返回实际所读的字节数，如果返回的值是0表示已经读到文件的结束了，小于0表示出现了错误。</p>
+<p>write函数将buf中的nbytes字节内容写入文件描述符fd.成功时返回写的字节数。失败时返回-1，并设置errno变量。 在网络程序中，当我们向套接字文件描述符写时有俩种可能。1)write的返回值大于0，表示写了部分或者是全部的数据(<strong>还要检查返回值的大小和需要写入数据的大小是否一致</strong>)。2)返回的值小于0，此时出现了错误。我们要根据错误类型来处理。</p>
+<h4 id="连接关闭-close-函数"><a href="#连接关闭-close-函数" class="headerlink" title="连接关闭-close()函数"></a>连接关闭-close()函数</h4><blockquote>
+<p>int close(int fd);</p>
+</blockquote>
+<p>close一个TCP socket的缺省行为时把该socket标记为以关闭，然后立即返回到调用进程。该描述字不能再由调用进程使用，也就是说不能再作为read或write的第一个参数。</p>
+<h3 id="socket编程中的文件描述符-监听套接字和已连接套接字"><a href="#socket编程中的文件描述符-监听套接字和已连接套接字" class="headerlink" title="socket编程中的文件描述符-监听套接字和已连接套接字"></a>socket编程中的文件描述符-监听套接字和已连接套接字</h3><h4 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">socket()----&gt;</span><span class="language-bash">创建出 active_socket_fd (client_socket_fd)</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果不绑定端口，系统会随机绑定一个端口</span></span><br><span class="line"><span class="meta prompt_">bind()---&gt;</span><span class="language-bash">把active_socket_fd与ip,port绑定起来</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">connect()---&gt; </span><span class="language-bash">client_socket_fd 主动请求服务端的 listen_socket_fd</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">read()/write()----&gt;</span><span class="language-bash">读/写(client_socket_fd) socket io</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">close()----&gt;</span><span class="language-bash">关闭socket_fd</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">socket()----&gt;</span><span class="language-bash">创建出 active_socket_fd</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">bind()---&gt;</span><span class="language-bash">把active_socket_fd与ip,port绑定起来</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">listen()----&gt;</span><span class="language-bash">active_socket_fd--&gt; listen_socket_fd 等待客户端的client_socket_fd来请求连接</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">accept()----&gt;</span><span class="language-bash">listen_socket_fd--&gt;connec_socket_fd 把监听socket转变为连接socket,用于建立连接购的读写数据</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">read()/write()----&gt;</span><span class="language-bash">读/写(connec_socket_fd) socket io</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">close()----&gt;</span><span class="language-bash">关闭socket_fd</span></span><br></pre></td></tr></table></figure>
+
+<p>一开始socket函数, 不管在客户端还是在服务端, 创建的都是主动socket, 但是在服务端经过listen(), 后把其转变为listen_socket_fd(被动监听socket)。经过accept()后转变为connect_socket_fd(已连接socket)。在转变为connect_socket_fd之前, 都是同一个socket, 只不过是socket的状态改变了, 但是服务端经过accept()后返回的socket是新的socket, 用于连接后的read()&#x2F;write()。</p>
+<p>可以说，服务端有两类socket（实际中不止两个）</p>
+<ul>
+<li>监听socket，用于监听新的连接的到来</li>
+<li>已连接socket，用于和客户端交流</li>
+</ul>
+<p>客户端只要一类socket</p>
+<ul>
+<li>已连接socket，用于和客户端交流</li>
+</ul>
+<h4 id="为什么服务端有两类套接字"><a href="#为什么服务端有两类套接字" class="headerlink" title="为什么服务端有两类套接字"></a>为什么服务端有两类套接字</h4><p> 有了listen_socket_fd和connect_socket_fd后, 就可以专门用一listen_socket_fd负责响应客户端的请求, 每次新的connect_socket_fd专门负责当前这次连接的数据交互。<strong>主要是性能更好</strong>。</p>
+<h3 id="socket中TCP的三次握手建立连接详解"><a href="#socket中TCP的三次握手建立连接详解" class="headerlink" title="socket中TCP的三次握手建立连接详解"></a>socket中TCP的三次握手建立连接详解</h3><p>当客户端调用connect时，触发了连接请求，向服务器发送了SYN J包，这时connect进入阻塞状态；服务器监听到连接请求，即收到SYN J包，调用accept函数接收请求向客户端发送SYN K ，ACK J+1，这时accept进入阻塞状态；客户端收到服务器的SYN K ，ACK J+1之后，这时connect返回，并对SYN K进行确认；服务器收到ACK K+1时，accept返回，至此三次握手完毕，连接建立。</p>
+<h3 id="socket中TCP的四次握手释放连接详解"><a href="#socket中TCP的四次握手释放连接详解" class="headerlink" title="socket中TCP的四次握手释放连接详解"></a>socket中TCP的四次握手释放连接详解</h3><ul>
+<li>某个应用进程首先调用close主动关闭连接，这时TCP发送一个FIN M；</li>
+<li>另一端接收到FIN M之后，执行被动关闭，对这个FIN进行确认。它的接收也作为文件结束符传递给应用进程，因为FIN的接收意味着应用进程在相应的连接上再也接收不到额外数据；</li>
+<li>一段时间之后，接收到文件结束符的应用进程调用close关闭它的socket。这导致它的TCP也发送一个FIN N；</li>
+<li>接收到这个FIN的源发送端TCP对它进行确认。</li>
+</ul>
+<p>这样每个方向上都有一个FIN和ACK。</p>
+<h4 id="服务器可以主动释放连接吗？"><a href="#服务器可以主动释放连接吗？" class="headerlink" title="服务器可以主动释放连接吗？"></a>服务器可以主动释放连接吗？</h4><p>答案肯定是可以的。从代码中可以看出，只要在服务端对已连接套接字调用close()方法就可以在服务端释放连接。这相当于上述socket中的4次握手中的后两步。</p>
+<h3 id="监听队列-listen-queue-和溢出"><a href="#监听队列-listen-queue-和溢出" class="headerlink" title="监听队列(listen queue)和溢出"></a>监听队列(listen queue)和溢出</h3><blockquote>
+<p>int listen(int sockfd, int backlog);</p>
+</blockquote>
+<p>backlog是一个参数，当用户没有足够快地调用accept(2)时，它控制内核将为新连接保留多少内存。</p>
+<p>例如，假设您有一个阻塞的单线程HTTP服务器，每个HTTP请求大约需要100毫秒。在这种情况下，HTTP服务器将花费100毫秒处理每个请求，然后才能再次调用accept(2)。这意味着在最多10个 rps 的情况下不会有排队现象。如果内核中有10个以上的 rps，则有两个选择。</p>
+<ul>
+<li>内核的第一个选择是根本不接受连接。例如，内核可以拒绝对传入的SYN包进行ACK。更常见的情况是，内核将完成TCP三次握手，然后使用RST终止连接。不管怎样，结果都是一样的：如果连接被拒绝，就不需要分配接收或写入缓冲区。</li>
+<li>内核的第二个选择是接受连接并为其分配一个<strong>套接字结构（包括接收&#x2F;写入缓冲区）</strong>，然后将套接字对象排队以备以后使用。下次用户调用accept(2)将立即获得已分配的套接字, 而不是阻塞系统调用。</li>
+</ul>
+<p>内核将会对新连接进行排队，但只是一定数量的连接。内核将排队的连接数量由listen(2)的backlog参数控制。通常此值设置为相对较小的值。在Linux上，socket.h 将 somaxconn 的值设置为128。</p>
+<p>当监听队列填满时，新连接会被拒绝。这称为监听队列溢出。</p>
+<h4 id="进程监听队列检查"><a href="#进程监听队列检查" class="headerlink" title="进程监听队列检查"></a>进程监听队列检查</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">检查在5000端口上的连接</span></span><br><span class="line">netstat -antp | grep 5000</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">只看处于listen状态的tcp套接字</span></span><br><span class="line">ss -tl</span><br><span class="line"></span><br><span class="line">-t：只显示tcp套接字；</span><br><span class="line">-l：显示处于监听状态的套接字；</span><br></pre></td></tr></table></figure>
+
+<p>ss指令中的recv-q和send-q。LISTEN 状态: Recv-Q 表示的当前等待服务端调用 accept 完成三次握手的 listen backlog 数值，也就是说，当客户端通过 connect() 去连接正在 listen() 的服务端时，这些连接会一直处于这个 queue 里面直到被服务端 accept()；Send-Q 表示的则是最大的 listen backlog 数值，这就就是上面提到的 min(backlog, somaxconn) 的值。</p>
+<p>所以线上的一个常见的问题就是（特别是想tornado这种非线程编程模型的框架），连接被拒绝。这个时候就果断的使用<code>ss -tl</code>查看一下进程的等待队列是否已经满了。 </p>
+<h3 id="读语义和写语义"><a href="#读语义和写语义" class="headerlink" title="读语义和写语义"></a>读语义和写语义</h3><h4 id="读语义"><a href="#读语义" class="headerlink" title="读语义"></a>读语义</h4><p>读语义就是将内核接受缓冲区中的数据删除，并将该数据复制到进程调用read(2)函数时提供的缓冲区。</p>
+<p>如果接收缓冲区为空，并且用户调用read(2)，则系统调用将被阻塞，直到数据可用。如果接收缓冲区是非空的，并且用户调用read(2)，系统调用将立即返回这些可用的数据。如果读取队列中准备好的数据量小于用户提供的缓冲区的大小，则可能发生部分读取。调用方可以通过检查read(2)的返回值来检测到这一点。如果接收缓冲区已满，而TCP连接的另一端尝试发送更多的数据，内核将拒绝对数据包进行ACK。</p>
+<h4 id="写语义"><a href="#写语义" class="headerlink" title="写语义"></a>写语义</h4><p>写语义就是将用户提供的缓冲区中的数据复制到内核写入队列中。</p>
+<p>如果写入队列未满，并且用户调用写入，则系统调用将成功。如果写入队列有足够的空间，则将复制所有数据。如果写入队列只有部分数据的空间，那么将发生部分写入，并且只有部分数据将被复制到缓冲区。调用方通过检查write(2)的返回值来检查这一点。如果写入队列已满，并且用户调用写入write(2)），则系统调用将被阻塞。</p>
+<h4 id="走向互联网"><a href="#走向互联网" class="headerlink" title="走向互联网"></a>走向互联网</h4><p>我们平时用到的套接字其实只是一个引用(一个对象ID)，这个套接字对象实际上是放在操作系统内核中。这个套接字对象内部有两个重要的缓冲结构，一个是读缓冲(read buffer)，一个是写缓冲(write buffer)，它们都是有限大小的数组结构。</p>
+<p>当我们对客户端的socket写入字节数组时(序列化后的请求消息对象req)，是将字节数组拷贝到内核区套接字对象的write buffer中，内核网络模块会有单独的线程负责不停地将write buffer的数据拷贝到网卡硬件，网卡硬件再将数据送到网线，经过一些列路由器交换机，最终送达服务器的网卡硬件中。</p>
+<p>同样，服务器内核的网络模块也会有单独的线程不停地将收到的数据拷贝到套接字的read buffer中等待用户层来读取。最终服务器的用户进程通过socket引用的read方法将read buffer中的数据拷贝到用户程序内存中进行反序列化成请求对象进行处理。然后服务器将处理后的响应对象走一个相反的流程发送给客户端，这里就不再具体描述。</p>
+<p><img src="https://s2.ax1x.com/2020/02/02/1JcI0A.gif" alt="简单动画"></p>
+<h3 id="如何查看一个进程的所有文件描述符"><a href="#如何查看一个进程的所有文件描述符" class="headerlink" title="如何查看一个进程的所有文件描述符"></a>如何查看一个进程的所有文件描述符</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1. 获取进程<span class="built_in">id</span>(ps -ef | grep ...)，如我这里是 22380</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">2. 查看进程级别限制， 实际上这里还能查到进程数限制等</span></span><br><span class="line">cat /proc/22380/limits | grep &quot;open file&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">3. 查看进程使用的文件描述符</span></span><br><span class="line">ls /proc/22380/fd</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">4. 计数</span></span><br><span class="line">ls /proc/22380/fd| wc -l</span><br></pre></td></tr></table></figure>
+
+<h4 id="新增一个连接后会，新建一个socket文件（也就多了一个文件描述符）"><a href="#新增一个连接后会，新建一个socket文件（也就多了一个文件描述符）" class="headerlink" title="新增一个连接后会，新建一个socket文件（也就多了一个文件描述符）"></a>新增一个连接后会，新建一个socket文件（也就多了一个文件描述符）</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">./server 启动后，只会有一个负责监听额socket文件</span></span><br><span class="line">dr-x------ 2 root root  0 Feb  1 13:37 ./</span><br><span class="line">dr-xr-xr-x 9 root root  0 Feb  1 13:37 ../</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 0 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 1 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 2 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 3 -&gt; socket:[12004746]</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">执行 ./client后，新增了一个socket文件</span></span><br><span class="line">root@upupup:/data/pypath/cloud-fly# ll /proc/19011/fd</span><br><span class="line">total 0</span><br><span class="line">dr-x------ 2 root root  0 Feb  1 13:37 ./</span><br><span class="line">dr-xr-xr-x 9 root root  0 Feb  1 13:37 ../</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 0 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 1 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 2 -&gt; /dev/pts/3</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 3 -&gt; socket:[12004746]</span><br><span class="line">lrwx------ 1 root root 64 Feb  1 13:37 4 -&gt; socket:[12004747]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>go-science&#x2F;example&#x2F;cpp</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>C语言之网络编程（服务器和客户端）:<a target="_blank" rel="noopener" href="https://blog.csdn.net/zh0314/article/details/77387162">https://blog.csdn.net/zh0314/article/details/77387162</a></p>
+<p>Linux Socket编程（不限Linux）：	<a target="_blank" rel="noopener" href="https://www.cnblogs.com/skynet/archive/2010/12/12/1903949.html">https://www.cnblogs.com/skynet/archive/2010/12/12/1903949.html</a></p>
+<p>监听套接字与已连接套接字：<a target="_blank" rel="noopener" href="https://blog.csdn.net/lihao21/article/details/64951446">https://blog.csdn.net/lihao21/article/details/64951446</a></p>
+<p>为什么有监听socket和连接socket,为什么产生两个socket：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/liangjf/p/9900928.html">https://www.cnblogs.com/liangjf/p/9900928.html</a></p>
+<p>ss命令和Recv-Q和Send-Q状态：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/leezhxing/p/5329786.html">https://www.cnblogs.com/leezhxing/p/5329786.html</a></p>
+<p>当我们在读写Socket时，我们究竟在读写什么？：<a target="_blank" rel="noopener" href="https://juejin.im/post/5b344ad6e51d4558892eeb46">https://juejin.im/post/5b344ad6e51d4558892eeb46</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%A5%97%E6%8E%A5%E5%AD%97/" rel="tag"># 套接字</a>
+              <a href="/tags/%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6/" rel="tag"># 文件描述符</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/20/http/http%E4%B9%8Bgolang%20gin%20%E6%A1%86%E6%9E%B6%E7%9A%84%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95/" rel="prev" title="http之golang gin 框架的路由算法">
+      <i class="fa fa-chevron-left"></i> http之golang gin 框架的路由算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/01/io/%E5%A5%97%E6%8E%A5%E5%AD%97%E5%92%8C%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6-%E4%B8%8B/" rel="next" title="套接字和文件描述符-下">
+      套接字和文件描述符-下 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A5%97%E6%8E%A5%E5%AD%97"><span class="nav-number">1.</span> <span class="nav-text">套接字</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-%E8%AF%AD%E8%A8%80%E5%A5%97%E6%8E%A5%E5%AD%97%E7%BC%96%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">C 语言套接字编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%A5%97%E6%8E%A5%E5%AD%97-socket-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.1.</span> <span class="nav-text">创建套接字-socket()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%91%E5%AE%9A%E5%A5%97%E6%8E%A5%E5%AD%97-bind-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">绑定套接字-bind()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%91%E5%90%AC%E7%AB%AF%E5%8F%A3-listen-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.3.</span> <span class="nav-text">监听端口-listen()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%A5%E5%8F%97%E8%AF%B7%E6%B1%82-accept-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.4.</span> <span class="nav-text">接受请求-accept()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5-connect-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.5.</span> <span class="nav-text">客户端连接-connect()函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86-read-%E3%80%81write-%E7%AD%89%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.6.</span> <span class="nav-text">数据处理-read()、write()等函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E5%85%B3%E9%97%AD-close-%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.7.</span> <span class="nav-text">连接关闭-close()函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#socket%E7%BC%96%E7%A8%8B%E4%B8%AD%E7%9A%84%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6-%E7%9B%91%E5%90%AC%E5%A5%97%E6%8E%A5%E5%AD%97%E5%92%8C%E5%B7%B2%E8%BF%9E%E6%8E%A5%E5%A5%97%E6%8E%A5%E5%AD%97"><span class="nav-number">1.3.</span> <span class="nav-text">socket编程中的文件描述符-监听套接字和已连接套接字</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">1.3.1.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF"><span class="nav-number">1.3.2.</span> <span class="nav-text">服务端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9C%8D%E5%8A%A1%E7%AB%AF%E6%9C%89%E4%B8%A4%E7%B1%BB%E5%A5%97%E6%8E%A5%E5%AD%97"><span class="nav-number">1.3.3.</span> <span class="nav-text">为什么服务端有两类套接字</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#socket%E4%B8%ADTCP%E7%9A%84%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.4.</span> <span class="nav-text">socket中TCP的三次握手建立连接详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#socket%E4%B8%ADTCP%E7%9A%84%E5%9B%9B%E6%AC%A1%E6%8F%A1%E6%89%8B%E9%87%8A%E6%94%BE%E8%BF%9E%E6%8E%A5%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.5.</span> <span class="nav-text">socket中TCP的四次握手释放连接详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E4%B8%BB%E5%8A%A8%E9%87%8A%E6%94%BE%E8%BF%9E%E6%8E%A5%E5%90%97%EF%BC%9F"><span class="nav-number">1.5.1.</span> <span class="nav-text">服务器可以主动释放连接吗？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%91%E5%90%AC%E9%98%9F%E5%88%97-listen-queue-%E5%92%8C%E6%BA%A2%E5%87%BA"><span class="nav-number">1.6.</span> <span class="nav-text">监听队列(listen queue)和溢出</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9B%91%E5%90%AC%E9%98%9F%E5%88%97%E6%A3%80%E6%9F%A5"><span class="nav-number">1.6.1.</span> <span class="nav-text">进程监听队列检查</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%BB%E8%AF%AD%E4%B9%89%E5%92%8C%E5%86%99%E8%AF%AD%E4%B9%89"><span class="nav-number">1.7.</span> <span class="nav-text">读语义和写语义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%BB%E8%AF%AD%E4%B9%89"><span class="nav-number">1.7.1.</span> <span class="nav-text">读语义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E8%AF%AD%E4%B9%89"><span class="nav-number">1.7.2.</span> <span class="nav-text">写语义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B5%B0%E5%90%91%E4%BA%92%E8%81%94%E7%BD%91"><span class="nav-number">1.7.3.</span> <span class="nav-text">走向互联网</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8B%E4%B8%80%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E6%89%80%E6%9C%89%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="nav-number">1.8.</span> <span class="nav-text">如何查看一个进程的所有文件描述符</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5%E5%90%8E%E4%BC%9A%EF%BC%8C%E6%96%B0%E5%BB%BA%E4%B8%80%E4%B8%AAsocket%E6%96%87%E4%BB%B6%EF%BC%88%E4%B9%9F%E5%B0%B1%E5%A4%9A%E4%BA%86%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%EF%BC%89"><span class="nav-number">1.8.1.</span> <span class="nav-text">新增一个连接后会，新建一个socket文件（也就多了一个文件描述符）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">2.</span> <span class="nav-text">附录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

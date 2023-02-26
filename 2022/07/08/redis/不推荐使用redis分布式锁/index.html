@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[toc] 概述目前比较主流的分布式锁有两种选择：一种是使用redis集群做分布式锁，另外一种是使用zookeeper，这两种分布式锁有着各自的特点，但是在技术选型上，我还是推荐使用zookeeper来做分布式锁，至于为什么不推荐redis集群来做分布式锁，我会在下面阐述。 CAP理论1.Consistency 一致性一致性指“all nodes see the same data at the">
+<meta property="og:type" content="article">
+<meta property="og:title" content="不推荐使用redis分布式锁的原因">
+<meta property="og:url" content="http://example.com/2022/07/08/redis/%E4%B8%8D%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[toc] 概述目前比较主流的分布式锁有两种选择：一种是使用redis集群做分布式锁，另外一种是使用zookeeper，这两种分布式锁有着各自的特点，但是在技术选型上，我还是推荐使用zookeeper来做分布式锁，至于为什么不推荐redis集群来做分布式锁，我会在下面阐述。 CAP理论1.Consistency 一致性一致性指“all nodes see the same data at the">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-08T08:43:43.000Z">
+<meta property="article:modified_time" content="2022-07-08T08:58:17.493Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="分布式锁 - 强一致性">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/07/08/redis/%E4%B8%8D%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>不推荐使用redis分布式锁的原因 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/07/08/redis/%E4%B8%8D%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          不推荐使用redis分布式锁的原因
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-07-08 16:43:43 / 修改时间：16:58:17" itemprop="dateCreated datePublished" datetime="2022-07-08T16:43:43+08:00">2022-07-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[toc]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>目前比较主流的分布式锁有两种选择：一种是使用redis集群做分布式锁，另外一种是使用zookeeper，这两种分布式锁有着各自的特点，但是在技术选型上，我还是推荐使用zookeeper来做分布式锁，至于为什么不推荐redis集群来做分布式锁，我会在下面阐述。</p>
+<h2 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h2><h3 id="1-Consistency-一致性"><a href="#1-Consistency-一致性" class="headerlink" title="1.Consistency 一致性"></a>1.Consistency 一致性</h3><p>一致性指“all nodes see the same data at the same time”，即更新操作成功并返回客户端完成后，所有节点在同一时间的数据完全一致，所以，一致性，说的就是数据一致性。分布式的一致性</p>
+<p>对于一致性，可以分为从客户端和服务端两个不同的视角。从客户端来看，一致性主要指的是多并发访问时更新过的数据如何获取的问题。从服务端来看，则是更新如何复制分布到整个系统，以保证数据最终一致。</p>
+<p>一致性是因为有并发读写才有的问题，因此在理解一致性的问题时，一定要注意结合考虑并发读写的场景。</p>
+<p>从客户端角度，多进程并发访问时，更新过的数据在不同进程如何获取的不同策略，决定了不同的一致性。</p>
+<p>三种一致性策略</p>
+<ul>
+<li>对于关系型数据库，要求更新过的数据能被后续的访问都能看到，这是强一致性。</li>
+<li>如果能容忍后续的部分或者全部访问不到，则是弱一致性。</li>
+<li>如果经过一段时间后要求能访问到更新后的数据，则是最终一致性。</li>
+</ul>
+<p>CAP中说，不可能同时满足的这个一致性指的是强一致性。</p>
+<h3 id="2-Availability-可用性"><a href="#2-Availability-可用性" class="headerlink" title="2.Availability 可用性"></a>2.Availability 可用性</h3><p>可用性指“Reads and writes always succeed”，即服务一直可用，而且是正常响应时间。</p>
+<p>对于一个可用性的分布式系统，每一个非故障的节点必须对每一个请求作出响应。所以，一般我们在衡量一个系统的可用性的时候，都是通过停机时间来计算的。</p>
+<h3 id="3-Partition-Tolerance分区容错性"><a href="#3-Partition-Tolerance分区容错性" class="headerlink" title="3.Partition Tolerance分区容错性"></a>3.Partition Tolerance分区容错性</h3><p>分区容错性指“the system continues to operate despite arbitrary message loss or failure of part of the system”，即分布式系统在遇到某节点或网络分区故障的时候，仍然能够对外提供满足一致性和可用性的服务。</p>
+<p>分区容错性和扩展性紧密相关。在分布式应用中，可能因为一些分布式的原因导致系统无法正常运转。好的分区容错性要求能够使应用虽然是一个分布式系统，而看上去却好像是在一个可以运转正常的整体。比如现在的分布式系统中有某一个或者几个机器宕掉了，其他剩下的机器还能够正常运转满足系统需求，或者是机器之间有网络异常，将分布式系统分隔未独立的几个部分，各个部分还能维持分布式系统的运作，这样就具有好的分区容错性。</p>
+<h2 id="为什么不建议使用redis分布锁"><a href="#为什么不建议使用redis分布锁" class="headerlink" title="为什么不建议使用redis分布锁"></a>为什么不建议使用redis分布锁</h2><h3 id="主从切换可能丢失锁信息"><a href="#主从切换可能丢失锁信息" class="headerlink" title="主从切换可能丢失锁信息"></a>主从切换可能丢失锁信息</h3><p>考虑一下这样的场景：在分布式环境中，很多并发需要锁来同步，当使用redis分布式锁，通用的做法是使用redis的setnx key value px 这样的命令，设置一个字段，当设置成功说明获取锁，设置不成功说明锁被占用，当获取所之后需要删除锁，也就是删除设置的锁字段，这是锁可以被其他占用。</p>
+<p>这里在主从切换回出现问题，当第一个线程在主服务器上设置了锁，但是这时候从服务器并没有及时同步主服务器的状态，也就是没有同步主服务器中的锁字段，而此时，主服务器挂了，redis的哨兵模式升级从服务器为主服务器，如果在并发量大的情况下，虽然第一个线程获取了锁，其他线程会在当前的主服务器（之前的从服务器，但是并没有同步已经设置的锁字段）上设置锁字段，这样并不能保证锁的互斥性。</p>
+<h3 id="缓存易失性"><a href="#缓存易失性" class="headerlink" title="缓存易失性"></a>缓存易失性</h3><p>假如第一个线程设置了锁，但是之后触发内存淘汰机制很不幸淘汰了设置的锁字段，接下来的线程在第一个线程没有释放锁的情况下，也是重新设置锁字段的，这样并不能保证锁的安全性。</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>但是如果不在意上诉问题，其实可以用 redis 做分布式锁，毕竟简单。</p>
+<h2 id="redis-分布式锁的挑战"><a href="#redis-分布式锁的挑战" class="headerlink" title="redis 分布式锁的挑战"></a>redis 分布式锁的挑战</h2><h3 id="执行时间超过锁的过期时间"><a href="#执行时间超过锁的过期时间" class="headerlink" title="执行时间超过锁的过期时间"></a>执行时间超过锁的过期时间</h3><ul>
+<li>客户 1 获取锁成功并设置 30 秒超时;</li>
+<li>客户 1 因为一些原因导致执行很慢(网络问题、发生 FullGC……)，过了 30 秒依然没执行完，但是锁过期「自动释放了」;</li>
+<li>客户 2 申请加锁成功;</li>
+<li>客户 1 执行完成，执行 DEL 释放锁指令，这个时候就把 客户 2 的锁给释放了。</li>
+</ul>
+<h4 id="锁续期"><a href="#锁续期" class="headerlink" title="锁续期"></a>锁续期</h4><p>我们可以让获得锁的线程开启一个守护线程，用来给快要过期的锁「续航」。加锁的时候设置一个过期时间，同时客户端开启一个「守护线程」，定时去检测这个锁的失效时间。如果快要过期，但是业务逻辑还没执行完成，自动对这个锁进行续期，重新设置过期时间。</p>
+<h3 id="避免释放别人的锁"><a href="#避免释放别人的锁" class="headerlink" title="避免释放别人的锁"></a>避免释放别人的锁</h3><p>在释放锁的时候，客户端将自己的「唯一标识」与锁上的「标识」比较是否相等，匹配上则删除，否则没有权利释放锁。通过 SET lock_resource_name $unique_id NX PX $expire_time，同时启动守护线程为快要过期单还没执行完毕的客户端的锁续命。由于是多个指令所以需要 lua 脚本来保证原子性。</p>
+<h3 id="解决-redis-主从切换的问题"><a href="#解决-redis-主从切换的问题" class="headerlink" title="解决 redis 主从切换的问题"></a>解决 redis 主从切换的问题</h3><p>如果客户端 1 刚往 master 节点写入一个分布式锁，此时这个指令还没来得及同步到 slave 节点。此时，master 节点宕机，其中一个 slave 被选举为新 master，这时候新 master 是没有客户端 1 写入的锁，锁丢失了。此刻，客户端 2 线程来获取锁，就成功了。</p>
+<p>虽然这个概率极低，但是我们必须得承认这个风险的存在。Redis 的作者为了统一分布式锁的标准，搞了一个 Redlock，算是 Redis 官方对于实现分布式锁的指导规范，<a target="_blank" rel="noopener" href="https://redis.io/topics/distlock%EF%BC%8C%E4%BD%86%E6%98%AF%E8%BF%99%E4%B8%AA">https://redis.io/topics/distlock，但是这个</a> Redlock 也被国外的一些分布式专家给喷了。</p>
+<p>太麻烦不看了</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/MOVIE14/article/details/82053391">https://blog.csdn.net/MOVIE14/article/details/82053391</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.51cto.com/article/689646.html">https://www.51cto.com/article/689646.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81-%E5%BC%BA%E4%B8%80%E8%87%B4%E6%80%A7/" rel="tag"># 分布式锁 - 强一致性</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/29/golang/golang%20context/" rel="prev" title="golang context">
+      <i class="fa fa-chevron-left"></i> golang context
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CAP%E7%90%86%E8%AE%BA"><span class="nav-number">2.</span> <span class="nav-text">CAP理论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Consistency-%E4%B8%80%E8%87%B4%E6%80%A7"><span class="nav-number">2.1.</span> <span class="nav-text">1.Consistency 一致性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Availability-%E5%8F%AF%E7%94%A8%E6%80%A7"><span class="nav-number">2.2.</span> <span class="nav-text">2.Availability 可用性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Partition-Tolerance%E5%88%86%E5%8C%BA%E5%AE%B9%E9%94%99%E6%80%A7"><span class="nav-number">2.3.</span> <span class="nav-text">3.Partition Tolerance分区容错性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E5%BB%BA%E8%AE%AE%E4%BD%BF%E7%94%A8redis%E5%88%86%E5%B8%83%E9%94%81"><span class="nav-number">3.</span> <span class="nav-text">为什么不建议使用redis分布锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%88%87%E6%8D%A2%E5%8F%AF%E8%83%BD%E4%B8%A2%E5%A4%B1%E9%94%81%E4%BF%A1%E6%81%AF"><span class="nav-number">3.1.</span> <span class="nav-text">主从切换可能丢失锁信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%98%93%E5%A4%B1%E6%80%A7"><span class="nav-number">3.2.</span> <span class="nav-text">缓存易失性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">3.3.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E7%9A%84%E6%8C%91%E6%88%98"><span class="nav-number">4.</span> <span class="nav-text">redis 分布式锁的挑战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E6%97%B6%E9%97%B4%E8%B6%85%E8%BF%87%E9%94%81%E7%9A%84%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4"><span class="nav-number">4.1.</span> <span class="nav-text">执行时间超过锁的过期时间</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%94%81%E7%BB%AD%E6%9C%9F"><span class="nav-number">4.1.1.</span> <span class="nav-text">锁续期</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E9%87%8A%E6%94%BE%E5%88%AB%E4%BA%BA%E7%9A%84%E9%94%81"><span class="nav-number">4.2.</span> <span class="nav-text">避免释放别人的锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3-redis-%E4%B8%BB%E4%BB%8E%E5%88%87%E6%8D%A2%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">4.3.</span> <span class="nav-text">解决 redis 主从切换的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">5.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

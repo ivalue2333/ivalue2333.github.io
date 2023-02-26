@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 设置过期时间的常见方式1234567891011expire key ttlexpireat key unix_timestamppexpire key ttlpexpireat key unix_timestampSETEX key seconds valuePSETEX key milliseconds valueSET key value [EX seconds] [PX mil">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis的过期策略及源码分析">
+<meta property="og:url" content="http://example.com/2020/11/02/redis/redis%E7%9A%84%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5%E5%8F%8A%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 设置过期时间的常见方式1234567891011expire key ttlexpireat key unix_timestamppexpire key ttlpexpireat key unix_timestampSETEX key seconds valuePSETEX key milliseconds valueSET key value [EX seconds] [PX mil">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-02T03:48:35.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.796Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="过期策略">
+<meta property="article:tag" content="expire">
+<meta property="article:tag" content="源码分析">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/11/02/redis/redis%E7%9A%84%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5%E5%8F%8A%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>redis的过期策略及源码分析 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/02/redis/redis%E7%9A%84%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5%E5%8F%8A%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          redis的过期策略及源码分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-02 11:48:35" itemprop="dateCreated datePublished" datetime="2020-11-02T11:48:35+08:00">2020-11-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="设置过期时间的常见方式"><a href="#设置过期时间的常见方式" class="headerlink" title="设置过期时间的常见方式"></a>设置过期时间的常见方式</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">expire key ttl</span><br><span class="line">expireat key unix_timestamp</span><br><span class="line"></span><br><span class="line">pexpire key ttl</span><br><span class="line">pexpireat key unix_timestamp</span><br><span class="line"></span><br><span class="line">SETEX key seconds value</span><br><span class="line">PSETEX key milliseconds value</span><br><span class="line">SET key value [EX seconds] [PX milliseconds] [NX|XX]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在 redis 的实现中，expire, expireat, pexpire 这三种最终都是使用 pexpireat 来实现的</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="过期键值对的删除有三种策略"><a href="#过期键值对的删除有三种策略" class="headerlink" title="过期键值对的删除有三种策略"></a>过期键值对的删除有三种策略</h2><h3 id="定时删除"><a href="#定时删除" class="headerlink" title="定时删除"></a>定时删除</h3><p>设置一个定时器和回调函数，时间一到就调用回调函数删除键值对。优点是及时删除，缺点是需要为每个键值对都设置定时器，比较麻烦(其实可以用timer_fd的，参考muduo定时任务的实现)</p>
+<h3 id="惰性删除"><a href="#惰性删除" class="headerlink" title="惰性删除"></a>惰性删除</h3><p>只有当再次访问该键时才判断是否过期，如果过期将其删除。优点是不需要为每个键值对进行时间监听，缺点是如果这个键值对一直不被访问，那么即使过期也会一直残留在数据库中，占用不必要的内存</p>
+<h3 id="周期删除"><a href="#周期删除" class="headerlink" title="周期删除"></a>周期删除</h3><p>每隔一段时间执行一次删除过期键值对的操作。优点是既不需要监听每个键值对导致占用CPU，也不会一直不删除导致占用内存，缺点是不容易确定删除操作的执行时长和频率<br>Redis采用惰性删除和周期删除两种策略，通过配合使用，服务器可以很好的合理使用CPU时间和避免内不能空间的浪费</p>
+<h2 id="redis-过期策略的实现"><a href="#redis-过期策略的实现" class="headerlink" title="redis 过期策略的实现"></a>redis 过期策略的实现</h2><h3 id="redis-expire-api"><a href="#redis-expire-api" class="headerlink" title="redis expire api"></a>redis expire api</h3><p>Redis是如何实现定时删除的，在数据库结构redisDb中，可以发现除了上篇提到的用于保存键值对的dict字典外，另有一个字典变量expires，实际上正是它保存着键和其过期时间(绝对时间)。当执行完SET命令后，两个字典的数据分布为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisDb</span> &#123;</span></span><br><span class="line">    dict *dict;                 <span class="comment">/* The keyspace for this DB */</span></span><br><span class="line">    dict *expires;              <span class="comment">/* Timeout of keys with a timeout set */</span></span><br><span class="line">&#125; redisDb;</span><br></pre></td></tr></table></figure>
+
+<h4 id="设置键的过期时间，setExpire"><a href="#设置键的过期时间，setExpire" class="headerlink" title="设置键的过期时间，setExpire"></a>设置键的过期时间，setExpire</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">setExpire</span><span class="params">(client *c, redisDb *db, robj *key, <span class="type">long</span> <span class="type">long</span> when)</span> &#123;</span><br><span class="line">    dictEntry *kde, *de;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Reuse the sds from the main dict in the expire dict */</span></span><br><span class="line">     <span class="comment">/* 从数据字典中寻找键节点， kde 中包含 key */</span></span><br><span class="line">    kde = dictFind(db-&gt;dict,key-&gt;ptr);</span><br><span class="line">    serverAssertWithInfo(<span class="literal">NULL</span>,key,kde != <span class="literal">NULL</span>);</span><br><span class="line">    <span class="comment">/* 从时间字典中寻找键节点，如果不存在则创建一个 */</span></span><br><span class="line">    de = dictAddOrFind(db-&gt;expires,dictGetKey(kde));</span><br><span class="line">    <span class="comment">/* 设置键节点的值，值为过期时间(绝对时间) */</span></span><br><span class="line">    dictSetSignedIntegerVal(de,when);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dictSetSignedIntegerVal是宏定义，设置键节点de的值为when。因为哈希节点中的值结构是联合，可以存储不同大小的数字，也可以通过void*指针存储其它类型，这里过期时间是long long类型，所以可以存在int64_t类型上。</p>
+<h4 id="获取键的过期时间，getExpire"><a href="#获取键的过期时间，getExpire" class="headerlink" title="获取键的过期时间，getExpire"></a>获取键的过期时间，getExpire</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">long</span> <span class="type">long</span> <span class="title function_">getExpire</span><span class="params">(redisDb *db, robj *key)</span> &#123;</span><br><span class="line">    dictEntry *de;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* No expire? return ASAP */</span></span><br><span class="line">    <span class="keyword">if</span> (dictSize(db-&gt;expires) == <span class="number">0</span> ||</span><br><span class="line">       (de = dictFind(db-&gt;expires,key-&gt;ptr)) == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* The entry was found in the expire dict, this means it should also</span></span><br><span class="line"><span class="comment">     * be present in the main dict (safety check). */</span></span><br><span class="line">    serverAssertWithInfo(<span class="literal">NULL</span>,key,dictFind(db-&gt;dict,key-&gt;ptr) != <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">return</span> dictGetSignedIntegerVal(de);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="删除键的过期时间，removeExpire"><a href="#删除键的过期时间，removeExpire" class="headerlink" title="删除键的过期时间，removeExpire"></a>删除键的过期时间，removeExpire</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">removeExpire</span><span class="params">(redisDb *db, robj *key)</span> &#123;</span><br><span class="line">    <span class="comment">/* An expire may only be removed if there is a corresponding entry in the</span></span><br><span class="line"><span class="comment">     * main dict. Otherwise, the key will never be freed. */</span></span><br><span class="line">    serverAssertWithInfo(<span class="literal">NULL</span>,key,dictFind(db-&gt;dict,key-&gt;ptr) != <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">return</span> dictDelete(db-&gt;expires,key-&gt;ptr) == DICT_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="redis-过期删除的实现"><a href="#redis-过期删除的实现" class="headerlink" title="redis 过期删除的实现"></a>redis 过期删除的实现</h3><p><strong>Redis 采用惰性删除和周期删除两种策略</strong>，通过配合使用，服务器可以很好的合理使用CPU时间和避免内不能空间的浪费。</p>
+<h4 id="惰性删除-1"><a href="#惰性删除-1" class="headerlink" title="惰性删除"></a>惰性删除</h4><p>惰性删除是指在对每一个键进行读写操作时，先判断一下这个键是否已经过期，如果过期则将其删除。该操作由expireIfNeeded函数完成。</p>
+<h5 id="get-操作的流程"><a href="#get-操作的流程" class="headerlink" title="get 操作的流程"></a>get 操作的流程</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">getGenericCommand</span><span class="params">(client *c)</span></span><br><span class="line">    </span><br><span class="line">robj *<span class="title function_">lookupKeyReadOrReply</span><span class="params">(client *c, robj *key, robj *reply)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line">robj *<span class="title function_">lookupKeyRead</span><span class="params">(redisDb *db, robj *key)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> lookupKeyReadWithFlags(db,key,LOOKUP_NONE);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 进入这个函数会调用  (expireIfNeeded(db,key)， 判断 key 是否过期</span></span><br><span class="line">robj *<span class="title function_">lookupKeyReadWithFlags</span><span class="params">(redisDb *db, robj *key, <span class="type">int</span> flags)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// lookup 最终寻找 key 对应的 val。 在redis中，所有的键值对都会用内置的哈希表保存在内存里，因此，在lookupKey的实现里，先使用dictFind函数查找传进来的key是否存在哈希表中，如果找到，则调用dictGetVal获取哈希节点对象的value属性，否则，返回NULL，函数的时间复杂度是O(1)。</span></span><br><span class="line">robj *<span class="title function_">lookupKey</span><span class="params">(redisDb *db, robj *key, <span class="type">int</span> flags)</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="主从实现惰性删除的方法"><a href="#主从实现惰性删除的方法" class="headerlink" title="主从实现惰性删除的方法"></a>主从实现惰性删除的方法</h5><ul>
+<li>如果当前请求是在 master 节点上，且当前的 key 已经过期，那么直接删除过期的 key。</li>
+<li>如果当前请求是在 slave 节点上，且当前 key 已经过期， 直接返回 null，不做删除。（删除操作只能由 master 执行并同步给 slave 节点）</li>
+</ul>
+<h4 id="周期删除-1"><a href="#周期删除-1" class="headerlink" title="周期删除"></a>周期删除</h4><p>Redis服务器会周期性地执行server.c&#x2F;serverCron函数，在这个函数中执行的databasesCron函数会调用activeExpireCycle函数，这个函数在时间字典(expires)中随机选择若干键节点，判断其是否过期，如果过期则将其删除。</p>
+<h5 id="循环函数"><a href="#循环函数" class="headerlink" title="循环函数"></a>循环函数</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">activeExpireCycle</span><span class="params">(<span class="type">int</span> type)</span> &#123;</span><br><span class="line">    <span class="comment">// 循环次数和时间：dbs_per_call：上一次执行越就久，dbs_per_call越大， timelimit_exit：最多执行这么多时间</span></span><br><span class="line">    <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; dbs_per_call &amp;&amp; timelimit_exit == <span class="number">0</span>; j++) &#123;</span><br><span class="line">         <span class="comment">// 循环 db：当前 db 过期的多才重复执行</span></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            <span class="keyword">while</span> (sampled &lt; num &amp;&amp; checked_buckets &lt; max_buckets) &#123;</span><br><span class="line">                <span class="comment">/* Get the next entry now since this entry may get deleted. */</span></span><br><span class="line">                 <span class="keyword">while</span>(de) &#123;</span><br><span class="line">                        dictEntry *e = de;</span><br><span class="line">                        de = de-&gt;next;</span><br><span class="line"></span><br><span class="line">                        ttl = dictGetSignedIntegerVal(e)-now;</span><br><span class="line">                        <span class="keyword">if</span> (activeExpireCycleTryExpire(db,e,now)) expired++;</span><br><span class="line">                 &#125;</span><br><span class="line">            &#125;</span><br><span class="line">           </span><br><span class="line">        &#125; (sampled == <span class="number">0</span> || (expired*<span class="number">100</span>/sampled) &gt; config_cycle_acceptable_stale);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="真正删除的代码"><a href="#真正删除的代码" class="headerlink" title="真正删除的代码"></a>真正删除的代码</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 真正删除一个 key， Helper function for the activeExpireCycle() function.</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">activeExpireCycleTryExpire</span><span class="params">(redisDb *db, dictEntry *de, <span class="type">long</span> <span class="type">long</span> now)</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><strong>Redis 采用惰性删除和周期删除两种策略</strong>，通过配合使用，服务器可以很好的合理使用CPU时间和避免内不能空间的浪费。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903618890432526">redis 指令的执行过程</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/asdfsadfasdfsa/article/details/88339060">redis源码–key的过期策略</a>： 这个源码有点老了，可以看最新的源码。</p>
+<p>ASAP: as sonn as possible</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+              <a href="/tags/%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5/" rel="tag"># 过期策略</a>
+              <a href="/tags/expire/" rel="tag"># expire</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag"># 源码分析</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/31/http/tcp%E4%B9%8B%E8%BF%9E%E6%8E%A5%E4%BC%98%E5%8C%96/" rel="prev" title="tcp之连接优化">
+      <i class="fa fa-chevron-left"></i> tcp之连接优化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/02/redis/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" rel="next" title="redis的数据类型">
+      redis的数据类型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4%E7%9A%84%E5%B8%B8%E8%A7%81%E6%96%B9%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">设置过期时间的常见方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%87%E6%9C%9F%E9%94%AE%E5%80%BC%E5%AF%B9%E7%9A%84%E5%88%A0%E9%99%A4%E6%9C%89%E4%B8%89%E7%A7%8D%E7%AD%96%E7%95%A5"><span class="nav-number">2.</span> <span class="nav-text">过期键值对的删除有三种策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%88%A0%E9%99%A4"><span class="nav-number">2.1.</span> <span class="nav-text">定时删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A4"><span class="nav-number">2.2.</span> <span class="nav-text">惰性删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%A8%E6%9C%9F%E5%88%A0%E9%99%A4"><span class="nav-number">2.3.</span> <span class="nav-text">周期删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">redis 过期策略的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-expire-api"><span class="nav-number">3.1.</span> <span class="nav-text">redis expire api</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E9%94%AE%E7%9A%84%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4%EF%BC%8CsetExpire"><span class="nav-number">3.1.1.</span> <span class="nav-text">设置键的过期时间，setExpire</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E9%94%AE%E7%9A%84%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4%EF%BC%8CgetExpire"><span class="nav-number">3.1.2.</span> <span class="nav-text">获取键的过期时间，getExpire</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E9%94%AE%E7%9A%84%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4%EF%BC%8CremoveExpire"><span class="nav-number">3.1.3.</span> <span class="nav-text">删除键的过期时间，removeExpire</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#redis-%E8%BF%87%E6%9C%9F%E5%88%A0%E9%99%A4%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">redis 过期删除的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A4-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">惰性删除</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#get-%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">get 操作的流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%AE%9E%E7%8E%B0%E6%83%B0%E6%80%A7%E5%88%A0%E9%99%A4%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">主从实现惰性删除的方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%A8%E6%9C%9F%E5%88%A0%E9%99%A4-1"><span class="nav-number">3.2.2.</span> <span class="nav-text">周期删除</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BE%AA%E7%8E%AF%E5%87%BD%E6%95%B0"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">循环函数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9C%9F%E6%AD%A3%E5%88%A0%E9%99%A4%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">真正删除的代码</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

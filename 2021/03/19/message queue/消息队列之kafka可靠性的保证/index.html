@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述kafka 的可靠性保证和 tcp 的可靠性保证有一致的地方，就是都是基于消息的确认和重传来实现的。当然 tcp 还有滑动窗口，拥塞避免等特性。 为保证 producer 发送的数据，能可靠的发送到指定的 topic，topic 的每个 partition 收到。producer 发送的数据后，broker 都需要向 producer 发送 ack（acknowledgement">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列之kafka可靠性的保证">
+<meta property="og:url" content="http://example.com/2021/03/19/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%E5%8F%AF%E9%9D%A0%E6%80%A7%E7%9A%84%E4%BF%9D%E8%AF%81/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述kafka 的可靠性保证和 tcp 的可靠性保证有一致的地方，就是都是基于消息的确认和重传来实现的。当然 tcp 还有滑动窗口，拥塞避免等特性。 为保证 producer 发送的数据，能可靠的发送到指定的 topic，topic 的每个 partition 收到。producer 发送的数据后，broker 都需要向 producer 发送 ack（acknowledgement">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.793Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="kafka">
+<meta property="article:tag" content="可靠性">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/03/19/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%E5%8F%AF%E9%9D%A0%E6%80%A7%E7%9A%84%E4%BF%9D%E8%AF%81/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列之kafka可靠性的保证 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/19/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%E5%8F%AF%E9%9D%A0%E6%80%A7%E7%9A%84%E4%BF%9D%E8%AF%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列之kafka可靠性的保证
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-19 00:00:00" itemprop="dateCreated datePublished" datetime="2021-03-19T00:00:00+08:00">2021-03-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>kafka 的可靠性保证和 tcp 的可靠性保证有一致的地方，就是都是基于消息的确认和重传来实现的。当然 tcp 还有滑动窗口，拥塞避免等特性。</p>
+<p>为保证 producer 发送的数据，能可靠的发送到指定的 topic，topic 的每个 partition 收到。producer 发送的数据后，broker 都需要向 producer 发送 ack（acknowledgement 确认收到），如果 producer 收到 ack，就会进行下一轮的发送，否则重新发送数据。</p>
+<h2 id="常见的两种保证"><a href="#常见的两种保证" class="headerlink" title="常见的两种保证"></a>常见的两种保证</h2><p>副本数据同步策略</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>半数以上完成同步，broker 发送 ack</td>
+<td>延迟低</td>
+<td>选举新的leader时，如果要容忍 n 个节点的故障，那么系统需要 2n + 1个节点</td>
+</tr>
+<tr>
+<td>全部完成同步，broker 发送 ack</td>
+<td>选举新的leader节点时，容忍 n 台节点的故障，需要 n+1 个副本</td>
+<td>延迟高</td>
+</tr>
+</tbody></table>
+<p>kafka 选择了第二种方案，原因如下</p>
+<ul>
+<li>第二种做数据镜像时，同样的容错下，第二种方案需要的节点更少。而kafka的每一个节点都存储这大量的数据，第一种方案会造成大量的数据冗余</li>
+<li>第二种的劣势是网络延迟高，但是网络延迟对kafka的影响较小</li>
+</ul>
+<h2 id="kakfa-的优化（ISR-同步副本列表）"><a href="#kakfa-的优化（ISR-同步副本列表）" class="headerlink" title="kakfa 的优化（ISR 同步副本列表）"></a>kakfa 的优化（ISR 同步副本列表）</h2><h3 id="第二种存在的单节点问题"><a href="#第二种存在的单节点问题" class="headerlink" title="第二种存在的单节点问题"></a>第二种存在的单节点问题</h3><p>采用第二种方案之后, 设想以下场景: leader 收到数据, 所有follower 都开始同步数据,但有一个follower ,因为某种故障,迟迟不能与leader进行同步,<strong>那leader就要一直等下去,直到它完成同步,才能发送ack</strong>。那么一个节点的性能，就会影响整个数据镜像集群的性能了。</p>
+<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>Leader 维护了一个动态的in-sync replica set(ISR 同步副本列表) ,意为和leader保持同步的follower 集合. 当ISR 中的 follower 完成数据的同步之后, Leader就会给follower 发送ack如果 follower 长时间未向 leader 同步数据,则该follower 将被 提出ISR 。</p>
+<h2 id="ack-机制"><a href="#ack-机制" class="headerlink" title="ack 机制"></a>ack 机制</h2><p>对于某些不太重要的数据,对数据的可靠性要求不要很高,能够容忍数据的少量丢失.所以没必要等ISR 中的follower 全部接受成功</p>
+<p>所以Kafka 为用户提高了三种可靠性级别,当producer向leader发送数据时，可以通过request.required.acks参数来设置数据可靠性的级别：</p>
+<h3 id="request-required-acks-x3D-1（默认）"><a href="#request-required-acks-x3D-1（默认）" class="headerlink" title="request.required.acks &#x3D; 1（默认）"></a>request.required.acks &#x3D; 1（默认）</h3><p>这意味着producer在ISR中的leader已成功收到的数据并得到确认后发送下一条message。如果leader宕机了（因为只有 ISR 中的leader 确认了消息），则会丢失数据。</p>
+<p>producer发送数据到leader，leader写本地日志成功，返回客户端成功；此时ISR中的副本还没有来得及拉取该消息，leader就宕机了，那么此次发送的消息就会丢失。</p>
+<h3 id="request-required-acks-x3D-0"><a href="#request-required-acks-x3D-0" class="headerlink" title="request.required.acks &#x3D; 0"></a>request.required.acks &#x3D; 0</h3><p>这意味着producer无需等待来自broker的确认而继续发送下一批消息。这种情况下数据传输效率最高，但是数据可靠性确是最低的。</p>
+<h3 id="request-required-acks-x3D-1"><a href="#request-required-acks-x3D-1" class="headerlink" title="request.required.acks &#x3D; -1"></a>request.required.acks &#x3D; -1</h3><p>producer需要等待ISR中的所有follower都确认接收到数据后才算一次发送完成，可靠性最高。但是这样也不能保证数据不丢失，比如当ISR中只有leader时（前面ISR那一节讲到，ISR中的成员由于某些情况会增加也会减少，最少就只剩一个leader），这样就变成了acks&#x3D;1的情况。</p>
+<p>acks&#x3D;-1的情况下，数据发送到leader后 ，部分ISR的副本同步，leader此时挂掉。比如follower1h和follower2都有可能变成新的leader, producer端会得到返回异常，producer端会重新发送数据，数据可能会重复。</p>
+<h2 id="复制原理和同步方式"><a href="#复制原理和同步方式" class="headerlink" title="复制原理和同步方式"></a>复制原理和同步方式</h2><p>Kafka中topic的每个partition有一个预写式的日志文件，虽然partition可以继续细分为若干个segment文件，但是对于上层应用来说可以将partition看成最小的存储单元（一个有多个segment文件拼接的“巨型”文件），每个partition都由一些列有序的、不可变的消息组成，这些消息被连续的追加到partition中。</p>
+<p>Kafka通过多副本机制实现故障自动转移，当Kafka集群中一个broker失效情况下仍然保证服务可用。在Kafka中发生复制时确保partition的日志能有序地写到其他节点上，N个replicas中，其中一个replica为leader，其他都为follower, <strong>leader处理partition的所有读写请求，与此同时，follower会被动定期地去复制leader上的数据。</strong></p>
+<h3 id="LEO-amp-HW"><a href="#LEO-amp-HW" class="headerlink" title="LEO &amp; HW"></a>LEO &amp; HW</h3><p>LEO: 指的是每个副本最大的offset ;</p>
+<p>HW: 指的是消费者能见到的最大的offset .ISR 队列中最小的LEO;</p>
+<h3 id="follower-故障"><a href="#follower-故障" class="headerlink" title="follower 故障"></a>follower 故障</h3><p>follower 发生故障后会被临时提出ISR ,待该follower恢复后,follower会读取本地磁盘记录的上次的HW , 并将log文件高于HW的部分截掉,.从HW开始向leader进行同步,等该follower的LEO大于等于该Partition的HW,即follower 追上leader之后,就可以重新加入ISR 了。</p>
+<h3 id="leader-故障"><a href="#leader-故障" class="headerlink" title="leader 故障"></a>leader 故障</h3><p>leader 发生故障之后,会从ISR 中选出一个新的leader ,之后,为保证多个副本之间的数据一致性,其余的follower会先将各自的log文件高于HW的部分截掉,然后从新的leader同步数据。</p>
+<h2 id="可靠性的保证"><a href="#可靠性的保证" class="headerlink" title="可靠性的保证"></a>可靠性的保证</h2><h3 id="消息传输保障"><a href="#消息传输保障" class="headerlink" title="消息传输保障"></a>消息传输保障</h3><p>接下来讨论的是Kafka如何确保消息在producer和consumer之间传输。有以下三种可能的传输保障（delivery guarantee）:</p>
+<ul>
+<li>At most once: 消息可能会丢，但绝不会重复传输</li>
+<li>At least once：消息绝不会丢，但可能会重复传输</li>
+<li>Exactly once：每条消息肯定会被传输一次且仅传输一次</li>
+</ul>
+<h4 id="broker-的保证"><a href="#broker-的保证" class="headerlink" title="broker 的保证"></a>broker 的保证</h4><p>Kafka的消息传输保障机制非常直观。当producer向broker发送消息时，一旦这条消息被commit，由于副本机制（replication）的存在，它就不会丢失。但是如果producer发送数据给broker后，遇到的网络问题而造成通信中断，那producer就无法判断该条消息是否已经提交（commit）。<strong>虽然Kafka无法确定网络故障期间发生了什么，但是producer可以retry多次，确保消息已经正确传输到broker中，所以目前Kafka实现的是at least once。</strong></p>
+<h4 id="consumer"><a href="#consumer" class="headerlink" title="consumer"></a>consumer</h4><p>consumer 最好的方法就是，在引入去重机制后，实现 at least once 的消费方式，即先取数据，然后做业务逻辑，最后commit。</p>
+<h3 id="消息去重"><a href="#消息去重" class="headerlink" title="消息去重"></a>消息去重</h3><p>如上一节所述，Kafka在producer端和consumer端都会出现消息的重复，这就需要去重处理。</p>
+<p>Kafka文档中提及GUID(Globally Unique Identifier)的概念，通过客户端生成算法得到每个消息的unique id，同时可映射至broker上存储的地址，即通过GUID便可查询提取消息内容，也便于发送方的幂等性保证，需要在broker上提供此去重处理模块，目前版本尚不支持。</p>
+<p>针对GUID, 如果从客户端的角度去重，那么需要引入集中式缓存，必然会增加依赖复杂度，另外缓存的大小难以界定。</p>
+<p>不只是Kafka, 类似RabbitMQ以及RocketMQ这类商业级中间件也只保障at least once, 且也无法从自身去进行消息去重。所以我们建议业务方根据自身的业务特点进行去重，比如业务消息本身具备幂等性，或者借助Redis等其他产品进行去重处理。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/91043276">KafKa 数据可靠性保证!</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1031803">Kafka 数据可靠性深度解读</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+              <a href="/tags/%E5%8F%AF%E9%9D%A0%E6%80%A7/" rel="tag"># 可靠性</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/03/17/http/tcp%E4%B9%8B%E4%B8%8Daccept/" rel="prev" title="tcp之不accept">
+      <i class="fa fa-chevron-left"></i> tcp之不accept
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/03/22/operation%20system/linux%20cpu%20cache/" rel="next" title="linux cpu cache">
+      linux cpu cache <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E4%B8%A4%E7%A7%8D%E4%BF%9D%E8%AF%81"><span class="nav-number">2.</span> <span class="nav-text">常见的两种保证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kakfa-%E7%9A%84%E4%BC%98%E5%8C%96%EF%BC%88ISR-%E5%90%8C%E6%AD%A5%E5%89%AF%E6%9C%AC%E5%88%97%E8%A1%A8%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">kakfa 的优化（ISR 同步副本列表）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E7%A7%8D%E5%AD%98%E5%9C%A8%E7%9A%84%E5%8D%95%E8%8A%82%E7%82%B9%E9%97%AE%E9%A2%98"><span class="nav-number">3.1.</span> <span class="nav-text">第二种存在的单节点问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3"><span class="nav-number">3.2.</span> <span class="nav-text">解决</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ack-%E6%9C%BA%E5%88%B6"><span class="nav-number">4.</span> <span class="nav-text">ack 机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#request-required-acks-x3D-1%EF%BC%88%E9%BB%98%E8%AE%A4%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">request.required.acks &#x3D; 1（默认）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request-required-acks-x3D-0"><span class="nav-number">4.2.</span> <span class="nav-text">request.required.acks &#x3D; 0</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request-required-acks-x3D-1"><span class="nav-number">4.3.</span> <span class="nav-text">request.required.acks &#x3D; -1</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6%E5%8E%9F%E7%90%86%E5%92%8C%E5%90%8C%E6%AD%A5%E6%96%B9%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">复制原理和同步方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LEO-amp-HW"><span class="nav-number">5.1.</span> <span class="nav-text">LEO &amp; HW</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#follower-%E6%95%85%E9%9A%9C"><span class="nav-number">5.2.</span> <span class="nav-text">follower 故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#leader-%E6%95%85%E9%9A%9C"><span class="nav-number">5.3.</span> <span class="nav-text">leader 故障</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E9%9D%A0%E6%80%A7%E7%9A%84%E4%BF%9D%E8%AF%81"><span class="nav-number">6.</span> <span class="nav-text">可靠性的保证</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E4%BC%A0%E8%BE%93%E4%BF%9D%E9%9A%9C"><span class="nav-number">6.1.</span> <span class="nav-text">消息传输保障</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#broker-%E7%9A%84%E4%BF%9D%E8%AF%81"><span class="nav-number">6.1.1.</span> <span class="nav-text">broker 的保证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#consumer"><span class="nav-number">6.1.2.</span> <span class="nav-text">consumer</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E5%8E%BB%E9%87%8D"><span class="nav-number">6.2.</span> <span class="nav-text">消息去重</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

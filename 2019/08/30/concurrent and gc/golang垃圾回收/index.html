@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)） 通过这篇文章，你会知道：  golang不同版">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【gc】golang垃圾回收">
+<meta property="og:url" content="http://example.com/2019/08/30/concurrent%20and%20gc/golang%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)） 通过这篇文章，你会知道：  golang不同版">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/d3fab54fd63a47a0a6e2fe0a57200c52.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/07/24/UvJWNR.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/1de88ce079714e568d5a2786edf759e0.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-16-15843705141890-concurrent-garbage-collector-heap.png">
+<meta property="og:image" content="https://img.draveness.me/2020-03-16-15843705141897-garbage-collector-phaes.png">
+<meta property="article:published_time" content="2019-08-30T09:43:42.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.782Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="垃圾回收">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/d3fab54fd63a47a0a6e2fe0a57200c52.png">
+
+<link rel="canonical" href="http://example.com/2019/08/30/concurrent%20and%20gc/golang%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【gc】golang垃圾回收 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/08/30/concurrent%20and%20gc/golang%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【gc】golang垃圾回收
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-30 17:43:42" itemprop="dateCreated datePublished" datetime="2019-08-30T17:43:42+08:00">2019-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<p>这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）</p>
+<p>通过这篇文章，你会知道：</p>
+<ul>
+<li>golang不同版本的几个垃圾收集的方式</li>
+</ul>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>自动内存管理的另一个重要的组成部分便是自动回收。在自动内存回收中， 垃圾回收器扮演一个十分重要的角色。通常， 垃圾回收器的执行过程可根据代码的行为被划分为两个半独立的组件： 赋值器（Mutator）和回收器（Collector）。</p>
+<h2 id="三色标记详解（Tri-color-marking）"><a href="#三色标记详解（Tri-color-marking）" class="headerlink" title="三色标记详解（Tri-color marking）"></a>三色标记详解（Tri-color marking）</h2><p>有三种集合：白色，黑色，灰色</p>
+<ul>
+<li>白色集合，或者叫危险集合，是垃圾回收的候选对象的集合</li>
+<li>黑色集合，黑色集合是根集合可达的集合，且没有白色集合中对象的传出引用，不参与垃圾回收</li>
+<li>灰色集包含从根可到达的所有对象，但尚未扫描以查找对“白色”对象的引用。 由于已知它们可以从根部到达，因此它们不能被垃圾收集，并且在扫描后将最终成为黑色集合。</li>
+</ul>
+<h3 id="清理过程"><a href="#清理过程" class="headerlink" title="清理过程"></a>清理过程</h3><p>在垃圾收集器开始工作时，程序中不存在任何的黑色对象，垃圾收集的根对象会被标记成灰色，垃圾收集器只会从灰色对象集合中取出对象开始扫描，当灰色集合中不存在任何对象时，标记阶段就会结束。</p>
+<p><strong>三色标记垃圾收集器的工作原理很简单，我们可以将其归纳成以下几个步骤：</strong></p>
+<ol>
+<li>从灰色对象的集合中选择一个灰色对象并将其标记成黑色；</li>
+<li>将黑色对象指向的所有对象都标记成灰色，保证该对象和被该对象引用的对象都不会被回收；</li>
+<li>重复上述两个步骤直到对象图中不存在灰色对象；</li>
+</ol>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/d3fab54fd63a47a0a6e2fe0a57200c52.png"></p>
+<h4 id="缺陷"><a href="#缺陷" class="headerlink" title="缺陷"></a>缺陷</h4><p>因为用户程序可能在标记执行的过程中修改对象的指针，所以三色标记清除算法本身是不可以并发或者增量执行的，它仍然需要 STW，在如下所示的三色标记过程中，用户程序建立了从 A 对象到 D 对象的引用，但是因为程序中已经不存在灰色对象了，所以 D 对象会被垃圾收集器错误地回收。</p>
+<p><img src="https://s1.ax1x.com/2020/07/24/UvJWNR.png"></p>
+<h3 id="屏障技术"><a href="#屏障技术" class="headerlink" title="屏障技术"></a>屏障技术</h3><p>想要在并发或者增量的标记算法中保证正确性，我们需要达成以下两种三色不变性（Tri-color invariant）中的任意一种：</p>
+<ul>
+<li>强三色不变性 — 黑色对象不会指向白色对象，只会指向灰色对象或者黑色对象；</li>
+<li>弱三色不变性 — 黑色对象指向的白色对象必须包含一条从灰色对象经由多个白色对象的可达路径</li>
+</ul>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/1de88ce079714e568d5a2786edf759e0.png"></p>
+<p>遵循上述两个不变性中的任意一个，我们都能保证垃圾收集算法的正确性，而屏障技术就是在并发或者增量标记过程中保证三色不变性的重要技术。</p>
+<p>垃圾收集中的屏障技术更像是一个钩子方法，它是在用户程序读取对象、创建新对象以及更新对象指针时执行的一段代码，根据操作类型的不同，我们可以将它们分成读屏障（Read barrier）和写屏障（Write barrier）两种，因为读屏障需要在读操作中加入代码片段，对用户程序的性能影响很大，所以编程语言往往都会采用写屏障保证三色不变性。</p>
+<p>我们在这里想要介绍的是 Go 语言中使用的两种写屏障技术，分别是 Dijkstra 提出的插入写屏障和 Yuasa 提出的删除写屏障，这里会分析它们如何保证三色不变性和垃圾收集器的正确性。</p>
+<h4 id="插入写屏障"><a href="#插入写屏障" class="headerlink" title="插入写屏障"></a>插入写屏障</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">writePointer(slot, ptr):</span><br><span class="line">    shade(ptr)</span><br><span class="line">    *slot = ptr</span><br></pre></td></tr></table></figure>
+
+<p>上述插入写屏障的伪代码非常好理解，每当我们执行类似 <code>*slot = ptr</code> 的表达式时，我们会执行上述写屏障通过 <code>shade</code> 函数尝试改变指针的颜色。如果 <code>ptr</code> 指针是白色的，那么该函数会将该对象设置成灰色，其他情况则保持不变。</p>
+<p>假设我们在应用程序中使用 Dijkstra 提出的插入写屏障，在一个垃圾收集器和用户程序交替运行的场景中会出现如上图所示的标记过程：</p>
+<ol>
+<li>垃圾收集器将根对象指向 A 对象标记成黑色并将 A 对象指向的对象 B 标记成灰色；</li>
+<li>用户程序修改 A 对象的指针，将原本指向 B 对象的指针指向 C 对象，这时触发写屏障将 C 对象标记成灰色；</li>
+<li>垃圾收集器依次遍历程序中的其他灰色对象，将它们分别标记成黑色；</li>
+</ol>
+<p>Dijkstra 的插入写屏障是一种相对保守的屏障技术，它会将<strong>有存活可能的对象都标记成灰色</strong>以满足强三色不变性。在如上所示的垃圾收集过程中，实际上不再存活的 B 对象最后没有被回收；而如果我们在第二和第三步之间将指向 C 对象的指针改回指向 B，垃圾收集器仍然认为 C 对象是存活的，这些被错误标记的垃圾对象只有在下一个循环才会被回收。</p>
+<p>插入式的 Dijkstra 写屏障虽然实现非常简单并且也能保证强三色不变性，但是它也有很明显的缺点。因为栈上的对象在垃圾收集中也会被认为是根对象，所以为了保证内存的安全，Dijkstra 必须为栈上的对象增加写屏障或者在标记阶段完成重新对栈上的对象进行扫描，这两种方法各有各的缺点，前者会大幅度增加写入指针的额外开销，后者重新扫描栈对象时需要暂停程序，垃圾收集算法的设计者需要在这两者之前做出权衡。</p>
+<h4 id="删除写屏障"><a href="#删除写屏障" class="headerlink" title="删除写屏障"></a>删除写屏障</h4><p>Yuasa 在 1990 年的论文 Real-time garbage collection on general-purpose machines 中提出了删除写屏障，因为一旦该写屏障开始工作，它就会保证开启写屏障时堆上所有对象的可达，所以也被称作快照垃圾收集（Snapshot GC）</p>
+<p>该算法会使用如下所示的写屏障保证增量或者并发执行垃圾收集时程序的正确性：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">writePointer(slot, ptr)</span><br><span class="line">    shade(*slot)</span><br><span class="line">    *slot = ptr</span><br></pre></td></tr></table></figure>
+
+<p>上述代码会在老对象的引用被删除时，将白色的老对象涂成灰色，这样删除写屏障就可以保证弱三色不变性，老对象引用的下游对象一定可以被灰色对象引用。</p>
+<p>假设我们在应用程序中使用 Yuasa 提出的删除写屏障，在一个垃圾收集器和用户程序交替运行的场景中会出现如上图所示的标记过程：</p>
+<ol>
+<li>垃圾收集器将根对象指向 A 对象标记成黑色并将 A 对象指向的对象 B 标记成灰色；</li>
+<li>用户程序将 A 对象原本指向 B 的指针指向 C，触发删除写屏障，但是因为 B 对象已经是灰色的，所以不做改变；</li>
+<li><strong>用户程序将 B 对象原本指向 C 的指针删除，触发删除写屏障，白色的 C 对象被涂成灰色</strong>；</li>
+<li>垃圾收集器依次遍历程序中的其他灰色对象，将它们分别标记成黑色；</li>
+</ol>
+<h5 id="增量和并发"><a href="#增量和并发" class="headerlink" title="增量和并发"></a>增量和并发</h5><p>远古时代的计算资源还没有今天这么丰富，今天的计算机往往都是多核的处理器，垃圾收集器一旦开始执行就会浪费大量的计算资源，为了减少应用程序暂停的最长时间和垃圾收集的总暂停时间，我们会使用下面的策略优化现代的垃圾收集器：</p>
+<ul>
+<li>增量垃圾收集 — 增量地标记和清除垃圾，降低应用程序暂停的最长时间；</li>
+<li>并发垃圾收集 — 利用多核的计算资源，在用户程序执行时并发标记和清除垃圾；</li>
+</ul>
+<p>因为增量和并发两种方式都可以与用户程序交替运行，所以我们需要<strong>使用屏障技术</strong>保证垃圾收集的正确性；与此同时，应用程序也不能等到内存溢出时触发垃圾收集，因为当内存不足时，应用程序已经无法分配内存，这与直接暂停程序没有什么区别，增量和并发的垃圾收集需要提前触发并在内存不足前完成整个循环，避免程序的长时间暂停。</p>
+<h4 id="增量收集器"><a href="#增量收集器" class="headerlink" title="增量收集器"></a>增量收集器</h4><p>增量式（Incremental）的垃圾收集是减少程序最长暂停时间的一种方案，它可以将原本时间较长的暂停时间切分成多个更小的 GC 时间片，虽然从垃圾收集开始到结束的时间更长了，但是这也减少了应用程序暂停的最大时间：</p>
+<p>需要注意的是，增量式的垃圾收集需要与三色标记法一起使用，为了保证垃圾收集的正确性，我们需要在垃圾收集开始前打开写屏障，这样用户程序对内存的修改都会先经过写屏障的处理，保证了堆内存中对象关系的强三色不变性或者弱三色不变性。虽然增量式的垃圾收集能够减少最大的程序暂停时间，但是增量式收集也会增加一次 GC 循环的总时间，在垃圾收集期间，因为写屏障的影响用户程序也需要承担额外的计算开销，所以增量式的垃圾收集也不是只有优点的。</p>
+<h4 id="并发收集器"><a href="#并发收集器" class="headerlink" title="并发收集器"></a>并发收集器</h4><p>并发（Concurrent）的垃圾收集不仅能够减少程序的最长暂停时间，还能减少整个垃圾收集阶段的时间，通过开启读写屏障、<strong>利用多核优势与用户程序并行执行</strong>，并发垃圾收集器确实能够减少垃圾收集对应用程序的影响：</p>
+<h3 id="golang的垃圾回收器演进过程"><a href="#golang的垃圾回收器演进过程" class="headerlink" title="golang的垃圾回收器演进过程"></a>golang的垃圾回收器演进过程</h3><p>Go 语言的垃圾收集器从诞生的第一天起就一直在演进，除了少数几个版本没有大更新之外，几乎每次发布的小版本都会提升垃圾收集的性能，而与性能一同提升的还有垃圾收集器代码的复杂度，本节将从 Go 语言 v1.0 版本开始分析垃圾收集器的演进过程。</p>
+<h3 id="Go-语言的并发收集"><a href="#Go-语言的并发收集" class="headerlink" title="Go 语言的并发收集"></a>Go 语言的并发收集</h3><p>Go 语言的并发垃圾收集器会在扫描对象之前暂停程序做一些标记对象的准备工作，其中包括启动后台标记的垃圾收集器以及开启写屏障，如果在后台执行的垃圾收集器不够快，应用程序申请内存的速度超过预期，运行时就会让申请内存的应用程序辅助完成垃圾收集的扫描阶段，在标记和标记终止阶段结束之后就会进入异步的清理阶段，将不用的内存增量回收。</p>
+<p>v1.5 版本实现的并发垃圾收集策略由专门的 Goroutine 负责在处理器之间同步和协调垃圾收集的状态。当其他的 Goroutine 发现需要触发垃圾收集时，它们需要将该信息通知给负责修改状态的主 Goroutine，然而这个通知的过程会带来一定的延迟，这个延迟的时间窗口很可能是不可控的，用户程序会在这段时间分配界面很多内存空间。</p>
+<p>v1.6 引入了去中心化的垃圾收集协调机制，将垃圾收集器变成一个显式的状态机，任意的 Goroutine 都可以调用方法触发状态的迁移，常见的状态迁移方法包括以下几个</p>
+<h4 id="STW-垃圾收集器的垃圾收集时间"><a href="#STW-垃圾收集器的垃圾收集时间" class="headerlink" title="STW 垃圾收集器的垃圾收集时间"></a>STW 垃圾收集器的垃圾收集时间</h4><p>因为并发垃圾收集器会与程序一起运行，所以它无法准确的控制堆内存的大小，并发收集器需要在达到目标前触发垃圾收集，这样才能够保证内存大小的可控，并发收集器需要尽可能保证垃圾收集结束时的堆内存与用户配置的 GOGC 一致。</p>
+<p><img src="https://img.draveness.me/2020-03-16-15843705141890-concurrent-garbage-collector-heap.png"></p>
+<h3 id="混合写屏障"><a href="#混合写屏障" class="headerlink" title="混合写屏障"></a>混合写屏障</h3><p>在 Go 语言 v1.7 版本之前，运行时会使用 Dijkstra 插入写屏障保证强三色不变性，但是运行时并没有在所有的垃圾收集根对象上开启插入写屏障。因为 Go 语言的应用程序可能包含成百上千的 Goroutine，而垃圾收集的根对象一般包括全局变量和栈对象，如果运行时需要在几百个 Goroutine 的栈上都开启写屏障，会带来巨大的额外开销，所以 Go 团队在实现上选择了在标记阶段完成时<strong>暂停程序、将所有栈对象标记为灰色并重新扫描</strong>，在活跃 Goroutine 非常多的程序中，重新扫描的过程需要占用 10 ~ 100ms 的时间。</p>
+<p>Go 语言在 v1.8 组合 Dijkstra 插入写屏障和 Yuasa 删除写屏障构成了如下所示的混合写屏障，该写屏障会<strong>将被覆盖的对象标记成灰色并在当前栈没有扫描时将新对象也标记成灰色</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">writePointer(slot, ptr):</span><br><span class="line">    shade(*slot)</span><br><span class="line">    <span class="keyword">if</span> current <span class="built_in">stack</span> is grey:</span><br><span class="line">        shade(ptr)</span><br><span class="line">    *slot = ptr</span><br></pre></td></tr></table></figure>
+
+<p>为了移除栈的重扫描过程，除了引入混合写屏障之外，在垃圾收集的标记阶段，我们还需要<strong>将创建的所有新对象都标记成黑色</strong>，防止新分配的栈内存和堆内存中的对象被错误地回收，因为栈内存在标记阶段最终都会变为黑色，所以不再需要重新扫描栈空间。</p>
+<h3 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h3><p>在介绍垃圾收集器的演进过程之前，我们需要对最新垃圾收集器的执行周期有一些初步的了解，这对我们了解其全局的设计会有比较大的帮助。Go 语言的垃圾收集可以分成清除终止、标记、标记终止和清除四个不同阶段，它们分别完成了不同的工作</p>
+<p><img src="https://img.draveness.me/2020-03-16-15843705141897-garbage-collector-phaes.png"></p>
+<h4 id="垃圾收集的多个阶段"><a href="#垃圾收集的多个阶段" class="headerlink" title="垃圾收集的多个阶段"></a>垃圾收集的多个阶段</h4><ol>
+<li>清理终止阶段；<ol>
+<li><strong>暂停程序</strong>，所有的处理器在这时会进入安全点（Safe point）；</li>
+<li>如果当前垃圾收集循环是强制触发的，我们还需要处理还未被清理的内存管理单元；</li>
+</ol>
+</li>
+<li>标记阶段；<ol>
+<li>将状态切换至 <code>_GCmark</code>、开启写屏障、用户程序协助（Mutator Assiste）并将根对象入队；</li>
+<li>恢复执行程序，标记进程和用于协助的用户程序会开始并发标记内存中的对象，写屏障会将被覆盖的指针和新指针都标记成灰色，而所有新创建的对象都会被直接标记成黑色；</li>
+<li>开始扫描根对象，包括所有 Goroutine 的栈、全局对象以及不在堆中的运行时数据结构，扫描 Goroutine 栈期间会暂停当前处理器；</li>
+<li>依次处理灰色队列中的对象，将对象标记成黑色并将它们指向的对象标记成灰色；</li>
+<li>使用分布式的终止算法检查剩余的工作，发现标记阶段完成后进入标记终止阶段；</li>
+</ol>
+</li>
+<li>标记终止阶段；<ol>
+<li><strong>暂停程序</strong>、将状态切换至 <code>_GCmarktermination</code> 并关闭辅助标记的用户程序；</li>
+<li>清理处理器上的线程缓存；</li>
+</ol>
+</li>
+<li>清理阶段；<ol>
+<li>将状态切换至 <code>_GCoff</code> 开始清理阶段，初始化清理状态并关闭写屏障；</li>
+<li>恢复用户程序，所有新创建的对象会标记成白色；</li>
+<li>后台并发清理所有的内存管理单元，当 Goroutine 申请新的内存管理单元时就会触发清理；</li>
+</ol>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p> 实际上，gc低延迟是有代价的，其中最大的是吞吐量的下降。由于需要实现并行处理，线程间同步和多余的数据生成复制都会占用实际逻辑业务代码运行的时间。这就导致业务代码执行时间减少，吞吐量下降。并行GC的第二个代价是不可预测的堆空间扩大。程序在GC的运行期间仍能不断分配任意大小的堆空间，因此我们需要在到达最大的堆空间之前实行一次GC（不然就堆溢出了），但是过早实行GC会造成不必要的GC扫描，这也是需要衡量利弊的。</p>
+<p><strong>golang的垃圾收集简单概括可以是，STW 扫描一次协程栈 + 混合写屏障 （创建对象默认黑色） + 三色标记。这里创建对象是指所有的，包括堆上和栈上的。</strong></p>
+<p>垃圾收集是一门非常古老的技术，它的执行速度和利用率很大程度上决定了程序的运行速度，Go 语言为了实现高性能的并发垃圾收集器，使用<strong>三色抽象、并发增量回收、混合写屏障、调步算法以及用户程序协助等机制</strong>将垃圾收集的暂停时间优化至毫秒级以下，从早期的版本看到今天，我们能体会到其中的工程设计和演进，作者觉得分析垃圾收集的是实现还是非常有趣和值得的。</p>
+<p>垃圾收集是一个难题，没有所谓十全十美的方案，通常是为了适应应用场景做出的一种取舍。</p>
+<p>通过这篇文章，你会知道：</p>
+<ul>
+<li>垃圾回收的常见的几种方式：引用计数，标记清理，复制收集，分代收集</li>
+<li>golang不同版本的几个垃圾收集的方式</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-garbage-collector/">主要的参考：大佬详解垃圾收集器</a></p>
+<p><a target="_blank" rel="noopener" href="http://idiotsky.top/2017/08/16/gc-three-color/">一张图了解三色标记</a></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking">维基百科-</a></p>
+<p><a target="_blank" rel="noopener" href="http://legendtkl.com/2017/04/28/golang-gc/#more">Golang 垃圾回收剖析</a></p>
+<p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000018161588">https://segmentfault.com/a/1190000018161588</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+              <a href="/tags/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" rel="tag"># 垃圾回收</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/30/translation/%E3%80%90%E7%BF%BB%E8%AF%91%E3%80%91%E7%90%86%E8%A7%A3pulsar%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/" rel="prev" title="【翻译】理解pulsar如何工作">
+      <i class="fa fa-chevron-left"></i> 【翻译】理解pulsar如何工作
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/09/09/learn/git%E4%B8%8D%E5%90%8C%E9%98%B6%E6%AE%B5%E6%92%A4%E5%9B%9E/" rel="next" title="git不同阶段撤回">
+      git不同阶段撤回 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%E8%AF%A6%E8%A7%A3%EF%BC%88Tri-color-marking%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">三色标记详解（Tri-color marking）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B8%85%E7%90%86%E8%BF%87%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">清理过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E9%99%B7"><span class="nav-number">2.1.1.</span> <span class="nav-text">缺陷</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%8F%E9%9A%9C%E6%8A%80%E6%9C%AF"><span class="nav-number">2.2.</span> <span class="nav-text">屏障技术</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E5%86%99%E5%B1%8F%E9%9A%9C"><span class="nav-number">2.2.1.</span> <span class="nav-text">插入写屏障</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%86%99%E5%B1%8F%E9%9A%9C"><span class="nav-number">2.2.2.</span> <span class="nav-text">删除写屏障</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E5%92%8C%E5%B9%B6%E5%8F%91"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">增量和并发</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A2%9E%E9%87%8F%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.2.3.</span> <span class="nav-text">增量收集器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E6%94%B6%E9%9B%86%E5%99%A8"><span class="nav-number">2.2.4.</span> <span class="nav-text">并发收集器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#golang%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E6%BC%94%E8%BF%9B%E8%BF%87%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">golang的垃圾回收器演进过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E7%9A%84%E5%B9%B6%E5%8F%91%E6%94%B6%E9%9B%86"><span class="nav-number">2.4.</span> <span class="nav-text">Go 语言的并发收集</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#STW-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E6%97%B6%E9%97%B4"><span class="nav-number">2.4.1.</span> <span class="nav-text">STW 垃圾收集器的垃圾收集时间</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%86%99%E5%B1%8F%E9%9A%9C"><span class="nav-number">2.5.</span> <span class="nav-text">混合写屏障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">2.6.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%9A%84%E5%A4%9A%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">2.6.1.</span> <span class="nav-text">垃圾收集的多个阶段</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

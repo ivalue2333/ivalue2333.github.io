@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="dfs[TOC] 深度优先搜索属于图算法的一种，英文缩写为DFS即Depth First Search.其过程简要来说是对每一个可能的分支路径深入到不能再深入为止，而且每个节点只能访问一次. 特别的， 回溯算法也是一种dfs，回溯算法一般是先跟遍历，回溯算法需要在每次递归前做选择的操作，在每次递归后做取消选择的操作。 二叉树的遍历二叉树的先序遍历，中序遍历，后序遍历，本质上来说，都是深度优先搜索。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法之dfs">
+<meta property="og:url" content="http://example.com/2020/12/19/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8Bdfs%20/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="dfs[TOC] 深度优先搜索属于图算法的一种，英文缩写为DFS即Depth First Search.其过程简要来说是对每一个可能的分支路径深入到不能再深入为止，而且每个节点只能访问一次. 特别的， 回溯算法也是一种dfs，回溯算法一般是先跟遍历，回溯算法需要在每次递归前做选择的操作，在每次递归后做取消选择的操作。 二叉树的遍历二叉树的先序遍历，中序遍历，后序遍历，本质上来说，都是深度优先搜索。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-12-19T11:39:49.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.774Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="dfs">
+<meta property="article:tag" content="图的遍历">
+<meta property="article:tag" content="树的遍历">
+<meta property="article:tag" content="递归">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/12/19/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8Bdfs%20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>算法之dfs | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/19/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8Bdfs%20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法之dfs
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-19 19:39:49" itemprop="dateCreated datePublished" datetime="2020-12-19T19:39:49+08:00">2020-12-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="dfs"><a href="#dfs" class="headerlink" title="dfs"></a>dfs</h2><p>[TOC]</p>
+<p>深度优先搜索属于图算法的一种，英文缩写为DFS即Depth First Search.其过程简要来说是对每一个可能的分支路径深入到不能再深入为止，而且每个节点只能访问一次.</p>
+<p>特别的， 回溯算法也是一种dfs，回溯算法一般是先跟遍历，回溯算法需要在每次递归前做选择的操作，在每次递归后做取消选择的操作。</p>
+<h2 id="二叉树的遍历"><a href="#二叉树的遍历" class="headerlink" title="二叉树的遍历"></a>二叉树的遍历</h2><p>二叉树的先序遍历，中序遍历，后序遍历，本质上来说，都是深度优先搜索。</p>
+<p>唯一的区别是：<strong>在遍历的过程中，什么时候访问根节点的值， 因为根节点值可以在三个时间点访问，在第一次深度优先递归之前，在第一次深度优先递归之后，在第二次深度优先递归之后。</strong></p>
+<blockquote>
+<p>During the traversal, what time they will access the content of a node.<br>Because a node is actually visited 3 times for binary tree. They include: the time before the first DFS call, and the times after each DFS call.</p>
+</blockquote>
+<h3 id="三种遍历"><a href="#三种遍历" class="headerlink" title="三种遍历"></a>三种遍历</h3><p>The preorder traversal accesses the content of a node when it is first visited (before the DFS on his left child). It is implemented as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Preorder (root) &#123;</span><br><span class="line">  1. access content of root </span><br><span class="line">  2. Call Preorder(root.left)</span><br><span class="line">  3. Call Preorder(root.right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The postorder traversal accesses the content of a node when it is last visited (after the DFS on both children). It is implemented as follows :</p>
+<figure class="highlight plaintext"><figcaption><span>(root) &#123;</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Preorder (root) &#123;</span><br><span class="line">  1. Call Preorder(root.left)</span><br><span class="line">  2. Call Preorder(root.right)</span><br><span class="line">  3. access content of root </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The inorder traversal accesses the content of a node just before we visit right child. It is implemented as follows：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Preorder (root) &#123;</span><br><span class="line">  1. Call Preorder(root.left)</span><br><span class="line">  2. access content of root </span><br><span class="line">  3. Call Preorder(root.right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="从上到下vs从下到上"><a href="#从上到下vs从下到上" class="headerlink" title="从上到下vs从下到上"></a>从上到下vs从下到上</h2><p>当看到二叉树的时候，一定要有不管在哪个节点上，都是一棵二叉树的思想。</p>
+<h3 id="从上到下"><a href="#从上到下" class="headerlink" title="从上到下"></a>从上到下</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">给定一个二叉树，返回所有从根节点到叶子节点的路径。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">说明:叶子节点是指没有子节点的节点。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">示例:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">输入:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">   1</span></span><br><span class="line"><span class="string"> /   \</span></span><br><span class="line"><span class="string">2     3</span></span><br><span class="line"><span class="string"> \</span></span><br><span class="line"><span class="string">  5</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">输出: [&quot;1-&gt;2-&gt;5&quot;, &quot;1-&gt;3&quot;]</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">解释: 所有根节点到叶子节点的路径为: 1-&gt;2-&gt;5, 1-&gt;3</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">来源：力扣（LeetCode）</span></span><br><span class="line"><span class="string">链接：https://leetcode-cn.com/problems/binary-tree-paths</span></span><br><span class="line"><span class="string">著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> algorithm.binary_tree <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        self.paths = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">binaryTreePaths</span>(<span class="params">self, root: TreeNode</span>) -&gt; <span class="type">List</span>[<span class="built_in">str</span>]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        前序遍历，前序遍历的使用场景是从上到下的顺序访问，例如这里需要获取从根结点到叶子结点的路径。</span></span><br><span class="line"><span class="string">        前序遍历在访问到叶子结点后，就直接return了，不需要在回溯中做动作</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.dfs(root, <span class="string">&quot;&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> self.paths</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">dfs</span>(<span class="params">self, root: TreeNode, pathStr: <span class="built_in">str</span></span>):</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> root:</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> root.left <span class="keyword">and</span> <span class="keyword">not</span> root.right:</span><br><span class="line">            pathStr += <span class="built_in">str</span>(root.val)</span><br><span class="line">            self.paths.append(pathStr)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        pathStr += <span class="built_in">str</span>(root.val) + <span class="string">&quot;-&gt;&quot;</span></span><br><span class="line">        self.dfs(root.left, pathStr)</span><br><span class="line">        self.dfs(root.right, pathStr)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">root = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="literal">None</span>, <span class="number">5</span>]</span><br><span class="line">root = gen_tree_from_list(root)</span><br><span class="line"><span class="built_in">print</span>(Solution().binaryTreePaths(root))</span><br></pre></td></tr></table></figure>
+
+<h3 id="从下到上"><a href="#从下到上" class="headerlink" title="从下到上"></a>从下到上</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">给你一棵以 root 为根的 二叉树 ，请你返回 任意 二叉搜索子树的最大键值和。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">二叉搜索树的定义如下：</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">任意节点的左子树中的键值都 小于 此节点的键值。</span></span><br><span class="line"><span class="string">任意节点的右子树中的键值都 大于 此节点的键值。</span></span><br><span class="line"><span class="string">任意节点的左子树和右子树都是二叉搜索树。</span></span><br><span class="line"><span class="string"> </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">示例 1：</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">输入：root = [1,4,3,2,4,2,5, None, None, None, None, None, None,4,6]</span></span><br><span class="line"><span class="string">输出：20</span></span><br><span class="line"><span class="string">解释：键值为 3 的子树是和最大的二叉搜索树。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">来源：力扣（LeetCode）</span></span><br><span class="line"><span class="string">链接：https://leetcode-cn.com/problems/maximum-sum-bst-in-binary-tree</span></span><br><span class="line"><span class="string">著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="keyword">from</span> algorithm.binary_tree <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 空的二叉树也是二叉搜索树，所以这里最小值肯定是0， 不是 float(&quot;-inf&quot;)</span></span><br><span class="line">        self.max_sum = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">maxSumBST</span>(<span class="params">self, root: TreeNode</span>) -&gt; <span class="built_in">int</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        后序遍历</span></span><br><span class="line"><span class="string">        当前节点的视角</span></span><br><span class="line"><span class="string">            1：判断当前二叉树是不是二叉搜索树 （后序遍历）</span></span><br><span class="line"><span class="string">                1：当前节点的左子树，右子树 是不是 bst</span></span><br><span class="line"><span class="string">                2：当前节点比左子树的最大值大，比右子树的最小值小</span></span><br><span class="line"><span class="string">            2：计算当前二叉树的节点和（后序遍历）</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.traverse(root)</span><br><span class="line">        <span class="keyword">return</span> self.max_sum</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">traverse</span>(<span class="params">self, root: TreeNode</span>) -&gt; <span class="built_in">list</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        使用后序遍历</span></span><br><span class="line"><span class="string">        返回值有如下定义</span></span><br><span class="line"><span class="string">        res[0] 表示当前二叉树是否是 bst， 1表示是bst， 0表示不是bst</span></span><br><span class="line"><span class="string">        res[1] 表示当前二叉树的所有节点的最小值</span></span><br><span class="line"><span class="string">        res[2] 表示当前二叉树的所有节点的最大值</span></span><br><span class="line"><span class="string">        res[3] 表示当前二叉树的所有节点的和</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> root:</span><br><span class="line">            <span class="comment"># 这里是为叶子节点方便去叶子节点的值作为二叉树所有节点的最小值，最大值</span></span><br><span class="line">            <span class="keyword">return</span> [<span class="number">1</span>, <span class="built_in">float</span>(<span class="string">&quot;inf&quot;</span>), <span class="built_in">float</span>(<span class="string">&quot;-inf&quot;</span>), <span class="number">0</span>]</span><br><span class="line"></span><br><span class="line">        res = [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]</span><br><span class="line">        left = self.traverse(root.left)</span><br><span class="line">        right = self.traverse(root.right)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> left[<span class="number">0</span>] != <span class="number">1</span> <span class="keyword">or</span> right[<span class="number">0</span>] != <span class="number">1</span>:</span><br><span class="line">            <span class="keyword">return</span> res</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> left[<span class="number">2</span>] &gt;= root.val <span class="keyword">or</span> right[<span class="number">1</span>] &lt;= root.val:</span><br><span class="line">            <span class="keyword">return</span> res</span><br><span class="line"></span><br><span class="line">        res[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">        res[<span class="number">1</span>] = <span class="built_in">min</span>(left[<span class="number">1</span>], root.val)</span><br><span class="line">        res[<span class="number">2</span>] = <span class="built_in">max</span>(right[<span class="number">2</span>], root.val)</span><br><span class="line">        res[<span class="number">3</span>] = left[<span class="number">3</span>] + right[<span class="number">3</span>] + root.val</span><br><span class="line"></span><br><span class="line">        self.max_sum = <span class="built_in">max</span>(self.max_sum, res[<span class="number">3</span>])</span><br><span class="line">        <span class="keyword">return</span> res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">root = [<span class="number">1</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>, <span class="number">4</span>, <span class="number">6</span>]</span><br><span class="line">root = gen_tree_from_list(root)</span><br><span class="line"><span class="built_in">print</span>(Solution().maxSumBST(root))</span><br></pre></td></tr></table></figure>
+
+<h2 id="回溯算法"><a href="#回溯算法" class="headerlink" title="回溯算法"></a>回溯算法</h2><h2 id="算法模板"><a href="#算法模板" class="headerlink" title="算法模板"></a>算法模板</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">result = []</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">backtrack</span>(<span class="params">路径, 选择列表</span>):</span><br><span class="line">    <span class="keyword">if</span> 满足结束条件:</span><br><span class="line">        result.add(路径)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> 选择 <span class="keyword">in</span> 选择列表:</span><br><span class="line">        做选择</span><br><span class="line">        backtrack(路径, 选择列表)</span><br><span class="line">        撤销选择</span><br></pre></td></tr></table></figure>
+
+<h3 id="排列"><a href="#排列" class="headerlink" title="排列"></a>排列</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#! /usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> copy</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">permute</span>(<span class="params">self, nums: <span class="type">List</span>[<span class="built_in">int</span>]</span>) -&gt; <span class="type">List</span>[<span class="type">List</span>[<span class="built_in">int</span>]]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        全排列问题</span></span><br><span class="line"><span class="string">        思路：搜索回溯</span></span><br><span class="line"><span class="string">            1. 当前可选择列表， 当前已选链表</span></span><br><span class="line"><span class="string">            2. 如果达到要求，那么将 track 加入到 ans， 并返回</span></span><br><span class="line"><span class="string">            3. 循环当前可选列表</span></span><br><span class="line"><span class="string">                3.1. 未达到要求， 从可选择列表中选择一个元素，加入 track 列表，并递归</span></span><br><span class="line"><span class="string">                3.2 递归返回后，撤销上一次的选择，将上一个元素从 track 列表中弹出， 并继续循环</span></span><br><span class="line"><span class="string">            4. 返回 ans</span></span><br><span class="line"><span class="string">        :param nums:</span></span><br><span class="line"><span class="string">        :return:</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">backtrace</span>(<span class="params">track: <span class="built_in">list</span></span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(nums) == <span class="built_in">len</span>(track):</span><br><span class="line">                ans.append(track[:])</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            <span class="keyword">for</span> i, num <span class="keyword">in</span> <span class="built_in">enumerate</span>(nums):</span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> used[i]:</span><br><span class="line">                    track.append(num)</span><br><span class="line">                    used[i] = <span class="literal">True</span></span><br><span class="line">                    backtrace(track)</span><br><span class="line">                    used[i] = <span class="literal">False</span></span><br><span class="line">                    track.pop()</span><br><span class="line"></span><br><span class="line">        ans = []</span><br><span class="line">        used = [<span class="literal">False</span>] * <span class="built_in">len</span>(nums)</span><br><span class="line">        backtrace([])</span><br><span class="line">        <span class="keyword">return</span> ans</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">input</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"><span class="built_in">print</span>(Solution().permute(<span class="built_in">input</span>))</span><br></pre></td></tr></table></figure>
+
+<h3 id="组合"><a href="#组合" class="headerlink" title="组合"></a>组合</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">combine</span>(<span class="params">self, n: <span class="built_in">int</span>, k: <span class="built_in">int</span></span>) -&gt; <span class="type">List</span>[<span class="type">List</span>[<span class="built_in">int</span>]]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        这里和上面的区别是，当前可选列表的表示方式的区别</span></span><br><span class="line"><span class="string">        思路</span></span><br><span class="line"><span class="string">            1. 可选列表的表示方式，在调用 backtrace 处，每次传入 index， 用于表示当前可选列表在 nums 中 起始 index</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        :tag to_remember 回溯最好的写法</span></span><br><span class="line"><span class="string">        :param n:</span></span><br><span class="line"><span class="string">        :param k:</span></span><br><span class="line"><span class="string">        :return:</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">backtrace</span>(<span class="params">start_index, track: <span class="built_in">list</span></span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(track) == k:</span><br><span class="line">                ans.append(track[:])</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> index <span class="keyword">in</span> <span class="built_in">range</span>(start_index, n):</span><br><span class="line">                track.append(nums[index])</span><br><span class="line">                backtrace(index + <span class="number">1</span>, track)</span><br><span class="line">                track.pop()</span><br><span class="line"></span><br><span class="line">        nums = [i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, n + <span class="number">1</span>)]</span><br><span class="line">        ans = []</span><br><span class="line">        backtrace(<span class="number">0</span>, [])</span><br><span class="line">        <span class="keyword">return</span> ans</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/dfs/" rel="tag"># dfs</a>
+              <a href="/tags/%E5%9B%BE%E7%9A%84%E9%81%8D%E5%8E%86/" rel="tag"># 图的遍历</a>
+              <a href="/tags/%E6%A0%91%E7%9A%84%E9%81%8D%E5%8E%86/" rel="tag"># 树的遍历</a>
+              <a href="/tags/%E9%80%92%E5%BD%92/" rel="tag"># 递归</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/12/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8Bgroupcache%20singleflight%20%E9%98%B2%E7%BC%93%E5%AD%98%E5%B4%A9%E6%BA%83%E7%AE%97%E6%B3%95/" rel="prev" title="算法之groupcache singleflight 防缓存崩溃算法">
+      <i class="fa fa-chevron-left"></i> 算法之groupcache singleflight 防缓存崩溃算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/19/algorithm/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B9%8BTrie/" rel="next" title="数据结构之Trie">
+      数据结构之Trie <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#dfs"><span class="nav-number">1.</span> <span class="nav-text">dfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E9%81%8D%E5%8E%86"><span class="nav-number">2.</span> <span class="nav-text">二叉树的遍历</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E9%81%8D%E5%8E%86"><span class="nav-number">2.1.</span> <span class="nav-text">三种遍历</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8A%E5%88%B0%E4%B8%8Bvs%E4%BB%8E%E4%B8%8B%E5%88%B0%E4%B8%8A"><span class="nav-number">3.</span> <span class="nav-text">从上到下vs从下到上</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8A%E5%88%B0%E4%B8%8B"><span class="nav-number">3.1.</span> <span class="nav-text">从上到下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8E%E4%B8%8B%E5%88%B0%E4%B8%8A"><span class="nav-number">3.2.</span> <span class="nav-text">从下到上</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E6%BA%AF%E7%AE%97%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">回溯算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E6%A8%A1%E6%9D%BF"><span class="nav-number">5.</span> <span class="nav-text">算法模板</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E5%88%97"><span class="nav-number">5.1.</span> <span class="nav-text">排列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E5%90%88"><span class="nav-number">5.2.</span> <span class="nav-text">组合</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

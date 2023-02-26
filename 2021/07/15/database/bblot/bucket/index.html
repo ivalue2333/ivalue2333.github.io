@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] Bucket数据结构12345678910111213141516171819202122232425&#x2F;&#x2F; Bucket represents a collection of key&#x2F;value pairs inside the database.type Bucket struct &amp;#123;	*bucket	tx       *Tx                &#x2F;&#x2F; the a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="bblot bucket">
+<meta property="og:url" content="http://example.com/2021/07/15/database/bblot/bucket/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] Bucket数据结构12345678910111213141516171819202122232425&#x2F;&#x2F; Bucket represents a collection of key&#x2F;value pairs inside the database.type Bucket struct &amp;#123;	*bucket	tx       *Tx                &#x2F;&#x2F; the a">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-18T12:43:46.407Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="bblot - bucket">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/07/15/database/bblot/bucket/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>bblot bucket | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/15/database/bblot/bucket/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          bblot bucket
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-15 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-15T00:00:00+08:00">2021-07-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-18 20:43:46" itemprop="dateModified" datetime="2021-07-18T20:43:46+08:00">2021-07-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/bblot/" itemprop="url" rel="index"><span itemprop="name">bblot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="Bucket数据结构"><a href="#Bucket数据结构" class="headerlink" title="Bucket数据结构"></a>Bucket数据结构</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Bucket represents a collection of key/value pairs inside the database.</span></span><br><span class="line"><span class="keyword">type</span> Bucket <span class="keyword">struct</span> &#123;</span><br><span class="line">	*bucket</span><br><span class="line">	tx       *Tx                <span class="comment">// the associated transaction</span></span><br><span class="line">	buckets  <span class="keyword">map</span>[<span class="type">string</span>]*Bucket <span class="comment">// subbucket cache</span></span><br><span class="line">	page     *page              <span class="comment">// inline page reference</span></span><br><span class="line">	rootNode *node              <span class="comment">// materialized node for the root page.</span></span><br><span class="line">	nodes    <span class="keyword">map</span>[pgid]*node     <span class="comment">// node cache</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Sets the threshold for filling nodes when they split. By default,</span></span><br><span class="line">	<span class="comment">// the bucket will fill to 50% but it can be useful to increase this</span></span><br><span class="line">	<span class="comment">// amount if you know that your write workloads are mostly append-only.</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line">	<span class="comment">// This is non-persisted across transactions so it must be set in every Tx.</span></span><br><span class="line">	FillPercent <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// bucket represents the on-file representation of a bucket.</span></span><br><span class="line"><span class="comment">// This is stored as the &quot;value&quot; of a bucket key. If the bucket is small enough,</span></span><br><span class="line"><span class="comment">// then its root page can be stored inline in the &quot;value&quot;, after the bucket</span></span><br><span class="line"><span class="comment">// header. In the case of inline buckets, the &quot;root&quot; will be 0.</span></span><br><span class="line"><span class="keyword">type</span> bucket <span class="keyword">struct</span> &#123;</span><br><span class="line">	root     pgid   <span class="comment">// page id of the bucket&#x27;s root-level page</span></span><br><span class="line">	sequence <span class="type">uint64</span> <span class="comment">// monotonically incrementing, used by NextSequence()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Bucket遍历之Cursor"><a href="#Bucket遍历之Cursor" class="headerlink" title="Bucket遍历之Cursor"></a>Bucket遍历之Cursor</h2><p>本节我们先做一节内容的铺垫，暂时不讲如何创建、获取、删除一个Bucket。而是介绍一个boltdb中的新对象Cursor。</p>
+<p>答案是：所有的上述操作都是建立在首先定位到一个Bucket所属的位置，然后才能对其进行操作。而定位一个Bucket的功能就是由Cursor来完成的。所以我们先这一节给大家介绍一下boltdb中的Cursor。</p>
+<p>我们先看下官方文档对Cursor的描述</p>
+<blockquote>
+<p>Cursor represents an iterator that can traverse over all key&#x2F;value pairs in a bucket in sorted order.</p>
+</blockquote>
+<p>用大白话讲，既然一个Bucket逻辑上是一颗b+树，那就意味着我们可以对其进行遍历。前面提到的set、get操作，无非是要在Bucket上先找到合适的位置，然后再进行操作。而“找”这个操作就是交由Cursor来完成的。简而言之对Bucket这颗b+树的遍历工作由Cursor来执行。一个Bucket对象关联一个Cursor。下面我们先看看Bucket和Cursor之间的关系。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Cursor creates a cursor associated with the bucket.</span></span><br><span class="line"><span class="comment">// The cursor is only valid as long as the transaction is open.</span></span><br><span class="line"><span class="comment">// Do not use a cursor after the transaction is closed.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> Cursor() *Cursor &#123;</span><br><span class="line">	<span class="comment">// Update transaction statistics.</span></span><br><span class="line">	b.tx.stats.CursorCount++</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Allocate and return a cursor.</span></span><br><span class="line">	<span class="keyword">return</span> &amp;Cursor&#123;</span><br><span class="line">		bucket: b,</span><br><span class="line">		stack:  <span class="built_in">make</span>([]elemRef, <span class="number">0</span>),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// elemRef represents a reference to an element on a given page/node.</span></span><br><span class="line"><span class="keyword">type</span> elemRef <span class="keyword">struct</span> &#123;</span><br><span class="line">	page  *page</span><br><span class="line">	node  *node</span><br><span class="line">	index <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// isLeaf returns whether the ref is pointing at a leaf page/node.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *elemRef)</span></span> isLeaf() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> r.node != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> r.node.isLeaf</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> (r.page.flags &amp; leafPageFlag) != <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// count returns the number of inodes or page elements.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *elemRef)</span></span> count() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> r.node != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="built_in">len</span>(r.node.inodes)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="type">int</span>(r.page.count)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Cursor结构"><a href="#Cursor结构" class="headerlink" title="Cursor结构"></a>Cursor结构</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Cursor <span class="keyword">struct</span> &#123;</span><br><span class="line">   bucket *Bucket</span><br><span class="line">   stack  []elemRef</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Bucket returns the bucket that this cursor was created from.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Bucket() *Bucket &#123;</span><br><span class="line">   <span class="keyword">return</span> c.bucket</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Cursor对外接口"><a href="#Cursor对外接口" class="headerlink" title="Cursor对外接口"></a>Cursor对外接口</h3><p>下面我们看一下Cursor对外暴露的接口有哪些。看之前也可以心里先想一下。针对一棵树我们需要哪些遍历接口呢？</p>
+<p>主体也就是三类：<strong>定位到某一个元素的位置</strong>、在当前位置<strong>从前往后找</strong>、在当前位置<strong>从后往前找</strong>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> First() (key []<span class="type">byte</span>, value []<span class="type">byte</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Last() (key []<span class="type">byte</span>, value []<span class="type">byte</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Next() (key []<span class="type">byte</span>, value []<span class="type">byte</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Prev() (key []<span class="type">byte</span>, value []<span class="type">byte</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Delete() <span class="type">error</span></span><br><span class="line"><span class="comment">// Seek moves the cursor to a given key and returns it.</span></span><br><span class="line"><span class="comment">// If the key does not exist then the next key is used. If no keys</span></span><br><span class="line"><span class="comment">// follow, a nil key is returned.</span></span><br><span class="line"><span class="comment">// The returned key and value are only valid for the life of the transaction.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Seek(seek []<span class="type">byte</span>) (key []<span class="type">byte</span>, value []<span class="type">byte</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="page-node"><a href="#page-node" class="headerlink" title="page node"></a>page node</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pageNode returns the in-memory node, if it exists.</span></span><br><span class="line"><span class="comment">// Otherwise returns the underlying page.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> pageNode(id pgid) (*page, *node) &#123;</span><br><span class="line">   <span class="comment">// Inline buckets have a fake page embedded in their value so treat them</span></span><br><span class="line">   <span class="comment">// differently. We&#x27;ll return the rootNode (if available) or the fake page.</span></span><br><span class="line">   <span class="keyword">if</span> b.root == <span class="number">0</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> id != <span class="number">0</span> &#123;</span><br><span class="line">         <span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;inline bucket non-zero page access(2): %d != 0&quot;</span>, id))</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> b.rootNode != <span class="literal">nil</span> &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="literal">nil</span>, b.rootNode</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> b.page, <span class="literal">nil</span></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Check the node cache for non-inline buckets.</span></span><br><span class="line">   <span class="keyword">if</span> b.nodes != <span class="literal">nil</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> n := b.nodes[id]; n != <span class="literal">nil</span> &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="literal">nil</span>, n</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Finally lookup the page from the transaction if no node is materialized.</span></span><br><span class="line">   <span class="keyword">return</span> b.tx.page(id), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// data 表示 mmap 的 file 数据</span></span><br><span class="line"><span class="comment">// page retrieves a page reference from the mmap based on the current page size.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> page(id pgid) *page &#123;</span><br><span class="line">	pos := id * pgid(db.pageSize)</span><br><span class="line">	<span class="keyword">return</span> (*page)(unsafe.Pointer(&amp;db.data[pos]))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Seek-key-实现分析"><a href="#Seek-key-实现分析" class="headerlink" title="Seek(key)实现分析"></a>Seek(key)实现分析</h3><p>Seek()方法内部主要调用了seek()私有方法，我们重点关注seek()这个方法的实现，该方法有三个返回值，前两个为key、value、第三个为叶子节点的类型。前面提到在boltdb中，叶子节点元素有两种类型：一种是嵌套的子桶、一种是普通的key&#x2F;value。而这二者就是通过flags来区分的。如果叶子节点元素为嵌套的子桶时，返回的flags为1，也就是bucketLeafFlag取值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> Seek(seek []<span class="type">byte</span>) (key []<span class="type">byte</span>, value []<span class="type">byte</span>) &#123;</span><br><span class="line">    k, v, flags := c.seek(seek)</span><br><span class="line">    <span class="comment">// If we ended up after the last element of a page then move to the next one.</span></span><br><span class="line">    <span class="comment">// 下面这一段逻辑是必须的，因为在seek()方法中，如果ref.index&gt;ref.count()的话，就直接返回nil,nil,0了</span></span><br><span class="line">    <span class="comment">// 这里需要返回下一个</span></span><br><span class="line">    <span class="keyword">if</span> ref := &amp;c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>]; ref.index &gt;= ref.count() &#123;</span><br><span class="line">        k, v, flags = c.next()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> k == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span></span><br><span class="line">        <span class="comment">//     子桶的话</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (flags &amp; <span class="type">uint32</span>(bucketLeafFlag)) != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> k, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> k, v</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 实际上调用 search 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> seek(seek []<span class="type">byte</span>) (key []<span class="type">byte</span>, value []<span class="type">byte</span>, flags <span class="type">uint32</span>) &#123;</span><br><span class="line">	<span class="comment">// Start from root page/node and traverse to correct page.</span></span><br><span class="line">	c.stack = c.stack[:<span class="number">0</span>]</span><br><span class="line">	c.search(seek, c.bucket.root)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// If this is a bucket then return a nil value.</span></span><br><span class="line">	<span class="keyword">return</span> c.keyValue()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 整个 search 就是构建了一个搜索栈，最后用 elemRef 中的 index， 这个 index 表示node 中 inodes 的下标，或者 	page 下标。</span></span><br><span class="line"><span class="comment">// search recursively performs a binary search against a given page/node until it finds a given key.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> search(key []<span class="type">byte</span>, pgid pgid) &#123;</span><br><span class="line">	p, n := c.bucket.pageNode(pgid)</span><br><span class="line">	<span class="keyword">if</span> p != <span class="literal">nil</span> &amp;&amp; (p.flags&amp;(branchPageFlag|leafPageFlag)) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;invalid page type: %d: %x&quot;</span>, p.id, p.flags))</span><br><span class="line">	&#125;</span><br><span class="line">	e := elemRef&#123;page: p, node: n&#125;</span><br><span class="line">  <span class="comment">// 搜索栈</span></span><br><span class="line">	c.stack = <span class="built_in">append</span>(c.stack, e)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// If we&#x27;re on a leaf page/node then find the specific node.</span></span><br><span class="line">  <span class="comment">// 叶子结点就直接最后一次二分查询了</span></span><br><span class="line">	<span class="keyword">if</span> e.isLeaf() &#123;</span><br><span class="line">		c.nsearch(key)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 搜索 node 或者 page， 差异非常小，因为本质上 node 就是 page 的 内存形式</span></span><br><span class="line">	<span class="keyword">if</span> n != <span class="literal">nil</span> &#123;</span><br><span class="line">		c.searchNode(key, n)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	c.searchPage(key, p)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> searchNode(key []<span class="type">byte</span>, n *node) &#123;</span><br><span class="line">	<span class="keyword">var</span> exact <span class="type">bool</span></span><br><span class="line">	index := sort.Search(<span class="built_in">len</span>(n.inodes), <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">		<span class="comment">// TODO(benbjohnson): Optimize this range search. It&#x27;s a bit hacky right now.</span></span><br><span class="line">		<span class="comment">// sort.Search() finds the lowest index where f() != -1 but we need the highest index.</span></span><br><span class="line">		ret := bytes.Compare(n.inodes[i].key, key)</span><br><span class="line">		<span class="keyword">if</span> ret == <span class="number">0</span> &#123;</span><br><span class="line">			exact = <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> ret != <span class="number">-1</span></span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">if</span> !exact &amp;&amp; index &gt; <span class="number">0</span> &#123;</span><br><span class="line">		index--</span><br><span class="line">	&#125;</span><br><span class="line">	c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>].index = index</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Recursively search to the next page.</span></span><br><span class="line">	c.search(key, n.inodes[index].pgid)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// keyValue returns the key and value of the current leaf element.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> keyValue() ([]<span class="type">byte</span>, []<span class="type">byte</span>, <span class="type">uint32</span>) &#123;</span><br><span class="line">	ref := &amp;c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>]</span><br><span class="line"></span><br><span class="line">	<span class="comment">// If the cursor is pointing to the end of page/node then return nil.</span></span><br><span class="line">	<span class="keyword">if</span> ref.count() == <span class="number">0</span> || ref.index &gt;= ref.count() &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, <span class="number">0</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Retrieve value from node.</span></span><br><span class="line">	<span class="keyword">if</span> ref.node != <span class="literal">nil</span> &#123;</span><br><span class="line">		inode := &amp;ref.node.inodes[ref.index]</span><br><span class="line">		<span class="keyword">return</span> inode.key, inode.value, inode.flags</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Or retrieve value from page.</span></span><br><span class="line">	elem := ref.page.leafPageElement(<span class="type">uint16</span>(ref.index))</span><br><span class="line">	<span class="keyword">return</span> elem.key(), elem.value(), elem.flags</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这儿我们就已经看完所有的seek()查找一个key的过程了，其内部也很简单，就是从根节点开始，通过不断递归遍历每层节点，采用二分法来定位到具体的叶子节点。到达叶子节点时，其叶子节点内部存储的数据也是有序的，因此继续按照二分查找来找到最终的下标。</p>
+<p>值得需要注意点：</p>
+<p><strong>在遍历时，我们都知道，有可能遍历到的当前分支节点数据并没有在内存中，此时就需要从page中加载数据遍历。所以在遍历过程中，优先在node中找，如果node为空的时候才会采用page来查找。</strong></p>
+<h3 id="First-、Last-实现分析"><a href="#First-、Last-实现分析" class="headerlink" title="First()、Last()实现分析"></a>First()、Last()实现分析</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> First() (key []<span class="type">byte</span>, value []<span class="type">byte</span>) &#123;</span><br><span class="line">    _assert(c.bucket.tx.db != <span class="literal">nil</span>, <span class="string">&quot;tx closed&quot;</span>)</span><br><span class="line">    <span class="comment">// 清空stack</span></span><br><span class="line">    c.stack = c.stack[:<span class="number">0</span>]</span><br><span class="line">    p, n := c.bucket.pageNode(c.bucket.root)</span><br><span class="line">    <span class="comment">// 一直找到第一个叶子节点，此处在天添加stack时，一直让index设置为0即可</span></span><br><span class="line">    ref := elemRef&#123;page: p, node: n, index: <span class="number">0</span>&#125;</span><br><span class="line">    c.stack = <span class="built_in">append</span>(c.stack, ref)</span><br><span class="line">    c.first()</span><br><span class="line">    <span class="comment">// If we land on an empty page then move to the next value.</span></span><br><span class="line">    <span class="comment">// https://github.com/boltdb/bolt/issues/450</span></span><br><span class="line">    <span class="comment">// 当前页时空的话，找下一个</span></span><br><span class="line">    <span class="keyword">if</span> c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>].count() == <span class="number">0</span> &#123;</span><br><span class="line">        c.next()</span><br><span class="line">    &#125;</span><br><span class="line">    k, v, flags := c.keyValue()</span><br><span class="line">    <span class="comment">// 是桶</span></span><br><span class="line">    <span class="keyword">if</span> (flags &amp; <span class="type">uint32</span>(bucketLeafFlag)) != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> k, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> k, v</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// first moves the cursor to the first leaf element under the last page in the stack.</span></span><br><span class="line"><span class="comment">// 找到最后一个非叶子节点的第一个叶子节点。index=0的节点</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> first() &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="comment">// Exit when we hit a leaf page.</span></span><br><span class="line">        <span class="keyword">var</span> ref = &amp;c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>]</span><br><span class="line">        <span class="keyword">if</span> ref.isLeaf() &#123;</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Keep adding pages pointing to the first element to the stack.</span></span><br><span class="line">        <span class="keyword">var</span> pgid pgid</span><br><span class="line">        <span class="keyword">if</span> ref.node != <span class="literal">nil</span> &#123;</span><br><span class="line">            pgid = ref.node.inodes[ref.index].pgid</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            pgid = ref.page.branchPageElement(<span class="type">uint16</span>(ref.index)).pgid</span><br><span class="line">        &#125;</span><br><span class="line">        p, n := c.bucket.pageNode(pgid)</span><br><span class="line">        c.stack = <span class="built_in">append</span>(c.stack, elemRef&#123;page: p, node: n, index: <span class="number">0</span>&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Next-分析"><a href="#Next-分析" class="headerlink" title="Next 分析"></a>Next 分析</h3><h4 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">c := b.Cursor()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 启动遍历模式</span></span><br><span class="line"><span class="keyword">for</span> k, v := c.First(); k != <span class="literal">nil</span>; k, v = c.Next() &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;cursor, key=%s, value=%s\n&quot;</span>, <span class="type">string</span>(k), <span class="type">string</span>(v))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// next 的实现就是去移动每一个 node 的 index， 从叶子结点开始，这样就能遍历完所有的叶子结点了！！！</span></span><br><span class="line"><span class="comment">// next moves to the next leaf element and returns the key and value.</span></span><br><span class="line"><span class="comment">// If the cursor is at the last leaf element then it stays there and returns nil.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cursor)</span></span> next() (key []<span class="type">byte</span>, value []<span class="type">byte</span>, flags <span class="type">uint32</span>) &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">// Attempt to move over one element until we&#x27;re successful.</span></span><br><span class="line">		<span class="comment">// Move up the stack as we hit the end of each page in our stack.</span></span><br><span class="line">		<span class="keyword">var</span> i <span class="type">int</span></span><br><span class="line">    <span class="comment">// c.stack 是在调用 First 函数时被写入的，所以，这样倒序来遍历能实现按序获取</span></span><br><span class="line">		<span class="keyword">for</span> i = <span class="built_in">len</span>(c.stack) - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">			elem := &amp;c.stack[i]</span><br><span class="line">			<span class="keyword">if</span> elem.index &lt; elem.count()<span class="number">-1</span> &#123;</span><br><span class="line">				elem.index++</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// If we&#x27;ve hit the root page then stop and return. This will leave the</span></span><br><span class="line">		<span class="comment">// cursor on the last element of the last page.</span></span><br><span class="line">		<span class="keyword">if</span> i == <span class="number">-1</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span>, <span class="number">0</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Otherwise start from where we left off in the stack and find the</span></span><br><span class="line">		<span class="comment">// first element of the first leaf page.</span></span><br><span class="line">		c.stack = c.stack[:i+<span class="number">1</span>]</span><br><span class="line">    <span class="comment">// 获取下一个叶子结点</span></span><br><span class="line">		c.first()</span><br><span class="line"></span><br><span class="line">		<span class="comment">// If this is an empty page then restart and move back up the stack.</span></span><br><span class="line">		<span class="comment">// https://github.com/boltdb/bolt/issues/450</span></span><br><span class="line">		<span class="keyword">if</span> c.stack[<span class="built_in">len</span>(c.stack)<span class="number">-1</span>].count() == <span class="number">0</span> &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> c.keyValue()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="node节点的相关操作"><a href="#node节点的相关操作" class="headerlink" title="node节点的相关操作"></a>node节点的相关操作</h2><p>在开始分析node节点之前，我们先看一下官方对node节点的描述</p>
+<blockquote>
+<p>node represents an in-memory, deserialized page</p>
+</blockquote>
+<p>一个node节点，既可能是叶子节点，也可能是根节点，也可能是分支节点。是物理磁盘上读取进来的页page的内存表现形式。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node represents an in-memory, deserialized page.</span></span><br><span class="line"><span class="keyword">type</span> node <span class="keyword">struct</span> &#123;</span><br><span class="line">    bucket     *Bucket <span class="comment">// 关联一个桶</span></span><br><span class="line">    isLeaf     <span class="type">bool</span></span><br><span class="line">    unbalanced <span class="type">bool</span>   <span class="comment">// 值为true的话，需要考虑页合并</span></span><br><span class="line">    spilled    <span class="type">bool</span>   <span class="comment">// 值为true的话，需要考虑页分裂</span></span><br><span class="line">    key        []<span class="type">byte</span> <span class="comment">// 对于分支节点的话，保留的是最小的key</span></span><br><span class="line">    pgid       pgid   <span class="comment">// 分支节点关联的页id</span></span><br><span class="line">    parent     *node  <span class="comment">// 该节点的parent</span></span><br><span class="line">    children   nodes  <span class="comment">// 该节点的孩子节点</span></span><br><span class="line">    inodes     inodes <span class="comment">// 该节点上保存的索引数据</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/ inode represents an internal node inside of a node.</span><br><span class="line"><span class="comment">// It can be used to point to elements in a page or point</span></span><br><span class="line"><span class="comment">// to an element which hasn&#x27;t been added to a page yet.</span></span><br><span class="line"><span class="keyword">type</span> inode <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// 表示是否是子桶叶子节点还是普通叶子节点。如果flags值为1表示子桶叶子节点，否则为普通叶子节点</span></span><br><span class="line">    flags <span class="type">uint32</span></span><br><span class="line">    <span class="comment">// 当inode为分支元素时，pgid才有值，为叶子元素时，则没值</span></span><br><span class="line">    pgid pgid</span><br><span class="line">    key  []<span class="type">byte</span></span><br><span class="line">    <span class="comment">// 当inode为分支元素时，value为空，为叶子元素时，才有值</span></span><br><span class="line">    value []<span class="type">byte</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="node-gt-page"><a href="#node-gt-page" class="headerlink" title="node-&gt;page"></a>node-&gt;page</h3><h3 id="page-gt-node"><a href="#page-gt-node" class="headerlink" title="page-&gt;node"></a>page-&gt;node</h3><h3 id="node节点的增删改查"><a href="#node节点的增删改查" class="headerlink" title="node节点的增删改查"></a>node节点的增删改查</h3><h4 id="put-k-v"><a href="#put-k-v" class="headerlink" title="put(k,v)"></a>put(k,v)</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// put inserts a key/value.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> put(oldKey, newKey, value []<span class="type">byte</span>, pgid pgid, flags <span class="type">uint32</span>) &#123;</span><br><span class="line">	<span class="keyword">if</span> pgid &gt;= n.bucket.tx.meta.pgid &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;pgid (%d) above high water mark (%d)&quot;</span>, pgid, n.bucket.tx.meta.pgid))</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">len</span>(oldKey) &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;put: zero-length old key&quot;</span>)</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">len</span>(newKey) &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;put: zero-length new key&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Find insertion index.</span></span><br><span class="line">	index := sort.Search(<span class="built_in">len</span>(n.inodes), <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123; <span class="keyword">return</span> bytes.Compare(n.inodes[i].key, oldKey) != <span class="number">-1</span> &#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Add capacity and shift nodes if we don&#x27;t have an exact match and need to insert.</span></span><br><span class="line">	exact := (<span class="built_in">len</span>(n.inodes) &gt; <span class="number">0</span> &amp;&amp; index &lt; <span class="built_in">len</span>(n.inodes) &amp;&amp; bytes.Equal(n.inodes[index].key, oldKey))</span><br><span class="line">	<span class="keyword">if</span> !exact &#123;</span><br><span class="line">		n.inodes = <span class="built_in">append</span>(n.inodes, inode&#123;&#125;)</span><br><span class="line">		<span class="built_in">copy</span>(n.inodes[index+<span class="number">1</span>:], n.inodes[index:])</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	inode := &amp;n.inodes[index]</span><br><span class="line">	inode.flags = flags</span><br><span class="line">	inode.key = newKey</span><br><span class="line">	inode.value = value</span><br><span class="line">	inode.pgid = pgid</span><br><span class="line">	_assert(<span class="built_in">len</span>(inode.key) &gt; <span class="number">0</span>, <span class="string">&quot;put: zero-length inode key&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="get-k"><a href="#get-k" class="headerlink" title="get(k)"></a>get(k)</h4><p>在node中，没有get(k)的方法，其本质是在Cursor中就返回了get的数据。大家可以看看Cursor中的keyValue()方法。</p>
+<h4 id="del-k"><a href="#del-k" class="headerlink" title="del(k)"></a>del(k)</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// del removes a key from the node.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> del(key []<span class="type">byte</span>) &#123;</span><br><span class="line">	<span class="comment">// Find index of key.</span></span><br><span class="line">	index := sort.Search(<span class="built_in">len</span>(n.inodes), <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123; <span class="keyword">return</span> bytes.Compare(n.inodes[i].key, key) != <span class="number">-1</span> &#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Exit if the key isn&#x27;t found.</span></span><br><span class="line">	<span class="keyword">if</span> index &gt;= <span class="built_in">len</span>(n.inodes) || !bytes.Equal(n.inodes[index].key, key) &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Delete inode from the node.</span></span><br><span class="line">	n.inodes = <span class="built_in">append</span>(n.inodes[:index], n.inodes[index+<span class="number">1</span>:]...)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Mark the node as needing rebalancing.</span></span><br><span class="line">	n.unbalanced = <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="nextSibling-、prevSibling"><a href="#nextSibling-、prevSibling" class="headerlink" title="nextSibling()、prevSibling()"></a>nextSibling()、prevSibling()</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// childAt returns the child node at a given index.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> childAt(index <span class="type">int</span>) *node &#123;</span><br><span class="line">	<span class="keyword">if</span> n.isLeaf &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Sprintf(<span class="string">&quot;invalid childAt(%d) on a leaf node&quot;</span>, index))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> n.bucket.node(n.inodes[index].pgid, n)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// childIndex returns the index of a given child node.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> childIndex(child *node) <span class="type">int</span> &#123;</span><br><span class="line">	index := sort.Search(<span class="built_in">len</span>(n.inodes), <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123; <span class="keyword">return</span> bytes.Compare(n.inodes[i].key, child.key) != <span class="number">-1</span> &#125;)</span><br><span class="line">	<span class="keyword">return</span> index</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// numChildren returns the number of children.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> numChildren() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(n.inodes)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// nextSibling returns the next node with the same parent.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> nextSibling() *node &#123;</span><br><span class="line">	<span class="keyword">if</span> n.parent == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">// 有父节点问题就不大了</span></span><br><span class="line">	index := n.parent.childIndex(n)</span><br><span class="line">	<span class="keyword">if</span> index &gt;= n.parent.numChildren()<span class="number">-1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> n.parent.childAt(index + <span class="number">1</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// prevSibling returns the previous node with the same parent.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *node)</span></span> prevSibling() *node &#123;</span><br><span class="line">	<span class="keyword">if</span> n.parent == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	index := n.parent.childIndex(n)</span><br><span class="line">	<span class="keyword">if</span> index == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> n.parent.childAt(index - <span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Bucket的相关操作"><a href="#Bucket的相关操作" class="headerlink" title="Bucket的相关操作"></a>Bucket的相关操作</h2><h3 id="创建一个Bucket"><a href="#创建一个Bucket" class="headerlink" title="创建一个Bucket"></a>创建一个Bucket</h3><p>根据指定的key来创建一个Bucket,如果指定key的Bucket已经存在，则会报错。如果指定的key之前有插入过元素，也会报错。否则的话，会在当前的Bucket中找到合适的位置，然后新建一个Bucket插入进去，最后返回给客户端。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CreateBucket creates a new bucket at the given key and returns the new bucket.</span></span><br><span class="line"><span class="comment">// Returns an error if the key already exists, if the bucket name is blank, or if the bucket name is too long.</span></span><br><span class="line"><span class="comment">// The bucket instance is only valid for the lifetime of the transaction.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> CreateBucket(key []<span class="type">byte</span>) (*Bucket, <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> b.tx.db == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, ErrTxClosed</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> !b.tx.writable &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, ErrTxNotWritable</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">len</span>(key) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, ErrBucketNameRequired</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Move cursor to correct position.</span></span><br><span class="line">    <span class="comment">// 拿到游标</span></span><br><span class="line">    c := b.Cursor()</span><br><span class="line">    <span class="comment">// 开始遍历、找到合适的位置</span></span><br><span class="line">    k, _, flags := c.seek(key)</span><br><span class="line">    <span class="comment">// Return an error if there is an existing key.</span></span><br><span class="line">    <span class="keyword">if</span> bytes.Equal(key, k) &#123;</span><br><span class="line">        <span class="comment">// 是桶,已经存在了</span></span><br><span class="line">        <span class="keyword">if</span> (flags &amp; bucketLeafFlag) != <span class="number">0</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, ErrBucketExists</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 不是桶、但key已经存在了</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, ErrIncompatibleValue</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Create empty, inline bucket.</span></span><br><span class="line">    <span class="keyword">var</span> bucket = Bucket&#123;</span><br><span class="line">        bucket:      &amp;bucket&#123;&#125;,</span><br><span class="line">        rootNode:    &amp;node&#123;isLeaf: <span class="literal">true</span>&#125;,</span><br><span class="line">        FillPercent: DefaultFillPercent,</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 拿到bucket对应的value</span></span><br><span class="line">    <span class="keyword">var</span> value = bucket.write()</span><br><span class="line">    <span class="comment">// Insert into node.</span></span><br><span class="line">    key = cloneBytes(key)</span><br><span class="line">    <span class="comment">// 插入到inode中</span></span><br><span class="line">    <span class="comment">// c.node()方法会在内存中建立这棵树，调用n.read(page)</span></span><br><span class="line">    c.node().put(key, key, value, <span class="number">0</span>, bucketLeafFlag)</span><br><span class="line">    <span class="comment">// Since subbuckets are not allowed on inline buckets, we need to</span></span><br><span class="line">    <span class="comment">// dereference the inline page, if it exists. This will cause the bucket</span></span><br><span class="line">    <span class="comment">// to be treated as a regular, non-inline bucket for the rest of the tx.</span></span><br><span class="line">    b.page = <span class="literal">nil</span></span><br><span class="line">    <span class="comment">//根据key获取一个桶</span></span><br><span class="line">    <span class="keyword">return</span> b.Bucket(key), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="获取一个Bucket"><a href="#获取一个Bucket" class="headerlink" title="获取一个Bucket"></a>获取一个Bucket</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">/ Bucket retrieves a nested bucket by name.</span><br><span class="line"><span class="comment">// Returns nil if the bucket does not exist.</span></span><br><span class="line"><span class="comment">// The bucket instance is only valid for the lifetime of the transaction.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> Bucket(name []<span class="type">byte</span>) *Bucket &#123;</span><br><span class="line">    <span class="keyword">if</span> b.buckets != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> child := b.buckets[<span class="type">string</span>(name)]; child != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> child</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Move cursor to key.</span></span><br><span class="line">    <span class="comment">// 根据游标找key</span></span><br><span class="line">    c := b.Cursor()</span><br><span class="line">    k, v, flags := c.seek(name)</span><br><span class="line">    <span class="comment">// Return nil if the key doesn&#x27;t exist or it is not a bucket.</span></span><br><span class="line">    <span class="keyword">if</span> !bytes.Equal(name, k) || (flags&amp;bucketLeafFlag) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Otherwise create a bucket and cache it.</span></span><br><span class="line">    <span class="comment">// 根据找到的value来打开桶。</span></span><br><span class="line">    <span class="keyword">var</span> child = b.openBucket(v)</span><br><span class="line">    <span class="comment">// 加速缓存的作用</span></span><br><span class="line">    <span class="keyword">if</span> b.buckets != <span class="literal">nil</span> &#123;</span><br><span class="line">        b.buckets[<span class="type">string</span>(name)] = child</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> child</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// Helper method that re-interprets a sub-bucket value</span></span><br><span class="line"><span class="comment">// from a parent into a Bucket</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> openBucket(value []<span class="type">byte</span>) *Bucket &#123;</span><br><span class="line">    <span class="keyword">var</span> child = newBucket(b.tx)</span><br><span class="line">    <span class="comment">// If unaligned load/stores are broken on this arch and value is</span></span><br><span class="line">    <span class="comment">// unaligned simply clone to an aligned byte array.</span></span><br><span class="line">    unaligned := brokenUnaligned &amp;&amp; <span class="type">uintptr</span>(unsafe.Pointer(&amp;value[<span class="number">0</span>]))&amp;<span class="number">3</span> != <span class="number">0</span></span><br><span class="line">    <span class="keyword">if</span> unaligned &#123;</span><br><span class="line">        value = cloneBytes(value)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// If this is a writable transaction then we need to copy the bucket entry.</span></span><br><span class="line">    <span class="comment">// Read-only transactions can point directly at the mmap entry.</span></span><br><span class="line">    <span class="keyword">if</span> b.tx.writable &amp;&amp; !unaligned &#123;</span><br><span class="line">        child.bucket = &amp;bucket&#123;&#125;</span><br><span class="line">        *child.bucket = *(*bucket)(unsafe.Pointer(&amp;value[<span class="number">0</span>]))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        child.bucket = (*bucket)(unsafe.Pointer(&amp;value[<span class="number">0</span>]))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Save a reference to the inline page if the bucket is inline.</span></span><br><span class="line">    <span class="comment">// 内联桶</span></span><br><span class="line">    <span class="keyword">if</span> child.root == <span class="number">0</span> &#123;</span><br><span class="line">        child.page = (*page)(unsafe.Pointer(&amp;value[bucketHeaderSize]))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> &amp;child</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="key-x2F-value的插入、获取、删除"><a href="#key-x2F-value的插入、获取、删除" class="headerlink" title="key&#x2F;value的插入、获取、删除"></a>key&#x2F;value的插入、获取、删除</h2><p>其实本质上，对key&#x2F;value的所有操作最终都要表现在底层的node上。因为node节点就是用来存储真实数据的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> Get(key []<span class="type">byte</span>) []<span class="type">byte</span> &#123;</span><br><span class="line">	k, v, flags := b.Cursor().seek(key)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Return nil if this is a bucket.</span></span><br><span class="line">	<span class="keyword">if</span> (flags &amp; bucketLeafFlag) != <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// If our target node isn&#x27;t the same key as what&#x27;s passed in then return nil.</span></span><br><span class="line">	<span class="keyword">if</span> !bytes.Equal(key, k) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> v</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> Put(key []<span class="type">byte</span>, value []<span class="type">byte</span>) <span class="type">error</span> &#123;</span><br><span class="line">	<span class="comment">// Move cursor to correct position.</span></span><br><span class="line">	c := b.Cursor()</span><br><span class="line">	k, _, flags := c.seek(key)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Return an error if there is an existing key with a bucket value.</span></span><br><span class="line">	<span class="keyword">if</span> bytes.Equal(key, k) &amp;&amp; (flags&amp;bucketLeafFlag) != <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ErrIncompatibleValue</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Insert into node.</span></span><br><span class="line">	key = cloneBytes(key)</span><br><span class="line">	c.node().put(key, key, value, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> Delete(key []<span class="type">byte</span>) <span class="type">error</span> &#123;</span><br><span class="line">	<span class="comment">// Move cursor to correct position.</span></span><br><span class="line">	c := b.Cursor()</span><br><span class="line">	k, _, flags := c.seek(key)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Return nil if the key doesn&#x27;t exist.</span></span><br><span class="line">	<span class="keyword">if</span> !bytes.Equal(key, k) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Return an error if there is already existing bucket value.</span></span><br><span class="line">	<span class="keyword">if</span> (flags &amp; bucketLeafFlag) != <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> ErrIncompatibleValue</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Delete the node if we have a matching key.</span></span><br><span class="line">	c.node().del(key)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Bucket的页分裂、页合并"><a href="#Bucket的页分裂、页合并" class="headerlink" title="Bucket的页分裂、页合并"></a>Bucket的页分裂、页合并</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// spill writes all the nodes for this bucket to dirty pages.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> spill() <span class="type">error</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *Bucket)</span></span> rebalance() &#123;</span><br><span class="line">    <span class="keyword">for</span> _, n := <span class="keyword">range</span> b.nodes &#123;</span><br><span class="line">        n.rebalance()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> _, child := <span class="keyword">range</span> b.buckets &#123;</span><br><span class="line">        child.rebalance()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/bblot-bucket/" rel="tag"># bblot - bucket</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/15/database/bblot/page/" rel="prev" title="bblot page">
+      <i class="fa fa-chevron-left"></i> bblot page
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/07/15/database/bblot/bbolt%E5%85%A5%E9%97%A8/" rel="next" title="bblot 入门">
+      bblot 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Bucket%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">Bucket数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bucket%E9%81%8D%E5%8E%86%E4%B9%8BCursor"><span class="nav-number">2.</span> <span class="nav-text">Bucket遍历之Cursor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cursor%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">Cursor结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cursor%E5%AF%B9%E5%A4%96%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.2.</span> <span class="nav-text">Cursor对外接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#page-node"><span class="nav-number">2.3.</span> <span class="nav-text">page node</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Seek-key-%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.4.</span> <span class="nav-text">Seek(key)实现分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#First-%E3%80%81Last-%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.5.</span> <span class="nav-text">First()、Last()实现分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Next-%E5%88%86%E6%9E%90"><span class="nav-number">2.6.</span> <span class="nav-text">Next 分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">2.6.1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.6.2.</span> <span class="nav-text">实现</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#node%E8%8A%82%E7%82%B9%E7%9A%84%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">node节点的相关操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#node-gt-page"><span class="nav-number">3.1.</span> <span class="nav-text">node-&gt;page</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#page-gt-node"><span class="nav-number">3.2.</span> <span class="nav-text">page-&gt;node</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#node%E8%8A%82%E7%82%B9%E7%9A%84%E5%A2%9E%E5%88%A0%E6%94%B9%E6%9F%A5"><span class="nav-number">3.3.</span> <span class="nav-text">node节点的增删改查</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#put-k-v"><span class="nav-number">3.3.1.</span> <span class="nav-text">put(k,v)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#get-k"><span class="nav-number">3.3.2.</span> <span class="nav-text">get(k)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#del-k"><span class="nav-number">3.3.3.</span> <span class="nav-text">del(k)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nextSibling-%E3%80%81prevSibling"><span class="nav-number">3.3.4.</span> <span class="nav-text">nextSibling()、prevSibling()</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bucket%E7%9A%84%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C"><span class="nav-number">4.</span> <span class="nav-text">Bucket的相关操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AABucket"><span class="nav-number">4.1.</span> <span class="nav-text">创建一个Bucket</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E4%B8%80%E4%B8%AABucket"><span class="nav-number">4.2.</span> <span class="nav-text">获取一个Bucket</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#key-x2F-value%E7%9A%84%E6%8F%92%E5%85%A5%E3%80%81%E8%8E%B7%E5%8F%96%E3%80%81%E5%88%A0%E9%99%A4"><span class="nav-number">5.</span> <span class="nav-text">key&#x2F;value的插入、获取、删除</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bucket%E7%9A%84%E9%A1%B5%E5%88%86%E8%A3%82%E3%80%81%E9%A1%B5%E5%90%88%E5%B9%B6"><span class="nav-number">6.</span> <span class="nav-text">Bucket的页分裂、页合并</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述在神作《UNIX 网络编程》里，总结归纳了 5 种 I&#x2F;O 模型，包括同步和异步 I&#x2F;O：  阻塞 I&#x2F;O (Blocking I&#x2F;O) 非阻塞 I&#x2F;O (Nonblocking I&#x2F;O) I&#x2F;O 多路复用 (I&#x2F;O multiplexing) 信号驱动 I&#x2F;O (Signal driven">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO 入门">
+<meta property="og:url" content="http://example.com/2020/11/19/io/IO%20%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述在神作《UNIX 网络编程》里，总结归纳了 5 种 I&#x2F;O 模型，包括同步和异步 I&#x2F;O：  阻塞 I&#x2F;O (Blocking I&#x2F;O) 非阻塞 I&#x2F;O (Nonblocking I&#x2F;O) I&#x2F;O 多路复用 (I&#x2F;O multiplexing) 信号驱动 I&#x2F;O (Signal driven">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2020/11/24/DtXgAJ.md.png">
+<meta property="article:published_time" content="2020-11-19T13:33:42.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.772Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="IO">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2020/11/24/DtXgAJ.md.png">
+
+<link rel="canonical" href="http://example.com/2020/11/19/io/IO%20%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>IO 入门 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/19/io/IO%20%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          IO 入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-19 21:33:42" itemprop="dateCreated datePublished" datetime="2020-11-19T21:33:42+08:00">2020-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在神作《UNIX 网络编程》里，总结归纳了 5 种 I&#x2F;O 模型，包括同步和异步 I&#x2F;O：</p>
+<ul>
+<li>阻塞 I&#x2F;O (Blocking I&#x2F;O)</li>
+<li>非阻塞 I&#x2F;O (Nonblocking I&#x2F;O)</li>
+<li>I&#x2F;O 多路复用 (I&#x2F;O multiplexing)</li>
+<li>信号驱动 I&#x2F;O (Signal driven I&#x2F;O)</li>
+<li>异步 I&#x2F;O (Asynchronous I&#x2F;O)</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/DtXgAJ"><img src="https://s3.ax1x.com/2020/11/24/DtXgAJ.md.png" alt="DtXgAJ.md.png"></a></p>
+<h2 id="阻塞IO-Blocking-I-x2F-O"><a href="#阻塞IO-Blocking-I-x2F-O" class="headerlink" title="阻塞IO (Blocking I&#x2F;O)"></a>阻塞IO (Blocking I&#x2F;O)</h2><p>阻塞型IO指的是进程的IO的系统调用(recv())，会导致这个系统阻塞在这个系统调用上，直到有数据到来且系统准备好了数据之后，系统才能继续处理数据，阻塞型IO一个线程只能处理一个请求。阻塞型IO为了能同时处理多个请求，一般通过多线程技术来实现。但是线程的成本其实很高，所以阻塞模型并不是很适用高并发的场景。</p>
+<h2 id="非阻塞IO（non-blocking-IO）"><a href="#非阻塞IO（non-blocking-IO）" class="headerlink" title="非阻塞IO（non-blocking IO）"></a>非阻塞IO（non-blocking IO）</h2><p>Linux下，可以通过设置socket使其变为non-blocking。非阻塞就很简单了，就是服务器不断去忙轮询系统调用(反复调用recv()，因为non-blocking的IO如果数据没有准备好，会立即返回)。 可以看到服务器线程可以通过循环调用recv()接口，可以在单个线程内实现对所有连接的数据接收工作。但是上述模型绝不被推荐。因为，循环调用recv()将大幅度推高CPU 占用率；此外，在这个方案中recv()更多的是起到检测“操作是否完成”的作用，实际操作系统提供了更为高效的检测“操作是否完成“作用的接口，例如select()多路复用模式，可以一次检测多个连接是否活跃。</p>
+<h2 id="多路复用IO（IO-multiplexing）-事件驱动-IO"><a href="#多路复用IO（IO-multiplexing）-事件驱动-IO" class="headerlink" title="多路复用IO（IO multiplexing）(事件驱动 IO)"></a>多路复用IO（IO multiplexing）(事件驱动 IO)</h2><p>这种IO方式为事件驱动IO(event driven IO)。select或者epoll类型的IO，当你调用select()函数时，进程会被阻塞直到有数据准备完成。数据准备完成后，需要再调用recv()函数来从系统中接受数据到用户进程（注意这是两次系统调用，一次是阻塞，一次及时返回）。IO多路复用，虽然有一个阻塞的地方，但是多路复用IO依然支持海量并发请求，这是因为，select这个系统调用会让系统内核监视select负责的所有的socket，一旦有数据准备好，就停止这个阻塞，并返回ok，然后用户进程可以再次发起请求，拿取数据。IO多路复用是一种极其高效的IO模型，使用IO多路复用，在高并发的情况下，一个进程能够将CPU的使用发挥到极致（如果在用户进程中有阻塞的地方下面会说）。但是IO多路复用不能充分发挥多核cpu的优点，因为它只使用了一个cpu（不同于多线程+阻塞IO），所以，通常的做法是多进程+多路复用IO，例如nginx和tornado。</p>
+<p>如果在用户进程中存在阻塞的地方，那么多路复用IO的效果将大打折扣，所以nginx的主要作用就是做转发。而tornado为自己作为client去请求其他服务器时，可以开启协程模式（异步请求框架!）。熟悉go的开发者应该知道，如果有多个IO读取，多个网络请求，那么，最好是开启多个协程，通过管道来实现数据回流，这能最大化避免阻塞带来的时间消耗。</p>
+<p>在多路复用模型中，对于每一个socket，一般都设置成为non-blocking，整个用户的process其实是一直被block的。只不过process是被select这个函数block，而不是被socket IO给block。因此select()与非阻塞IO类似。</p>
+<p>使用select搭建的服务流程，如果select()发现某句柄捕捉到了“可读事件”，服务器程序应及时做recv()操作，并根据接收到的数据准备好待发送数据，并将对应的句柄值加入writefds，准备下一次的“可写事件”的select()探测。同样，如果select()发现某句柄捕捉到“可写事件”，则程序应及时做send()操作，并准备好下一次的“可读事件”探测准备。</p>
+<h3 id="多路复用IO的缺点"><a href="#多路复用IO的缺点" class="headerlink" title="多路复用IO的缺点"></a>多路复用IO的缺点</h3><p>缺点1：该模型将事件探测和事件响应夹杂在一起，一旦事件响应的执行体庞大，则对整个模型是灾难性的。真实案例，线上的tornado服务，和文件上传，下载的服务放在了一起，大量的用时极长的上传下载操作阻塞了所有的进程，最终导致整个服务死掉。</p>
+<p>缺点2：select()接口并不是实现“事件驱动”的最好选择。因为当需要探测的句柄值较大时，select()接口本身需要消耗大量时间去轮询各个句柄。很多操作系统提供了更为高效的接口，如linux提供了epoll，BSD提供了kqueue，Solaris提供了&#x2F;dev&#x2F;poll。<strong>epoll和select相比好的地方在于，epoll会向每一个socket注册回调，一旦socket数据准备完成，就会通知epoll()函数，epoll函数再返回，好处就是轮训少了一点，但是阻塞还是在的。</strong></p>
+<h2 id="信号驱动-I-x2F-O-Signal-driven-I-x2F-O"><a href="#信号驱动-I-x2F-O-Signal-driven-I-x2F-O" class="headerlink" title="信号驱动 I&#x2F;O (Signal driven I&#x2F;O)"></a>信号驱动 I&#x2F;O (Signal driven I&#x2F;O)</h2><p>信号驱动IO（signal-driven IO），使用信号机制，让内核在描述符就绪时发送SIGIO信号通知用户进程。整个过程是先通过sigaction系统调用安装一个信号处理函数。该系统调用将立即返回，用户进程继续工作，也就是说它没有被阻塞。当数据报准备好读取时，内核就为该进程产生一个SIGIO信号，我们随后可以在信号处理函数中调用recvfrom读取内核空间准备好的数据。特点：第一阶段(等待数据报到达期间)进程不被阻塞。</p>
+<p>从上图中可以看出，信号驱动IO第一步非阻塞，通过sigaction系统调用达到目标。</p>
+<h2 id="异步-I-x2F-O-Asynchronous-I-x2F-O"><a href="#异步-I-x2F-O-Asynchronous-I-x2F-O" class="headerlink" title="异步 I&#x2F;O (Asynchronous I&#x2F;O)"></a>异步 I&#x2F;O (Asynchronous I&#x2F;O)</h2><p>用户进程发起read操作之后，立刻就可以开始去做其它的事。而另一方面，从kernel的角度，当它受到一个asynchronous read之后，首先它会立刻返回，所以不会对用户进程产生任何block。然后，kernel会等待数据准备完成，然后将数据拷贝到用户内存，当这一切都完成之后，kernel会给用户进程发送一个signal，告诉它read操作完成了。</p>
+<h2 id="IO总结"><a href="#IO总结" class="headerlink" title="IO总结"></a>IO总结</h2><p>调用blocking IO会一直block住对应的进程直到操作完成，而non-blocking IO在kernel还在准备数据的情况下会立刻返回。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">A synchronous I/O operation causes the requesting process to be blocked until that I/O operation completes;</span><br><span class="line"></span><br><span class="line">An asynchronous I/O operation does not cause the requesting process to be blocked;</span><br></pre></td></tr></table></figure>
+
+<h2 id="tornado"><a href="#tornado" class="headerlink" title="tornado"></a>tornado</h2><p>tornado 作为服务端，其编程模式是多进程+IO多路复用，这种编程模型的好处是能支持10k及以上的并发请求，缺点是一旦一个请求占用时间过长，那么整个系统的可能因为其他请求直接死掉，因为没有其他的线程(worker)来工作了。tornado作为请求的client（tornado也是一个http请求库），他可以实现异步请求。</p>
+<p>关于tornado（python的一个web框架），很多文章都在说它是一个异步框架啦，巴拉巴拉，这句话其实不对（只对了一半的话能叫对吗？）官方的说法其实很明显了，tornado是一个非阻塞的web框架（作为服务端，non-blocking不等于异步哦），同时是一个异步请求库（作为客户端的库）。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed. By using non-blocking network I/O, Tornado can scale to tens of thousands of open connections, making it ideal for long polling, WebSockets, and other applications that require a long-lived connection to each user.</span><br></pre></td></tr></table></figure>
+
+<p>tornado 实际上和nginx是一个编程模型，优先使用IO多路复用的IO模型(select, epoll)，但是请注意，IO多路复用不是异步IO！IO多路复用的显著特点是这种IO模型可以让系统调用<strong>同时</strong>管理数以万计的请求，实现单进程也可以支持大量并发请求的特性！IO多路复用的模型很应该和Nonblocking IO做对比，实际上IO多路复用是另一种形式的Nonblocking IO。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-28458801-id-4464639.html">http://blog.chinaunix.net/uid-28458801-id-4464639.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/tornadoweb/tornado">https://github.com/tornadoweb/tornado</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/IO/" rel="tag"># IO</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/11/learn/%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E4%B8%9A%E5%8A%A1%E5%B9%82%E7%AD%89%E6%80%A7/" rel="prev" title="如何保证业务的幂等性">
+      <i class="fa fa-chevron-left"></i> 如何保证业务的幂等性
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/20/io/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%20select%20%E5%85%A5%E9%97%A8/" rel="next" title="IO多路复用 select 入门">
+      IO多路复用 select 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%98%BB%E5%A1%9EIO-Blocking-I-x2F-O"><span class="nav-number">2.</span> <span class="nav-text">阻塞IO (Blocking I&#x2F;O)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E9%98%BB%E5%A1%9EIO%EF%BC%88non-blocking-IO%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">非阻塞IO（non-blocking IO）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8IO%EF%BC%88IO-multiplexing%EF%BC%89-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-IO"><span class="nav-number">4.</span> <span class="nav-text">多路复用IO（IO multiplexing）(事件驱动 IO)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8IO%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">4.1.</span> <span class="nav-text">多路复用IO的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8-I-x2F-O-Signal-driven-I-x2F-O"><span class="nav-number">5.</span> <span class="nav-text">信号驱动 I&#x2F;O (Signal driven I&#x2F;O)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5-I-x2F-O-Asynchronous-I-x2F-O"><span class="nav-number">6.</span> <span class="nav-text">异步 I&#x2F;O (Asynchronous I&#x2F;O)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">IO总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tornado"><span class="nav-number">8.</span> <span class="nav-text">tornado</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

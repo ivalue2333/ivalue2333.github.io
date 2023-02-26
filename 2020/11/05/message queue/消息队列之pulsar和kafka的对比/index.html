@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述之前的文章，我们描述了Apache Pulsar能够成为企业级流和消息系统的原因。Pulsar的企业特性包括消息的持久化存储，多租户，多机房互联互备，加密和安全性等。我们经常被问到的一个问题是Apache Pulsar和Apache Kafka有什么不同。 在本系列的Pulsar和Kafka比较文章中，我们将引导您认识和了解消息系统中一些重要关注点，比如健壮性，高可用性和高带宽低延">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列之 pulsar 和 kafka 的对比">
+<meta property="og:url" content="http://example.com/2020/11/05/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bpulsar%E5%92%8Ckafka%E7%9A%84%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述之前的文章，我们描述了Apache Pulsar能够成为企业级流和消息系统的原因。Pulsar的企业特性包括消息的持久化存储，多租户，多机房互联互备，加密和安全性等。我们经常被问到的一个问题是Apache Pulsar和Apache Kafka有什么不同。 在本系列的Pulsar和Kafka比较文章中，我们将引导您认识和了解消息系统中一些重要关注点，比如健壮性，高可用性和高带宽低延">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4PeDf.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4PhPH.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4iQeK.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4F8BV.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4FHUS.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/21/s4kD2j.md.png">
+<meta property="article:published_time" content="2020-11-05T11:40:37.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.794Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="pulsar">
+<meta property="article:tag" content="对比">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2021/01/21/s4PeDf.md.png">
+
+<link rel="canonical" href="http://example.com/2020/11/05/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bpulsar%E5%92%8Ckafka%E7%9A%84%E5%AF%B9%E6%AF%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列之 pulsar 和 kafka 的对比 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/05/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bpulsar%E5%92%8Ckafka%E7%9A%84%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列之 pulsar 和 kafka 的对比
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>之前的文章，我们描述了Apache Pulsar能够成为企业级流和消息系统的原因。Pulsar的企业特性包括消息的持久化存储，多租户，多机房互联互备，加密和安全性等。我们经常被问到的一个问题是Apache Pulsar和Apache Kafka有什么不同。</p>
+<p>在本系列的Pulsar和Kafka比较文章中，我们将引导您认识和了解消息系统中一些重要关注点，比如健壮性，高可用性和高带宽低延迟等。</p>
+<p>在用户选择一个消息系统时，消息模型是用户首先考虑的事情。消息模型应涵盖以下3个方面：</p>
+<ol>
+<li>消息消费 - 如何发送和消费消息；</li>
+<li>消息确认（ack） - 如何确认消息；</li>
+<li>消息保存 - 消息保留多长时间，触发消息删除的原因以及怎样删除；</li>
+</ol>
+<h3 id="消费模型"><a href="#消费模型" class="headerlink" title="消费模型"></a>消费模型</h3><ul>
+<li>队列模型</li>
+<li>流式模型</li>
+</ul>
+<h3 id="消费方式"><a href="#消费方式" class="headerlink" title="消费方式"></a>消费方式</h3><ul>
+<li>独占</li>
+<li>故障切换</li>
+<li>共享</li>
+</ul>
+<h2 id="消息消费模型"><a href="#消息消费模型" class="headerlink" title="消息消费模型"></a>消息消费模型</h2><p>在实时流式架构中，消息传递可以分为两类：队列（Queue）和流（Stream）。</p>
+<h3 id="队列（Queue）模型"><a href="#队列（Queue）模型" class="headerlink" title="队列（Queue）模型"></a>队列（Queue）模型</h3><p>队列模型主要是采用无序或者共享的方式来消费消息。通过队列模型，<strong>用户可以创建多个消费者从单个管道中接收消息；当一条消息从队列发送出来后，多个消费者中的只有一个（任何一个都有可能）接收和消费这条消息。</strong>消息系统的具体实现决定了最终哪个消费者实际接收到消息。</p>
+<p>队列模型通常与无状态应用程序一起结合使用。无状态应用程序不关心排序，但它们确实需要能够确认（ack）或删除单条消息，以及尽可能地扩展消费并行性的能力。典型的基于队列模型的消息系统包括 RabbitMQ 和RocketMQ。</p>
+<h3 id="流式（Stream）模型"><a href="#流式（Stream）模型" class="headerlink" title="流式（Stream）模型"></a>流式（Stream）模型</h3><p>相比之下，流模型要求消息的消费严格排序或独占消息消费。对于一个管道，使用流式模型，始终只会有一个消费者使用和消费消息。消费者按照消息写入管道的确切顺序接收从管道发送的消息。</p>
+<p>流模型通常与有状态应用程序相关联。有状态的应用程序更加关注消息的顺序及其状态。消息的消费顺序决定了有状态应用程序的状态。消息的顺序将影响应用程序处理逻辑的正确性。</p>
+<h2 id="Pulsar的消息消费模型"><a href="#Pulsar的消息消费模型" class="headerlink" title="Pulsar的消息消费模型"></a>Pulsar的消息消费模型</h2><p>Apache Pulsar通过“订阅”，抽象出了统一的: producer-topic-subscription-consumer 消费模型。Pulsar的消息模型既支持队列模型，也支持流模型。</p>
+<p>在Pulsar的消息消费模型中，Topic是用于发送消息的通道。每一个Topic对应着Apache BookKeeper中的一个分布式日志。发布者发布的每条消息只在Topic中存储一次；存储的过程中，BookKeeper会将消息复制存储在多个存储节点上；Topic中的每条消息，可以根据消费者的订阅需求，多次被使用，每个订阅对应一个消费者组（Consumer Group）。</p>
+<p>主题（Topic）是消费消息的真实来源。尽管消息仅在主题（Topic）上存储一次，但是用户可以有不同的订阅方式来消费这些消息：</p>
+<ul>
+<li>消费者被组合在一起以消费消息，每个消费组是一个订阅。</li>
+<li>每个Topic可以有不同的消费组。</li>
+<li>每组消费者都是对主题的一个订阅。</li>
+<li>每组消费者可以拥有自己不同的消费方式： 独占（Exclusive），故障切换（Failover）或共享（Share）。</li>
+</ul>
+<p>Pulsar通过这种模型，将队列模型和流模型这两种模型结合在了一起，提供了统一的API接口。 这种模型，既不会影响消息系统的性能，也不会带来额外的开销，同时还为用户提供了更多灵活性，方便用户程序以最匹配模式来使用消息系统。</p>
+<h3 id="独占订阅（Stream流模型）"><a href="#独占订阅（Stream流模型）" class="headerlink" title="独占订阅（Stream流模型）"></a>独占订阅（Stream流模型）</h3><p>顾名思义，独占订阅中，在任何时间，一个消费者组（订阅）中有且只有一个消费者来消费Topic中的消息。下图是独占订阅的示例。在这个示例中有一个有订阅A的活跃消费者A-0，消息m0到m4按顺序传送并由A-0消费。如果另一个消费者A-1想要附加到订阅A，则是不被允许的。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4PeDf"><img src="https://s3.ax1x.com/2021/01/21/s4PeDf.md.png" alt="s4PeDf.md.png"></a></p>
+<h3 id="故障切换（Stream流模型）"><a href="#故障切换（Stream流模型）" class="headerlink" title="故障切换（Stream流模型）"></a>故障切换（Stream流模型）</h3><p>使用故障切换订阅，一个消费者组（订阅）中可以有多个消费者（Consumer）可以附加到同一订阅。 但是，一个订阅中的所有消费者，只会有一个消费者被选为该订阅的主消费者。 其他消费者将被指定为故障转移消费者。<br>当主消费者断开连接时，分区将被重新分配给其中一个故障转移消费者，而新分配的消费者将成为新的主消费者。 发生这种情况时，所有未确认（ack）的消息都将传递给新的主消费者。 这类似于Apache Kafka中的Consumer partition rebalance。</p>
+<p>下图是故障切换订阅的示例。 消费者B-0和B-1通过订阅B订阅消费消息。B-0是主消费者并接收所有消息。 B-1是故障转移消费者，如果消费者B-0出现故障，它将接管消费。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4PhPH"><img src="https://s3.ax1x.com/2021/01/21/s4PhPH.md.png" alt="s4PhPH.md.png"></a></p>
+<h3 id="共享订阅（Queue队列模型）"><a href="#共享订阅（Queue队列模型）" class="headerlink" title="共享订阅（Queue队列模型）"></a>共享订阅（Queue队列模型）</h3><p>使用共享订阅，在同一个订阅背后，用户按照应用的需求挂载任意多的消费者。 订阅中的所有消息以循环分发形式发送给订阅背后的多个消费者，并且一个消息仅传递给一个消费者。</p>
+<p>当消费者断开连接时，所有传递给它但是未被确认（ack）的消息将被重新分配和组织，以便发送给该订阅上剩余的剩余消费者。</p>
+<p>下图是共享订阅的示例。 消费者C-1，C-2和C-3都在同一主题上消费消息。 每个消费者接收大约所有消息的1&#x2F;3。<br>如果想提高消费的速度，用户不需要不增加分区数量，只需要在同一个订阅中添加更多的消费者。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4iQeK"><img src="https://s3.ax1x.com/2021/01/21/s4iQeK.md.png" alt="s4iQeK.md.png"></a></p>
+<h3 id="三种订阅模式的选择"><a href="#三种订阅模式的选择" class="headerlink" title="三种订阅模式的选择"></a>三种订阅模式的选择</h3><p>独占和故障切换订阅，仅允许一个消费者来使用和消费，每个对主题的订阅。这两种模式都按主题分区顺序使用消息。它们最适用于需要严格消息顺序的流（Stream）用例。</p>
+<p>共享订阅允许每个主题分区有多个消费者。同一订阅中的每个消费者仅接收主题分区的一部分消息。共享订阅最适用于不需要保证消息顺序的队列（Queue）的使用模式，并且可以按照需要任意扩展消费者的数量。</p>
+<p>pulsar 的订阅实际上与Apache Kafka中的Consumer Group的概念类似。创建订阅的操作很轻量化，而且具有高度可扩展性，用户可以根据应用的需要创建任意数量的订阅。</p>
+<p>对同一主题的不同订阅，也可以采用不同的订阅类型。比如用户可以在同一主题上可以提供一个包含3个消费者的故障切换订阅，同时也提供一个包含20个消费者的共享订阅，并且可以在不改变分区数量的情况下，向共享订阅添加更多的消费者。</p>
+<p>下图描绘了一个包含3个订阅A，B和C的主题，并说明了消息如何从生产者流向消费者。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4F8BV"><img src="https://s3.ax1x.com/2021/01/21/s4F8BV.md.png" alt="s4F8BV.md.png"></a></p>
+<h2 id="Pulsar的消息确认（ACK）"><a href="#Pulsar的消息确认（ACK）" class="headerlink" title="Pulsar的消息确认（ACK）"></a>Pulsar的消息确认（ACK）</h2><p>由于分布式系统的特性，当使用分布式消息系统时，可能会发生故障。比如在消费者从消息系统中的主题消费消息的过程中，消费消息的消费者和服务于主题分区的消息代理（Broker）都可能发生错误。消息确认（ACK）的目的就是保证当发生这样的故障后，消费者能够从上一次停止的地方恢复消费，保证既不会丢失消息，也不会重复处理已经确认（ACK）的消息。</p>
+<p>在Apache Kafka中，恢复点通常称为Offset，更新恢复点的过程称为消息确认或提交Offset。</p>
+<p>在Apache Pulsar中，每个订阅中都使用一个专门的数据结构–游标（Cursor）来跟踪订阅中的每条消息的确认（ACK）状态。每当消费者在主题分区上确认消息时，游标都会更新。更新游标可确保消费者不会再次收到消息。</p>
+<p>Apache Pulsar提供两种消息确认方法，单条确认（Individual Ack）和累积确认（Cumulative Ack）。通过累积确认，消费者只需要确认它收到的最后一条消息。主题分区中的所有消息（包括）提供消息ID将被标记为已确认，并且不会再次传递给消费者。累积确认与Apache Kafka中的Offset更新类似。</p>
+<p>Apache Pulsar可以支持消息的单条确认，也就是选择性确认。消费者可以单独确认一条消息。 被确认后的消息将不会被重新传递。下图说明了单条确认和累积确认的差异（灰色框中的消息被确认并且不会被重新传递）。在图的上半部分，它显示了累计确认的一个例子，M12之前的消息被标记为acked。在图的下半部分，它显示了单独进行acking的示例。仅确认消息M7和M12 - 在消费者失败的情况下，除了M7和M12之外，其他所有消息将被重新传送。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4FHUS"><img src="https://s3.ax1x.com/2021/01/21/s4FHUS.md.png" alt="s4FHUS.md.png"></a>  </p>
+<p>独占订阅或故障切换订阅的消费者能够对消息进行单条确认和累积确认；共享订阅的消费者只允许对消息进行单条确认。单条确认消息的能力为处理消费者故障提供了更好的体验。对于某些应用来说，处理一条消息可能需要很长时间或者非常昂贵，防止重新传送已经确认的消息非常重要。</p>
+<p><strong>这个管理Ack的专门的数据结构–游标（Cursor），由Broker来管理，利用BookKeeper的Ledger提供存储，在后面的文章中我们会介绍更多的关于游标（Cursor）的细节。</strong></p>
+<p>Apache Pulsar提供了灵活的消息消费订阅类型和消息确认方法，通过简单的统一的API，就可以支持各种消息和流的使用场景。</p>
+<h2 id="Pulsar的消息保留（Retention）"><a href="#Pulsar的消息保留（Retention）" class="headerlink" title="Pulsar的消息保留（Retention）"></a>Pulsar的消息保留（Retention）</h2><p>在消息被确认后，Pulsar的Broker会更新对应的游标。当Topic里面中的一条消息，被所有的订阅都确认ack后，才能删除这条消息。Pulsar还允许通过设置保留时间，将消息保留更长时间，即使所有订阅已经确认消费了它们。</p>
+<p><strong>如果没有设置保留时间，那么所有的订阅者ack后，消息就会被删除。特殊的，如果一个订阅者都没有，那么pulsar会将消息直接扔起。</strong></p>
+<p>下图说明了如何在有2个订阅的主题中保留消息。订阅A在M6和订阅B已经消耗了M10之前的所有消息之前已经消耗了所有消息。这意味着M6之前的所有消息（灰色框中）都可以安全删除。订阅A仍未使用M6和M9之间的消息，无法删除它们。如果主题配置了消息保留期，则消息M0到M5将在配置的时间段内保持不变，即使A和B已经确认消费了它们。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/s4kD2j"><img src="https://s3.ax1x.com/2021/01/21/s4kD2j.md.png" alt="s4kD2j.md.png"></a></p>
+<p>在消息保留策略中，Pulsar还支持消息生存时间（TTL）。如果消息未在配置的TTL时间段内被任何消费者使用，则消息将自动标记为已确认。 消息保留期消息TTL之间的区别在于：消息保留期作用于标记为已确认并设置为已删除的消息，而TTL作用于未ack的消息。 上面的图例中说明了Pulsar中的TTL。 例如，如果订阅B没有活动消费者，则在配置的TTL时间段过后，消息M10将自动标记为已确认，即使没有消费者实际读取该消息。</p>
+<h2 id="对比总结"><a href="#对比总结" class="headerlink" title="对比总结"></a>对比总结</h2><h3 id="模型概念"><a href="#模型概念" class="headerlink" title="模型概念"></a>模型概念</h3><p>Kafka： Producer - topic - consumer group - consumer；</p>
+<p>Pulsar：Producer - topic - subscription - consumer。 </p>
+<h3 id="消费模式"><a href="#消费模式" class="headerlink" title="消费模式"></a>消费模式</h3><p>Kafka： 主要集中在流（Stream）模式，对单个 partition 是独占消费，没有共享（Queue）的消费模式；</p>
+<p>Pulsar：提供了统一的消息模型和 API。流（Stream）模式——独占和故障切换订阅方式；队列（Queue）模式——共享订阅的方式。</p>
+<h3 id="消息确认（Ack）"><a href="#消息确认（Ack）" class="headerlink" title="消息确认（Ack）"></a>消息确认（Ack）</h3><p>Kafka： 使用偏移 Offset；</p>
+<p>Pulsar：使用专门的 Cursor 管理。累积确认和 Kafka 效果一样；提供单条或选择性确认。</p>
+<h3 id="消息保留"><a href="#消息保留" class="headerlink" title="消息保留"></a>消息保留</h3><p>Kafka：根据设置的保留期来删除消息。有可能消息没被消费，过期后被删除。 不支持 TTL。</p>
+<p>Pulsar：消息只有被所有订阅消费后才会删除，不会丢失数据。也允许设置保留期，保留被消费的数据。支持 TTL。</p>
+<h3 id="消息路径"><a href="#消息路径" class="headerlink" title="消息路径"></a>消息路径</h3><p>zk 都记录了 topic （或分区topic）被分配到了 哪个 broker，生产者和消费者都依此来将消息发送到指定的broker。在发送消息时，可以指定消息发送到指定的分区topic，或者指定key和哈希策略。</p>
+<p>kafka： 在 producer 端，一条消息会通过生产者的运算，指定发送到 topic 的一个分区，一个分区对应着一个 broker。在 broker 端，消息日志存储在分区中。在消息端，一个消费组，对于 topic 的一个 分区的 offset 是被记录了的。一个消费组中的多个消息者负载均衡地消费多个分区的消息，体现为一个消费者消费一个或多个分区的消息。在kafka中，消费组中参与消费的消费者的个数上限是分区的个数。</p>
+<p>pulsar：在 producer 端，一条消息会通过运算，指定发送到 topic 的一个分区。一个分区对应着一个 broker（由 broker 集群来负载均衡，并由 zk 来记录元数据）。在 broker 端，一个分区的消息被存放在多个 bookie 中（数据镜像）。一个分区的数据被存在哪些 bookie 中，有 zk 来记录。一个订阅名（且在shared模式）中的多个消费者负载均衡地消费一个 topic 的数据。在pulsar中，订阅名中参与消费的消费者的个数没有上限。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug">Pulsar VS. Kafka（1）: 统一的消息消费模型（Queue + Stream）</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/pulsar/" rel="tag"># pulsar</a>
+              <a href="/tags/%E5%AF%B9%E6%AF%94/" rel="tag"># 对比</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/05/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E6%8A%95%E9%80%92%E8%AF%AD%E4%B9%89%E5%92%8C%E6%B6%88%E8%B4%B9%E8%AF%AD%E4%B9%89/" rel="prev" title="消息队列之消息队列的消费语义和投递语义">
+      <i class="fa fa-chevron-left"></i> 消息队列之消息队列的消费语义和投递语义
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/05/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bpulsar%E5%85%A5%E9%97%A8/" rel="next" title="消息队列之pulsar入门">
+      消息队列之pulsar入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">消费模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">消费方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">消息消费模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%9F%E5%88%97%EF%BC%88Queue%EF%BC%89%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">队列（Queue）模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E5%BC%8F%EF%BC%88Stream%EF%BC%89%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">流式（Stream）模型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pulsar%E7%9A%84%E6%B6%88%E6%81%AF%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.</span> <span class="nav-text">Pulsar的消息消费模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8B%AC%E5%8D%A0%E8%AE%A2%E9%98%85%EF%BC%88Stream%E6%B5%81%E6%A8%A1%E5%9E%8B%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">独占订阅（Stream流模型）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E5%88%87%E6%8D%A2%EF%BC%88Stream%E6%B5%81%E6%A8%A1%E5%9E%8B%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">故障切换（Stream流模型）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B1%E4%BA%AB%E8%AE%A2%E9%98%85%EF%BC%88Queue%E9%98%9F%E5%88%97%E6%A8%A1%E5%9E%8B%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">共享订阅（Queue队列模型）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">3.4.</span> <span class="nav-text">三种订阅模式的选择</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pulsar%E7%9A%84%E6%B6%88%E6%81%AF%E7%A1%AE%E8%AE%A4%EF%BC%88ACK%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">Pulsar的消息确认（ACK）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pulsar%E7%9A%84%E6%B6%88%E6%81%AF%E4%BF%9D%E7%95%99%EF%BC%88Retention%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">Pulsar的消息保留（Retention）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">对比总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%A6%82%E5%BF%B5"><span class="nav-number">6.1.</span> <span class="nav-text">模型概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.2.</span> <span class="nav-text">消费模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E7%A1%AE%E8%AE%A4%EF%BC%88Ack%EF%BC%89"><span class="nav-number">6.3.</span> <span class="nav-text">消息确认（Ack）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E4%BF%9D%E7%95%99"><span class="nav-number">6.4.</span> <span class="nav-text">消息保留</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E8%B7%AF%E5%BE%84"><span class="nav-number">6.5.</span> <span class="nav-text">消息路径</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

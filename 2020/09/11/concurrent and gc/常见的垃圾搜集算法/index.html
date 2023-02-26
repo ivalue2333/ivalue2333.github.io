@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)） 通过这篇文章，你会知道：  垃圾手机常见的判断">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【gc】常见的垃圾搜集算法">
+<meta property="og:url" content="http://example.com/2020/09/11/concurrent%20and%20gc/%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9E%83%E5%9C%BE%E6%90%9C%E9%9B%86%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)） 通过这篇文章，你会知道：  垃圾手机常见的判断">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c28455ee7a7148d9acdef45cd4c92f6a.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/d23544599e114ca8a2933e0e63715d95.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/f42881aa1270470ab02640bb3276789a.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/9d97083cd1e549b1a6738f6f0c7fe8f6.png">
+<meta property="article:published_time" content="2020-09-11T06:54:39.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.782Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="垃圾回收">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c28455ee7a7148d9acdef45cd4c92f6a.png">
+
+<link rel="canonical" href="http://example.com/2020/09/11/concurrent%20and%20gc/%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9E%83%E5%9C%BE%E6%90%9C%E9%9B%86%E7%AE%97%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【gc】常见的垃圾搜集算法 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/09/11/concurrent%20and%20gc/%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9E%83%E5%9C%BE%E6%90%9C%E9%9B%86%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【gc】常见的垃圾搜集算法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-11 14:54:39" itemprop="dateCreated datePublished" datetime="2020-09-11T14:54:39+08:00">2020-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<p>这里垃圾回收是指语言层面的对堆上的不再使用的对象，释放他们占用的空间。语言层面上的垃圾回收是一种自动内存管理（automatic memory management that consists of determining which objects should be deallocated (“garbage collected”)）</p>
+<p>通过这篇文章，你会知道：</p>
+<ul>
+<li><p>垃圾手机常见的判断对象是否可以回收的算法：引用计数法，跟可达分析法。</p>
+</li>
+<li><p>垃圾回收的常见的几种算法：标记清理， 标记整理，标记复制，分代收集，三色标记。</p>
+</li>
+</ul>
+<h2 id="判断对象是否可回收"><a href="#判断对象是否可回收" class="headerlink" title="判断对象是否可回收"></a>判断对象是否可回收</h2><h3 id="引用计数算法（reference-counting）"><a href="#引用计数算法（reference-counting）" class="headerlink" title="引用计数算法（reference counting）"></a>引用计数算法（reference counting）</h3><p>引用计数的思想非常简单：每个单元（对象）维护一个域（<strong>再对象头里</strong>），保存其它单元指向它的引用数量（类似有向图的入度）。如果多一个对这个对象的引用（指针），那么计数加一；而删除某个指向这个对象的引用（指针），那么计数减一。当其引用计数为 0 的时候，该单元会被进行回收。</p>
+<ul>
+<li>优点<ul>
+<li>渐进式。内存管理与用户程序的执行交织在一起，将 GC 的代价分散到整个程序。</li>
+<li>内存单元能够很快被回收。相比于其他垃圾回收算法，堆被耗尽或者达到某个阈值才会进行垃圾回收。</li>
+<li>算法易于实现。</li>
+</ul>
+</li>
+<li>缺点<ul>
+<li>原始的引用计数不能处理循环引用。</li>
+<li>维护引用计数降低运行效率。这是引用计数的代价，其他的垃圾收集也会有对应的代价方式。</li>
+</ul>
+</li>
+</ul>
+<h3 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h3><p>通过一系列称为 “GC Roots” 的对象作为起始点，从这个节点向下搜索，搜索走过的路径就是引用链，当一个对象到 GC Roots 没有任何引用链相连，也就是从 GC Roots 到这个对象不可达，则这个对象不可达，可以被回收。</p>
+<p>Java 虚拟机使用该算法来判断对象是否可被回收，GC Roots 一般包含以下内容：</p>
+<ul>
+<li>虚拟机栈中局部变量表中引用的对象</li>
+<li>本地方法栈中 JNI 中引用的对象</li>
+<li>方法区中类静态属性引用的对象</li>
+<li>方法区中的常量引用的对象</li>
+</ul>
+<h4 id="简述Java方法区"><a href="#简述Java方法区" class="headerlink" title="简述Java方法区"></a>简述Java方法区</h4><p>方法区又被称为静态区，是程序中永远唯一的元素存储区域。和堆一样，是各个线程共享的内存区域。它用于存储已被虚拟机加载的 类信息、常量、静态变量、即时编译器编译后的代码等数据。很多开发者更愿意把方法区称为“永久代”(Perm Gen)(Permanent Generation) 「总是存放不会轻易改变的内容」。在目前已经发布的JDK 1.7 的HotSpot中，已经把原本放在永久代的字符串常量池移至堆中。运行时常量池(Runtime Constant Pool)是方法区的一部分。</p>
+<h2 id="常见垃圾收集算法"><a href="#常见垃圾收集算法" class="headerlink" title="常见垃圾收集算法"></a>常见垃圾收集算法</h2><h3 id="标记-清除（mark-and-sweep）"><a href="#标记-清除（mark-and-sweep）" class="headerlink" title="标记-清除（mark and sweep）"></a>标记-清除（mark and sweep）</h3><p>标记-清扫算法是一种基于追踪的自动内存管理。内存单元在程序运行过程中并不会在变成垃圾立刻回收，而是保持不可达状态，直到到达某个阈值或者固定时间长度。这个时候系统会挂起用户程序，也就是 STW（Stop The World，GC 的时候挂起用户程序），转而执行垃圾回收程序。垃圾回收程序对所有的存活单元进行一次全局遍历确定哪些单元可以回收。算法分两个部分：标记（mark）和清扫（sweep）。标记阶段表明所有的存活单元，清扫阶段将垃圾单元回收。如下图：</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/c28455ee7a7148d9acdef45cd4c92f6a.png"></p>
+<h4 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h4><p>在标记阶段，程序会检查每个对象是否为活动对象，如果是活动对象，则程序会在对象头部打上标记。</p>
+<p>在清除阶段，会进行对象回收并取消标志位，另外，还会判断回收后的分块与前一个空闲分块是否连续，若连续，会合并这两个分块。回收对象就是把对象作为分块，连接到被称为 “空闲链表” 的单向链表，之后进行分配时只需要遍历这个空闲链表，就可以找到分块。</p>
+<p>在分配时，程序会搜索空闲链表寻找空间大于等于新对象大小 size 的块 block。如果它找到的块等于 size，会直接返回这个分块；如果找到的块大于 size，会将块分割成大小为 size 与 (block - size) 的两部分，返回大小为 size 的分块，并把大小为 (block - size) 的块返回给空闲链表。</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>可以处理循环引用的问题。</li>
+</ul>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>在垃圾回收阶段会停止运行程序，大大增加程序的响应时间和不稳定性。</li>
+<li>会产生大量不连续的内存碎片，导致无法给大对象分配内存。</li>
+</ul>
+<h3 id="标记-整理（Mark-Czompact）"><a href="#标记-整理（Mark-Czompact）" class="headerlink" title="标记-整理（Mark-Czompact）"></a>标记-整理（Mark-Czompact）</h3><p>为了提升内存的利用率，科学家提出了标记-整理算法，该算法的起始过程和标记-清除算法相同，先标记处待回收对象的内存区域，但是在清除时不是对所有可回收对象清除，而是让所有存活对象往内存空间的一边移动，把存活对象边界外的内存直接清空掉。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/d23544599e114ca8a2933e0e63715d95.png"></p>
+<h4 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>不会产生内存碎片</li>
+</ul>
+<h4 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>需要移动大量对象，处理效率比较低。</li>
+<li>在移动存活对象的过程中，需要全程暂停用户程序的执行，被设计者称为“<strong>Stop The World</strong>”。</li>
+</ul>
+<h3 id="标记-复制算法（Mark-Copying）"><a href="#标记-复制算法（Mark-Copying）" class="headerlink" title="标记-复制算法（Mark-Copying）"></a>标记-复制算法（Mark-Copying）</h3><p>将内存划分为大小相等的两块，每次只使用其中一块，当这一块内存用完了就将还存活的对象复制到另一块上面，然后再把使用过的内存空间进行一次清理。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/f42881aa1270470ab02640bb3276789a.png"></p>
+<h4 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>比较快</li>
+</ul>
+<h4 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>主要不足是只使用了内存的一半。</li>
+</ul>
+<h3 id="分代收集（generation-collector）"><a href="#分代收集（generation-collector）" class="headerlink" title="分代收集（generation collector）"></a>分代收集（generation collector）</h3><p>分代收集算法本质上是<strong>标记-复制算法</strong>，它把堆内存中较大的一块区域作为新生代区域，新生代区域中分为一个Eden区域和两个Survivor区域，Eden和Survivor的比例默认是8:1，因为在Eden区域，绝大数对象都熬不过第一轮GC（98%），所以每个Survivor区域只需要10%的空间就足矣了，每一次触发Minor GC时，就会将Eden区和Survivor区存活的对象复制到另外一个Survivor区域中，然后清除掉被回收的对象，每次都依据这样的步骤进行垃圾收集。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/9d97083cd1e549b1a6738f6f0c7fe8f6.png"></p>
+<h4 id="优点-3"><a href="#优点-3" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>效率较高</li>
+</ul>
+<h4 id="缺点-3"><a href="#缺点-3" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>实现复杂，且依赖于 标记-复制 垃圾收集算法</li>
+</ul>
+<h4 id="分配在old的情况"><a href="#分配在old的情况" class="headerlink" title="分配在old的情况"></a>分配在old的情况</h4><p><strong>大对象</strong>。当对象所占连续内存非常大时，不会分配在Eden区，如果分配在Eden区，那么对象存活时产生的复制操作将导致效率大大降低。</p>
+<p>…</p>
+<h4 id="Stop-The-World"><a href="#Stop-The-World" class="headerlink" title="Stop The World"></a>Stop The World</h4><blockquote>
+<p>需要先了解针对不同区域进行收集的名词：Minor GC（新生代收集）、Major GC（老年代收集）、Full GC（整个Java堆和方法区的收集）、Mixed GC（新生代收集和部分老年代的收集，目前只有G1收集器有这种行为）</p>
+</blockquote>
+<p>发生GC(MinorGC或者FullGC)时，都会将用户线程停顿并进行垃圾收集，在Minor GC中，STW的时间较短，只涉及Eden和survivor区域的对象清除和复制操作，而Full GC则是对整个堆内存进行垃圾收集，对象的扫描、标记和清除操作工作量大大提高，所以Full GC会导致用户线程停顿较长时间，如果频繁地发生Full GC，那么用户线程将无法正常执行。</p>
+<h3 id="三色标记（Tri-color-marking）"><a href="#三色标记（Tri-color-marking）" class="headerlink" title="三色标记（Tri-color_marking）"></a>三色标记（Tri-color_marking）</h3><p>三色标记法是一个逻辑上的抽象，将对象分成<strong>白：未搜索，灰：正搜索，黑：已搜索。</strong></p>
+<p>有三种集合：白色，黑色，灰色</p>
+<ul>
+<li>白色集合，或者叫危险集合，是垃圾回收的候选对象的集合</li>
+<li>黑色集合，黑色集合是根集合可达的集合，且没有白色集合中对象的传出引用，不参与垃圾回收</li>
+<li>灰色集包含从根可到达的所有对象，但尚未扫描以查找对“白色”对象的引用。 由于已知它们可以从根部到达，因此它们不能被垃圾收集，并且在扫描后将最终成为黑色集合。</li>
+</ul>
+<p>三色标记详细的请看 golang垃圾回收</p>
+<h4 id="优点-4"><a href="#优点-4" class="headerlink" title="优点"></a>优点</h4><ul>
+<li>stop the world 时间较短</li>
+</ul>
+<h4 id="缺点-4"><a href="#缺点-4" class="headerlink" title="缺点"></a>缺点</h4><ul>
+<li>三色标记必须引入写屏障，这带来了一些额外的开销</li>
+<li>写屏障还会带来垃圾残留，因为一些可能被用到的对象在标记过程中会被标记为灰节点</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="http://idiotsky.top/2017/08/16/gc-three-color/">一张图了解三色标记</a></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking">维基百科-三色标记</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/CyC2018/CS-Notes/blob/master/notes/Java%20%E8%99%9A%E6%8B%9F%E6%9C%BA.md">java垃圾收集算法</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+              <a href="/tags/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" rel="tag"># 垃圾回收</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/02/database/mysql%20%E5%88%86%E5%8C%BA%E5%88%86%E8%A1%A8%E5%88%86%E5%BA%93%E5%85%A5%E9%97%A8/" rel="prev" title="mysql 分区分表分库入门">
+      <i class="fa fa-chevron-left"></i> mysql 分区分表分库入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/16/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8B%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20k8s%E3%80%902%E3%80%91/" rel="next" title="虚拟化之开始使用 k8s【2】">
+      虚拟化之开始使用 k8s【2】 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E6%98%AF%E5%90%A6%E5%8F%AF%E5%9B%9E%E6%94%B6"><span class="nav-number">1.</span> <span class="nav-text">判断对象是否可回收</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95%EF%BC%88reference-counting%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">引用计数算法（reference counting）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">可达性分析算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E8%BF%B0Java%E6%96%B9%E6%B3%95%E5%8C%BA"><span class="nav-number">1.2.1.</span> <span class="nav-text">简述Java方法区</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">常见垃圾收集算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0-%E6%B8%85%E9%99%A4%EF%BC%88mark-and-sweep%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">标记-清除（mark and sweep）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B"><span class="nav-number">2.1.1.</span> <span class="nav-text">过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">2.1.2.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">2.1.3.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%EF%BC%88Mark-Czompact%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">标记-整理（Mark-Czompact）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0-%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95%EF%BC%88Mark-Copying%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">标记-复制算法（Mark-Copying）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9-2"><span class="nav-number">2.3.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-2"><span class="nav-number">2.3.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%EF%BC%88generation-collector%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">分代收集（generation collector）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9-3"><span class="nav-number">2.4.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-3"><span class="nav-number">2.4.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E9%85%8D%E5%9C%A8old%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">2.4.3.</span> <span class="nav-text">分配在old的情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Stop-The-World"><span class="nav-number">2.4.4.</span> <span class="nav-text">Stop The World</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0%EF%BC%88Tri-color-marking%EF%BC%89"><span class="nav-number">2.5.</span> <span class="nav-text">三色标记（Tri-color_marking）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9-4"><span class="nav-number">2.5.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-4"><span class="nav-number">2.5.2.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述kube-proxy 和 service配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 podIP:Port 来获取对应的服务。 但是还有一个问题：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟化之开始使用 k8s【2】">
+<meta property="og:url" content="http://example.com/2020/10/16/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8B%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20k8s%E3%80%902%E3%80%91/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述kube-proxy 和 service配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 podIP:Port 来获取对应的服务。 但是还有一个问题：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png">
+<meta property="article:published_time" content="2020-10-16T09:10:22.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.781Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="kubectl">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png">
+
+<link rel="canonical" href="http://example.com/2020/10/16/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8B%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20k8s%E3%80%902%E3%80%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>虚拟化之开始使用 k8s【2】 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/16/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8B%E5%BC%80%E5%A7%8B%E4%BD%BF%E7%94%A8%20k8s%E3%80%902%E3%80%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          虚拟化之开始使用 k8s【2】
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-16 17:10:22" itemprop="dateCreated datePublished" datetime="2020-10-16T17:10:22+08:00">2020-10-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h2 id="kube-proxy-和-service"><a href="#kube-proxy-和-service" class="headerlink" title="kube-proxy 和 service"></a>kube-proxy 和 service</h2><p>配置好网络之后，集群是什么情况呢？我们可以创建 pod，也能通过 ReplicationController 来创建特定副本的 pod（这是更推荐也是生产上要使用的方法，即使某个 rc 中只有一个 pod 实例）。可以从集群中获取每个 pod ip 地址，然后也能在集群内部直接通过 <code>podIP:Port</code> 来获取对应的服务。</p>
+<p>但是还有一个问题：<strong>pod 是经常变化的，每次更新 ip 地址都可能会发生变化</strong>，如果直接访问容器 ip 的话，会有很大的问题。而且进行扩展的时候，rc 中会有新的 pod 创建出来，出现新的 ip 地址，我们需要一种更灵活的方式来访问 pod 的服务。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 使用场景</span></span><br><span class="line">podIp=`kcpg robotserver-pro | awk <span class="string">&#x27;&#123;print $6&#125;&#x27;</span>` &amp;&amp; curl <span class="string">&quot;<span class="variable">$&#123;podIp&#125;</span>:8050/ai_answer&quot;</span> -X POST</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service-和-cluster-IP"><a href="#Service-和-cluster-IP" class="headerlink" title="Service 和 cluster IP"></a>Service 和 cluster IP</h3><p>针对这个问题，kubernetes 的解决方案是“服务”（service），每个服务都一个固定的虚拟 ip（这个 ip 也被称为 cluster IP），自动并且动态地绑定后面的 pod，所有的网络请求直接访问服务 ip，服务会自动向后端做转发。Service 除了提供稳定的对外访问方式之外，还能起到负载均衡（Load Balance）的功能，自动把请求流量分布到后端所有的服务上，服务可以做到对客户透明地进行水平扩展（scale）。</p>
+<p>而实现 service 这一功能的关键，就是 kube-proxy。kube-proxy 运行在每个节点上，监听 API Server 中服务对象的变化，通过管理 iptables 来实现网络的转发。</p>
+<blockquote>
+<p><strong>NOTE</strong>: kube-proxy 要求 NODE 节点操作系统中要具备 &#x2F;sys&#x2F;module&#x2F;br_netfilter 文件，而且还要设置 bridge-nf-call-iptables&#x3D;1，如果不满足要求，那么 kube-proxy 只是将检查信息记录到日志中，kube-proxy 仍然会正常运行，但是这样通过 Kube-proxy 设置的某些 iptables 规则就不会工作。</p>
+</blockquote>
+<p>kube-proxy 有两种实现 service 的方案：userspace 和 iptables</p>
+<ul>
+<li>userspace 是在用户空间监听一个端口，所有的 service 都转发到这个端口，然后 kube-proxy 在内部应用层对其进行转发。因为是在用户空间进行转发，所以效率也不高</li>
+<li>iptables 完全使用 iptables 来实现 service，是目前默认的方式，也是推荐的方式，效率很高（只有内核中 netfilter 一些损耗）。</li>
+</ul>
+<p>现在还有一种叫做 ipvs 的实现方案。</p>
+<p>这篇文章通过 iptables 模式运行 kube-proxy，后面的分析也是针对这个模式的，userspace 只是旧版本支持的模式，以后可能会放弃维护和支持。</p>
+<h3 id="kube-proxy-参数介绍"><a href="#kube-proxy-参数介绍" class="headerlink" title="kube-proxy 参数介绍"></a>kube-proxy 参数介绍</h3><p>…</p>
+<h2 id="实例启动和测试"><a href="#实例启动和测试" class="headerlink" title="实例启动和测试"></a>实例启动和测试</h2><h3 id="whoami-镜像"><a href="#whoami-镜像" class="headerlink" title="whoami 镜像"></a>whoami 镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># https://github.com/hypriot/rpi-whoami</span></span><br><span class="line">docker pull cizixs/whoami:v0.5</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h4><p>为了方便测试，我们创建一个 rc，里面有三个 pod。这个 pod 运行的是 <a target="_blank" rel="noopener" href="https://github.com/cizixs/whoami"><code>cizixs/whoami</code> 容器</a>，它是一个简单的 HTTP 服务器，监听在 3000 端口，访问它会返回容器的 hostname。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># cat whoami-rc.yml</span></span><br></pre></td></tr></table></figure>
+
+<p>创建部署， <code>kubectl create -f ./whoami-rc.yml</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicationController</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">whoami</span></span><br><span class="line">        <span class="attr">env:</span> <span class="string">dev</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">cizixs/whoami:v0.5</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">3000</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">MESSAGE</span></span><br><span class="line">            <span class="attr">value:</span> <span class="string">viola</span></span><br></pre></td></tr></table></figure>
+
+<p>我们为每个 pod 设置了两个 label：<code>app=whoami</code> 和 <code>env=dev</code>，这两个标签很重要，也是后面服务进行绑定 pod 的关键。</p>
+<p>为了使用 service，我们还要定义另外一个文件，并通过 <code>kubectl create -f ./whoami-svc.yml</code> 来创建出来对象：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">3000</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">3000</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">whoami</span></span><br><span class="line">    <span class="attr">env:</span> <span class="string">dev</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>selector</code> 告诉 kubernetes 这个 service 和后端哪些 pod 绑定在一起，这里包含的键值对会对所有 pod 的 <code>labels</code> 进行匹配，只要完全匹配，service 就会把 pod 作为后端。也就是说，service 和 rc 并不是对应的关系，一个 service 可能会使用多个 rc 管理的 pod 作为后端应用。</p>
+<p><code>ports</code> 字段指定服务的端口信息：</p>
+<ul>
+<li><code>port</code>：虚拟 ip 要绑定的 port，每个 service 会创建出来一个虚拟 ip，通过访问 <code>vip:port</code> 就能获取服务的内容。这个 port 可以用户随机选取，因为每个服务都有自己的 vip，也不用担心冲突的情况</li>
+<li><code>targetPort</code>：pod 中暴露出来的 port，这是运行的容器中具体暴露出来的端口，一定不能写错</li>
+<li><code>protocol</code>：提供服务的协议类型，可以是 <code>TCP</code> 或者 <code>UDP</code></li>
+</ul>
+<p>创建之后可以列出 service ，发现我们创建的 service 已经分配了一个虚拟 ip (10.108.161.211)，这个虚拟 ip 地址是不会变化的（除非 service 被删除）。查看 service 的详情可以看到它的 endpoints 列出，对应了具体提供服务的 pod 地址和端口。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">|&gt;<span class="comment"># kc get svc | grep whoami</span></span><br><span class="line"><span class="built_in">whoami</span>                                            ClusterIP      10.108.161.211   &lt;none&gt;                                                 3000/TCP                                       90s</span><br><span class="line"></span><br><span class="line"><span class="comment"># endpoints 中就是 pod 的ip + port，而这是易变的</span></span><br><span class="line">|&gt;<span class="comment"># kc describe svc whoami</span></span><br><span class="line">Name:              <span class="built_in">whoami</span></span><br><span class="line">Namespace:         test-ks</span><br><span class="line">Labels:            name=<span class="built_in">whoami</span></span><br><span class="line">Annotations:       &lt;none&gt;</span><br><span class="line">Selector:          app=<span class="built_in">whoami</span>,<span class="built_in">env</span>=dev</span><br><span class="line">Type:              ClusterIP</span><br><span class="line">IP:                10.108.161.211</span><br><span class="line">Port:              &lt;<span class="built_in">unset</span>&gt;  3000/TCP</span><br><span class="line">TargetPort:        3000/TCP</span><br><span class="line">Endpoints:         10.244.0.111:3000,10.244.0.112:3000,10.244.0.113:3000</span><br><span class="line">Session Affinity:  None</span><br><span class="line">Events:            &lt;none&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>默认的 service 类型是 <code>ClusterIP</code>，这个也可以从上面输出看出来。在这种情况下，只能从集群内部访问这个 IP，不能直接从集群外部访问服务。如果想对外提供服务，我们后面会讲解决方案。</p>
+<p>测试一下，访问 service 服务的时候可以看到它会随机地访问后端的 pod，给出不同的返回：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 直接通过 pod ip + port 访问</span></span><br><span class="line">|&gt;<span class="comment"># curl &quot;10.244.10.130:3000&quot;</span></span><br><span class="line">viola from whoami-hj7g8</span><br><span class="line"></span><br><span class="line"><span class="comment"># vip:port 访问 service，然后访问到 pod</span></span><br><span class="line"></span><br><span class="line">root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-8fpqp</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-c0x6h</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-8fpqp</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://10.108.161.211:3000</span></span><br><span class="line">viola from whoami-dc9ds</span><br></pre></td></tr></table></figure>
+
+<p><strong>NOTE</strong>: 需要注意的是，服务分配的 cluster IP 是一个虚拟 ip，如果你尝试 <code>ping</code> 这个 IP 会发现它没有任何响应，这也是刚接触 kubernetes service 的人经常会犯的错误。实际上，这个虚拟 IP 只有和它的 port 一起的时候才有作用，直接访问它，或者想访问该 IP 的其他端口都是徒劳。</p>
+<h3 id="外部能够访问的服务"><a href="#外部能够访问的服务" class="headerlink" title="外部能够访问的服务"></a>外部能够访问的服务</h3><p>上面创建的服务只能在集群内部访问，这在生产环境中还不能直接使用。如果希望有一个能直接对外使用的服务，可以使用 <code>NodePort</code> 或者 <code>LoadBalancer</code> 类型的 Service。我们先说说 <code>NodePort</code>，它的意思是在所有 worker 节点上暴露一个端口，这样外部可以直接通过访问 <code>nodeIP:Port</code> 来访问应用。</p>
+<p>我们先把刚才创建的服务删除：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># kubectl delete rc whoami</span></span><br><span class="line">replicationcontroller <span class="string">&quot;whoami&quot;</span> deleted</span><br><span class="line"></span><br><span class="line">[root@localhost ~]<span class="comment"># kubectl delete svc whoami</span></span><br><span class="line">service <span class="string">&quot;whoami&quot;</span> deleted</span><br></pre></td></tr></table></figure>
+
+<h4 id="启动-1"><a href="#启动-1" class="headerlink" title="启动"></a>启动</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh install2.sh <span class="variable">$&#123;ns&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>nodePort</code> 类型的服务会在所有的 worker 节点（运行了 kube-proxy）上统一暴露出端口对外提供服务，也就是说外部可以任意选择一个节点进行访问。比如我本地集群有三个节点：<code>172.17.8.100</code>、<code>172.17.8.101</code> 和 <code>172.17.8.102</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.100:31647</span></span><br><span class="line">viola from whoami-mc2fg</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.101:31647</span></span><br><span class="line">viola from whoami-8zc3d</span><br><span class="line">[root@localhost ~]<span class="comment"># curl http://172.17.8.102:31647</span></span><br><span class="line">viola from whoami-z6skj</span><br></pre></td></tr></table></figure>
+
+<p>有了 <code>nodePort</code>，用户可以通过外部的 Load Balance 或者路由器把流量转发到任意的节点，对外提供服务的同时，也可以做到负载均衡的效果。</p>
+<p><code>nodePort</code> 类型的服务并不影响原来虚拟 IP 的访问方式，内部节点依然可以通过 <code>vip:port</code> 的方式进行访问。</p>
+<h2 id="创建服务（原理解析）"><a href="#创建服务（原理解析）" class="headerlink" title="创建服务（原理解析）"></a>创建服务（原理解析）</h2><p>在 Kubernetes 中创建一个新的 Service 对象需要两大模块同时协作，其中一个模块是控制器，它需要在每次客户端创建新的 Service 对象时，生成其他用于暴露一组 Pod 的 Kubernetes 对象，也就是 Endpoint 对象；另一个模块是 kube-proxy，它运行在 Kubernetes 集群中的每一个节点上，会根据 Service 和 Endpoint 的变动改变节点上 iptables 或者 ipvs 中保存的规则。</p>
+<ul>
+<li>控制器， 用于生成 endpoints 对象</li>
+<li>kube-proxy</li>
+</ul>
+<h3 id="控制器"><a href="#控制器" class="headerlink" title="控制器"></a>控制器</h3><p>控制器模块其实总共有两个部分监听了 Service 变动的事件，其中一个是 <code>ServiceController</code>、另一个是 <code>EndpointController</code>，我们分别来看两者如何应对 Service 的变动。</p>
+<h4 id="EndpointController"><a href="#EndpointController" class="headerlink" title="EndpointController"></a>EndpointController</h4><p>EndpointController 本身并没有通过 Informer 监听 Endpoint 资源的变动，但是它却同时订阅了 Service 和 Pod 资源的增删事件，对于 Service 资源来讲，EndpointController 会通过以下的方式进行处理：</p>
+<p>EndpointController 中的 syncService 方法是用于创建和删除 Endpoint 资源最重要的方法，在这个方法中我们会根据 <strong>Service 对象规格中的选择器 Selector 获取集群中存在的所有 Pod，并将 Service 和 Pod 上的端口进行映射生成一个 EndpointPort 结构体</strong>：</p>
+<h4 id="查看-service-的endPoint"><a href="#查看-service-的endPoint" class="headerlink" title="查看 service 的endPoint"></a>查看 service 的endPoint</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 可以看到两个副本的 podIp</span></span><br><span class="line">|&gt;<span class="comment"># kcpg chatbot-client</span></span><br><span class="line">chatbot-client-ks-deploy-64d5f6cc84-dpp78                         1/1     Running     0          7d6h    172.0.7.197    alizjk-112191-prod-ks-kubelet-alg   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">chatbot-client-ks-deploy-64d5f6cc84-lx8ww                         1/1     Running     0          7d6h    172.0.3.20     zjk-023112158-kubelet-ks-qc         &lt;none&gt;           &lt;none&gt;</span><br><span class="line">|root@zjk-023112154-kubelet-ks-master ~</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 可以看到</span></span><br><span class="line"><span class="comment"># 1. service 的 type 和 clusterIP</span></span><br><span class="line"><span class="comment"># 2. endPoints,可以看到对应的就是上面两个 podIp</span></span><br><span class="line"><span class="comment"># 3. 这里有两组 endPoint, 一组是 http， 一组是 prof</span></span><br><span class="line">|&gt;<span class="comment"># kc describe service chatbot-client-ks-service</span></span><br><span class="line">Name:              chatbot-client-ks-service</span><br><span class="line">Namespace:         ks-prod</span><br><span class="line">Labels:            app=chatbot-client-ks</span><br><span class="line">Annotations:       kubectl.kubernetes.io/last-applied-configuration:</span><br><span class="line">                     &#123;<span class="string">&quot;apiVersion&quot;</span>:<span class="string">&quot;v1&quot;</span>,<span class="string">&quot;kind&quot;</span>:<span class="string">&quot;Service&quot;</span>,<span class="string">&quot;metadata&quot;</span>:&#123;<span class="string">&quot;annotations&quot;</span>:&#123;&#125;,<span class="string">&quot;labels&quot;</span>:&#123;<span class="string">&quot;app&quot;</span>:<span class="string">&quot;chatbot-client-ks&quot;</span>&#125;,<span class="string">&quot;name&quot;</span>:<span class="string">&quot;chatbot-client-ks-service&quot;</span>,<span class="string">&quot;...</span></span><br><span class="line"><span class="string">Selector:          app=chatbot-client-ks</span></span><br><span class="line"><span class="string">Type:              ClusterIP</span></span><br><span class="line"><span class="string">IP:                172.96.243.64</span></span><br><span class="line"><span class="string">Port:              http  8080/TCP</span></span><br><span class="line"><span class="string">TargetPort:        8080/TCP</span></span><br><span class="line"><span class="string">Endpoints:         172.0.3.20:8080,172.0.7.197:8080</span></span><br><span class="line"><span class="string">Port:              prof  8081/TCP</span></span><br><span class="line"><span class="string">TargetPort:        8081/TCP</span></span><br><span class="line"><span class="string">Endpoints:         172.0.3.20:8081,172.0.7.197:8081</span></span><br><span class="line"><span class="string">Session Affinity:  None</span></span><br><span class="line"><span class="string">Events:            &lt;none&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="kube-proxy"><a href="#kube-proxy" class="headerlink" title="kube-proxy"></a>kube-proxy</h3><p>在 Kubernetes 集群中的每一个节点都运行着一个 kube-proxy 进程，这个进程会负责监听 Kubernetes 主节点中 Service 的增加和删除事件并修改运行代理的配置，为节点内的客户端提供流量的转发和负载均衡等功能，但是当前 kube-proxy 的代理模式目前来看有三种：</p>
+<h4 id="iptable"><a href="#iptable" class="headerlink" title="iptable"></a>iptable</h4><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/8cee2fb2a2804f9884e3093dcec1ed32.png"></p>
+<p>iptables 作为一种代理模式，它同样实现了 OnServiceUpdate、OnEndpointsUpdate 等方法，这两个方法会分别调用相应的变更追踪对象。</p>
+<p>主要功能就是根据 <code>Service</code> 和 <code>Endpoint</code> 对象的变更生成一条一条的 iptables 规则.</p>
+<p>当我们使用 iptables 的方式启动节点上的代理时，所有的流量都会先经过 PREROUTING 或者 OUTPUT 链，随后进入 Kubernetes 自定义的链入口 KUBE-SERVICES、单个 Service 对应的链 KUBE-SVC-XXXX 以及每个 Pod 对应的链 KUBE-SEP-XXXX，经过这些链的处理，最终才能够访问当一个服务的真实 IP 地址。</p>
+<p>当我们使用 iptables 的方式启动节点上的代理时，所有的流量都会先经过 <code>PREROUTING</code> 或者 <code>OUTPUT</code> 链，随后进入 Kubernetes 自定义的链入口 KUBE-SERVICES、单个 Service 对应的链 <code>KUBE-SVC-XXXX</code> 以及每个 Pod 对应的链 <code>KUBE-SEP-XXXX</code>，经过这些链的处理，最终才能够访问当一个服务的真实 IP 地址。</p>
+<h4 id="ipvs"><a href="#ipvs" class="headerlink" title="ipvs"></a>ipvs</h4><p>ipvs 就是用于解决在大量 Service 时，iptables 规则同步变得不可用的性能问题。与 iptables 比较像的是，ipvs 的实现虽然也基于 netfilter 的钩子函数，<strong>但是它却使用哈希表作为底层的数据结构并且工作在内核态</strong>，这也就是说 ipvs 在重定向流量和同步代理规则有着更好的性能。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>Kubernetes 中的 Service 将一组 Pod 以统一的形式对外暴露成一个服务，它利用运行在内核空间的 iptables 或者 ipvs 高效地转发来自节点内部和外部的流量。除此之外，作为非常重要的 Kubernetes 对象，Service 不仅在逻辑上提供了微服务的概念，还引入 LoadBalancer 类型的 Service 无缝对接云服务商提供的复杂资源。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p> <a target="_blank" rel="noopener" href="https://cizixs.com/2017/03/30/kubernetes-introduction-service-and-kube-proxy/">主要的参考</a></p>
+<p><a target="_blank" rel="noopener" href="https://draveness.me/kubernetes-service/">service 原理</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/kubectl/" rel="tag"># kubectl</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/11/concurrent%20and%20gc/%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9E%83%E5%9C%BE%E6%90%9C%E9%9B%86%E7%AE%97%E6%B3%95/" rel="prev" title="【gc】常见的垃圾搜集算法">
+      <i class="fa fa-chevron-left"></i> 【gc】常见的垃圾搜集算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/19/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B9%8B%E6%8C%87%E6%A0%87/" rel="next" title="分布式系统之指标">
+      分布式系统之指标 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kube-proxy-%E5%92%8C-service"><span class="nav-number">2.</span> <span class="nav-text">kube-proxy 和 service</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Service-%E5%92%8C-cluster-IP"><span class="nav-number">2.1.</span> <span class="nav-text">Service 和 cluster IP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kube-proxy-%E5%8F%82%E6%95%B0%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.2.</span> <span class="nav-text">kube-proxy 参数介绍</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E5%90%AF%E5%8A%A8%E5%92%8C%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">实例启动和测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#whoami-%E9%95%9C%E5%83%8F"><span class="nav-number">3.1.</span> <span class="nav-text">whoami 镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-number">3.1.1.</span> <span class="nav-text">启动</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%96%E9%83%A8%E8%83%BD%E5%A4%9F%E8%AE%BF%E9%97%AE%E7%9A%84%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.2.</span> <span class="nav-text">外部能够访问的服务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">启动</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1%EF%BC%88%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">创建服务（原理解析）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">4.1.</span> <span class="nav-text">控制器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EndpointController"><span class="nav-number">4.1.1.</span> <span class="nav-text">EndpointController</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B-service-%E7%9A%84endPoint"><span class="nav-number">4.1.2.</span> <span class="nav-text">查看 service 的endPoint</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#kube-proxy"><span class="nav-number">4.2.</span> <span class="nav-text">kube-proxy</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#iptable"><span class="nav-number">4.2.1.</span> <span class="nav-text">iptable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ipvs"><span class="nav-number">4.2.2.</span> <span class="nav-text">ipvs</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.2.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

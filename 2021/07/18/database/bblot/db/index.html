@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述前面我们介绍了boltdb底层在磁盘上数据时如何组织存储(page)的，然后又介绍了磁盘中的数据在内存中又是如何存储(node)的。接着我们又介绍了管理kv数据集合的Bucket对象以及用来遍历Bucket的Cursor对象。最后我们详细的介绍了boltdb中事务是如何实现(Tx)的。到此boltdb中 各个零散的部件我们都一一熟悉了，接下来是时候将他们组织在一起工作了。因而就有了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="bblot db">
+<meta property="og:url" content="http://example.com/2021/07/18/database/bblot/db/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述前面我们介绍了boltdb底层在磁盘上数据时如何组织存储(page)的，然后又介绍了磁盘中的数据在内存中又是如何存储(node)的。接着我们又介绍了管理kv数据集合的Bucket对象以及用来遍历Bucket的Cursor对象。最后我们详细的介绍了boltdb中事务是如何实现(Tx)的。到此boltdb中 各个零散的部件我们都一一熟悉了，接下来是时候将他们组织在一起工作了。因而就有了">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-17T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-07-18T12:43:44.280Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="bblot - db">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/07/18/database/bblot/db/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>bblot db | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/18/database/bblot/db/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          bblot db
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-07-18 00:00:00 / 修改时间：20:43:44" itemprop="dateCreated datePublished" datetime="2021-07-18T00:00:00+08:00">2021-07-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/bblot/" itemprop="url" rel="index"><span itemprop="name">bblot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>前面我们介绍了boltdb底层在磁盘上数据时如何组织存储(page)的，然后又介绍了磁盘中的数据在内存中又是如何存储(node)的。接着我们又介绍了管理kv数据集合的Bucket对象以及用来遍历Bucket的Cursor对象。最后我们详细的介绍了boltdb中事务是如何实现(Tx)的。到此boltdb中 各个零散的部件我们都一一熟悉了，接下来是时候将他们组织在一起工作了。因而就有了boltdb中最上层的DB对象。本章主要介绍DB对象相关的方法以及其内部实现。</p>
+<h2 id="DB结构"><a href="#DB结构" class="headerlink" title="DB结构"></a>DB结构</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DB represents a collection of buckets persisted to a file on disk.</span></span><br><span class="line"><span class="comment">// All data access is performed through transactions which can be obtained through the DB.</span></span><br><span class="line"><span class="comment">// All the functions on DB will return a ErrDatabaseNotOpen if accessed before Open() is called.</span></span><br><span class="line"><span class="keyword">type</span> DB <span class="keyword">struct</span> &#123;</span><br><span class="line">    path     <span class="type">string</span></span><br><span class="line">    file     *os.File  <span class="comment">// 真实存储数据的磁盘文件</span></span><br><span class="line">    lockfile *os.File <span class="comment">// windows only</span></span><br><span class="line">    dataref  []<span class="type">byte</span>   <span class="comment">// mmap&#x27;ed readonly, write throws SEGV</span></span><br><span class="line">    <span class="comment">// 通过mmap映射进来的地址</span></span><br><span class="line">    data   *[maxMapSize]<span class="type">byte</span></span><br><span class="line">    datasz <span class="type">int</span></span><br><span class="line">    filesz <span class="type">int</span> <span class="comment">// current on disk file size</span></span><br><span class="line">    <span class="comment">//  元数据</span></span><br><span class="line">    meta0 *meta</span><br><span class="line">    meta1 *meta</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="对外接口"><a href="#对外接口" class="headerlink" title="对外接口"></a>对外接口</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建数据库接口</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Open</span><span class="params">(path <span class="type">string</span>, mode os.FileMode, options *Options)</span></span> (*DB, <span class="type">error</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="db-View-实现分析"><a href="#db-View-实现分析" class="headerlink" title="db.View()实现分析"></a>db.View()实现分析</h2><p>View()主要用来执行只读事务。事务的开启、提交、回滚都交由tx控制。</p>
+<h2 id="db-Update-实现分析"><a href="#db-Update-实现分析" class="headerlink" title="db.Update()实现分析"></a>db.Update()实现分析</h2><p>Update()主要用来执行读写事务。事务的开始、提交、回滚都交由tx内部控制</p>
+<h2 id="db-Batch-实现分析"><a href="#db-Batch-实现分析" class="headerlink" title="db.Batch()实现分析"></a>db.Batch()实现分析</h2><p>现在对Batch()方法稍作分析，在DB定义的那一节中我们可以看到，一个DB对象拥有一个batch对象，该对象是全局的。当我们使用Batch()方法时，内部会对将传递进去的fn缓存在calls中。</p>
+<p>其内部也是调用了Update，只不过是在Update内部遍历之前缓存的calls。</p>
+<p>有两种情况会触发调用Update。</p>
+<ol>
+<li>第一种情况是到达了MaxBatchDelay时间，就会触发Update</li>
+<li>第二种情况是len(db.batch.calls) &gt;&#x3D; db.MaxBatchSize，即缓存的calls个数大于等于MaxBatchSize时，也会触发Update。</li>
+</ol>
+<p><strong>Batch的本质是：</strong> 将每次写、每次刷盘的操作转变成了多次写、一次刷盘，从而提升性能。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 幂等</span></span><br><span class="line"><span class="comment">// The maximum batch size and delay can be adjusted with DB.MaxBatchSize</span></span><br><span class="line"><span class="comment">// and DB.MaxBatchDelay, respectively.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Batch is only useful when there are multiple goroutines calling it.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> Batch(fn <span class="function"><span class="keyword">func</span><span class="params">(*Tx)</span></span> <span class="type">error</span>) <span class="type">error</span> &#123;</span><br><span class="line">    errCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">error</span>, <span class="number">1</span>)</span><br><span class="line">    db.batchMu.Lock()</span><br><span class="line">    <span class="keyword">if</span> (db.batch == <span class="literal">nil</span>) || (db.batch != <span class="literal">nil</span> &amp;&amp; <span class="built_in">len</span>(db.batch.calls) &gt;= db.MaxBatchSize) &#123;</span><br><span class="line">        <span class="comment">// There is no existing batch, or the existing batch is full; start a new one.</span></span><br><span class="line">        db.batch = &amp;batch&#123;</span><br><span class="line">            db: db,</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// 超时控制</span></span><br><span class="line">        db.batch.timer = time.AfterFunc(db.MaxBatchDelay, db.batch.trigger)</span><br><span class="line">    &#125;</span><br><span class="line">    db.batch.calls = <span class="built_in">append</span>(db.batch.calls, call&#123;fn: fn, err: errCh&#125;)</span><br><span class="line">  	<span class="comment">// 数量控制</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(db.batch.calls) &gt;= db.MaxBatchSize &#123;</span><br><span class="line">        <span class="comment">// wake up batch, it&#x27;s ready to run</span></span><br><span class="line">        <span class="keyword">go</span> db.batch.trigger()</span><br><span class="line">    &#125;</span><br><span class="line">    db.batchMu.Unlock()</span><br><span class="line">    err := &lt;-errCh</span><br><span class="line">    <span class="keyword">if</span> err == trySolo &#123;</span><br><span class="line">        err = db.Update(fn)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// run performs the transactions in the batch and communicates results</span></span><br><span class="line"><span class="comment">// back to DB.Batch.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b *batch)</span></span> run() &#123;</span><br><span class="line">	b.db.batchMu.Lock()</span><br><span class="line">	b.timer.Stop()</span><br><span class="line">	<span class="comment">// Make sure no new work is added to this batch, but don&#x27;t break</span></span><br><span class="line">	<span class="comment">// other batches.</span></span><br><span class="line">	<span class="keyword">if</span> b.db.batch == b &#123;</span><br><span class="line">		b.db.batch = <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	b.db.batchMu.Unlock()</span><br><span class="line"></span><br><span class="line">retry:</span><br><span class="line">	<span class="keyword">for</span> <span class="built_in">len</span>(b.calls) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">var</span> failIdx = <span class="number">-1</span></span><br><span class="line">		err := b.db.Update(<span class="function"><span class="keyword">func</span><span class="params">(tx *Tx)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">			<span class="comment">// 遍历函数函数调用</span></span><br><span class="line">			<span class="keyword">for</span> i, c := <span class="keyword">range</span> b.calls &#123;</span><br><span class="line">				<span class="keyword">if</span> err := safelyCall(c.fn, tx); err != <span class="literal">nil</span> &#123;</span><br><span class="line">					failIdx = i</span><br><span class="line">					<span class="keyword">return</span> err</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> failIdx &gt;= <span class="number">0</span> &#123;</span><br><span class="line">			<span class="comment">// take the failing transaction out of the batch. it&#x27;s</span></span><br><span class="line">			<span class="comment">// safe to shorten b.calls here because db.batch no longer</span></span><br><span class="line">			<span class="comment">// points to us, and we hold the mutex anyway.</span></span><br><span class="line">			c := b.calls[failIdx]</span><br><span class="line">			b.calls[failIdx], b.calls = b.calls[<span class="built_in">len</span>(b.calls)<span class="number">-1</span>], b.calls[:<span class="built_in">len</span>(b.calls)<span class="number">-1</span>]</span><br><span class="line">			<span class="comment">// tell the submitter re-run it solo, continue with the rest of the batch</span></span><br><span class="line">			c.err &lt;- trySolo</span><br><span class="line">			<span class="keyword">continue</span> retry</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// pass success, or bolt internal errors, to all callers</span></span><br><span class="line">		<span class="comment">// 失败的单独重试一次</span></span><br><span class="line">		<span class="keyword">for</span> _, c := <span class="keyword">range</span> b.calls &#123;</span><br><span class="line">			c.err &lt;- err</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">break</span> retry</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="db-allocate-和db-grow-分析"><a href="#db-allocate-和db-grow-分析" class="headerlink" title="db.allocate()和db.grow()分析"></a>db.allocate()和db.grow()分析</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// allocate returns a contiguous block of memory starting at a given page.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> allocate(count <span class="type">int</span>) (*page, <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="comment">// Allocate a temporary buffer for the page.</span></span><br><span class="line">    <span class="keyword">var</span> buf []<span class="type">byte</span></span><br><span class="line">    <span class="keyword">if</span> count == <span class="number">1</span> &#123;</span><br><span class="line">        buf = db.pagePool.Get().([]<span class="type">byte</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        buf = <span class="built_in">make</span>([]<span class="type">byte</span>, count*db.pageSize)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 转成*page</span></span><br><span class="line">    p := (*page)(unsafe.Pointer(&amp;buf[<span class="number">0</span>]))</span><br><span class="line">    p.overflow = <span class="type">uint32</span>(count - <span class="number">1</span>)</span><br><span class="line">    <span class="comment">// Use pages from the freelist if they are available.</span></span><br><span class="line">    <span class="comment">// 先从空闲列表中找</span></span><br><span class="line">    <span class="keyword">if</span> p.id = db.freelist.allocate(count); p.id != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> p, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 找不到的话，就按照事务的pgid来分配</span></span><br><span class="line">    <span class="comment">// 表示需要从文件内部扩大</span></span><br><span class="line">    <span class="comment">// Resize mmap() if we&#x27;re at the end.</span></span><br><span class="line">    p.id = db.rwtx.meta.pgid</span><br><span class="line">    <span class="comment">// 因此需要判断是否目前所有的页数已经大于了mmap映射出来的空间</span></span><br><span class="line">    <span class="comment">// 这儿计算的页面总数是从当前的id后还要计算count+1个</span></span><br><span class="line">    <span class="keyword">var</span> minsz = <span class="type">int</span>((p.id+pgid(count))+<span class="number">1</span>) * db.pageSize</span><br><span class="line">    <span class="keyword">if</span> minsz &gt;= db.datasz &#123;</span><br><span class="line">        <span class="keyword">if</span> err := db.mmap(minsz); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;mmap allocate error: %s&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Move the page id high water mark.</span></span><br><span class="line">    <span class="comment">// 如果不是从freelist中找到的空间的话，更新meta的id，也就意味着是从文件中新扩展的页</span></span><br><span class="line">    db.rwtx.meta.pgid += pgid(count)</span><br><span class="line">    <span class="keyword">return</span> p, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// grow grows the size of the database to the given sz.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> grow(sz <span class="type">int</span>) <span class="type">error</span> &#123;</span><br><span class="line">    <span class="comment">// Ignore if the new size is less than available file size.</span></span><br><span class="line">    <span class="keyword">if</span> sz &lt;= db.filesz &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 满足这个条件sz&gt;filesz</span></span><br><span class="line">    <span class="comment">// If the data is smaller than the alloc size then only allocate what&#x27;s needed.</span></span><br><span class="line">    <span class="comment">// Once it goes over the allocation size then allocate in chunks.</span></span><br><span class="line">    <span class="keyword">if</span> db.datasz &lt; db.AllocSize &#123;</span><br><span class="line">        sz = db.datasz</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sz += db.AllocSize</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Truncate and fsync to ensure file size metadata is flushed.</span></span><br><span class="line">    <span class="comment">// https://github.com/boltdb/bolt/issues/284</span></span><br><span class="line">    <span class="keyword">if</span> !db.NoGrowSync &amp;&amp; !db.readOnly &#123;</span><br><span class="line">        <span class="keyword">if</span> runtime.GOOS != <span class="string">&quot;windows&quot;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> err := db.file.Truncate(<span class="type">int64</span>(sz)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;file resize error: %s&quot;</span>, err)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> err := db.file.Sync(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;file sync error: %s&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    db.filesz = sz</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="db-allocate-和db-grow-分析-1"><a href="#db-allocate-和db-grow-分析-1" class="headerlink" title="db.allocate()和db.grow()分析"></a>db.allocate()和db.grow()分析</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// allocate returns a contiguous block of memory starting at a given page.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> allocate(count <span class="type">int</span>) (*page, <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="comment">// Allocate a temporary buffer for the page.</span></span><br><span class="line">    <span class="keyword">var</span> buf []<span class="type">byte</span></span><br><span class="line">    <span class="keyword">if</span> count == <span class="number">1</span> &#123;</span><br><span class="line">        buf = db.pagePool.Get().([]<span class="type">byte</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        buf = <span class="built_in">make</span>([]<span class="type">byte</span>, count*db.pageSize)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 转成*page</span></span><br><span class="line">    p := (*page)(unsafe.Pointer(&amp;buf[<span class="number">0</span>]))</span><br><span class="line">    p.overflow = <span class="type">uint32</span>(count - <span class="number">1</span>)</span><br><span class="line">    <span class="comment">// Use pages from the freelist if they are available.</span></span><br><span class="line">    <span class="comment">// 先从空闲列表中找</span></span><br><span class="line">    <span class="keyword">if</span> p.id = db.freelist.allocate(count); p.id != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> p, <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 找不到的话，就按照事务的pgid来分配</span></span><br><span class="line">    <span class="comment">// 表示需要从文件内部扩大</span></span><br><span class="line">    <span class="comment">// Resize mmap() if we&#x27;re at the end.</span></span><br><span class="line">    p.id = db.rwtx.meta.pgid</span><br><span class="line">    <span class="comment">// 因此需要判断是否目前所有的页数已经大于了mmap映射出来的空间</span></span><br><span class="line">    <span class="comment">// 这儿计算的页面总数是从当前的id后还要计算count+1个</span></span><br><span class="line">    <span class="keyword">var</span> minsz = <span class="type">int</span>((p.id+pgid(count))+<span class="number">1</span>) * db.pageSize</span><br><span class="line">    <span class="keyword">if</span> minsz &gt;= db.datasz &#123;</span><br><span class="line">        <span class="keyword">if</span> err := db.mmap(minsz); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;mmap allocate error: %s&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Move the page id high water mark.</span></span><br><span class="line">    <span class="comment">// 如果不是从freelist中找到的空间的话，更新meta的id，也就意味着是从文件中新扩展的页</span></span><br><span class="line">    db.rwtx.meta.pgid += pgid(count)</span><br><span class="line">    <span class="keyword">return</span> p, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// grow grows the size of the database to the given sz.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(db *DB)</span></span> grow(sz <span class="type">int</span>) <span class="type">error</span> &#123;</span><br><span class="line">    <span class="comment">// Ignore if the new size is less than available file size.</span></span><br><span class="line">    <span class="keyword">if</span> sz &lt;= db.filesz &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 满足这个条件sz&gt;filesz</span></span><br><span class="line">    <span class="comment">// If the data is smaller than the alloc size then only allocate what&#x27;s needed.</span></span><br><span class="line">    <span class="comment">// Once it goes over the allocation size then allocate in chunks.</span></span><br><span class="line">    <span class="keyword">if</span> db.datasz &lt; db.AllocSize &#123;</span><br><span class="line">        sz = db.datasz</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sz += db.AllocSize</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Truncate and fsync to ensure file size metadata is flushed.</span></span><br><span class="line">    <span class="comment">// https://github.com/boltdb/bolt/issues/284</span></span><br><span class="line">    <span class="keyword">if</span> !db.NoGrowSync &amp;&amp; !db.readOnly &#123;</span><br><span class="line">        <span class="keyword">if</span> runtime.GOOS != <span class="string">&quot;windows&quot;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> err := db.file.Truncate(<span class="type">int64</span>(sz)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;file resize error: %s&quot;</span>, err)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> err := db.file.Sync(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;file sync error: %s&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    db.filesz = sz</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/bblot-db/" rel="tag"># bblot - db</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/15/database/bblot/bbolt%E5%85%A5%E9%97%A8/" rel="prev" title="bblot 入门">
+      <i class="fa fa-chevron-left"></i> bblot 入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/29/golang/golang%20context/" rel="next" title="golang context">
+      golang context <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DB%E7%BB%93%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">DB结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%A4%96%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.2.</span> <span class="nav-text">对外接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#db-View-%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">1.3.</span> <span class="nav-text">db.View()实现分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#db-Update-%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">1.4.</span> <span class="nav-text">db.Update()实现分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#db-Batch-%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">1.5.</span> <span class="nav-text">db.Batch()实现分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#db-allocate-%E5%92%8Cdb-grow-%E5%88%86%E6%9E%90"><span class="nav-number">1.6.</span> <span class="nav-text">db.allocate()和db.grow()分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#db-allocate-%E5%92%8Cdb-grow-%E5%88%86%E6%9E%90-1"><span class="nav-number">1.7.</span> <span class="nav-text">db.allocate()和db.grow()分析</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

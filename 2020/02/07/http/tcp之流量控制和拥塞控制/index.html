@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述拥塞控制就是防止过多的数据注入到网络中，这样可以使网络中的路由器或链路不致过载。拥塞控制所要做的都有一个前提，就是网络能承受现有的网络负荷。 流量控制往往指的是点对点通信量的控制，是个端到端的问题。流量控制所要做的就是控制发送端发送数据的速率，以便使接收端来得及接受。 拥塞控制和流量控制的区别流量控制是点到点的问题，一对一，如果接收方的数据来不及接收那么就能直接找到发送方这个罪魁祸">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tcp之的流量控制和拥塞控制">
+<meta property="og:url" content="http://example.com/2020/02/07/http/tcp%E4%B9%8B%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%92%8C%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述拥塞控制就是防止过多的数据注入到网络中，这样可以使网络中的路由器或链路不致过载。拥塞控制所要做的都有一个前提，就是网络能承受现有的网络负荷。 流量控制往往指的是点对点通信量的控制，是个端到端的问题。流量控制所要做的就是控制发送端发送数据的速率，以便使接收端来得及接受。 拥塞控制和流量控制的区别流量控制是点到点的问题，一对一，如果接收方的数据来不及接收那么就能直接找到发送方这个罪魁祸">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2021/01/20/sWhJXT.png">
+<meta property="article:published_time" content="2020-02-07T09:20:19.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.787Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http">
+<meta property="article:tag" content="tcp">
+<meta property="article:tag" content="拥塞控制">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2021/01/20/sWhJXT.png">
+
+<link rel="canonical" href="http://example.com/2020/02/07/http/tcp%E4%B9%8B%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%92%8C%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>tcp之的流量控制和拥塞控制 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/02/07/http/tcp%E4%B9%8B%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%92%8C%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          tcp之的流量控制和拥塞控制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-07 17:20:19" itemprop="dateCreated datePublished" datetime="2020-02-07T17:20:19+08:00">2020-02-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>拥塞控制就是防止过多的数据注入到网络中，这样可以使网络中的路由器或链路不致过载。拥塞控制所要做的都有一个前提，就是网络能承受现有的网络负荷。</p>
+<p>流量控制往往指的是点对点通信量的控制，是个端到端的问题。流量控制所要做的就是控制发送端发送数据的速率，以便使接收端来得及接受。</p>
+<h3 id="拥塞控制和流量控制的区别"><a href="#拥塞控制和流量控制的区别" class="headerlink" title="拥塞控制和流量控制的区别"></a>拥塞控制和流量控制的区别</h3><p>流量控制是点到点的问题，一对一，如果接收方的数据来不及接收那么就能直接找到发送方这个罪魁祸首，<code>主要是因为接收方来不及接受发送方的数据</code>；</p>
+<p>拥塞控制是多对一，一个接收方 面对多个发送方出现了网络拥堵，接收方找不到具体的发送方，<code>主要是因为网络发生了堵塞发送方数据迟迟到不了接收方</code>。</p>
+<h2 id="接收窗口-rwnd-和发送窗口（min-rwnd，cwnd-）"><a href="#接收窗口-rwnd-和发送窗口（min-rwnd，cwnd-）" class="headerlink" title="接收窗口 rwnd 和发送窗口（min(rwnd，cwnd)）"></a>接收窗口 rwnd 和发送窗口（min(rwnd，cwnd)）</h2><p>接收窗口receiver window(即rwnd)，是<code>接收方</code>根据自己的承受能力设置的接收缓存值大小，反映了接收方的接收能力，<code>来做流量控制</code>。</p>
+<p>拥塞窗口congestion window(即cwnd)，是<code>发送方</code>根据网络拥塞程度设置的网络窗口值，发送窗口&#x3D;min(rwnd，cwnd)即是接收窗口和拥塞窗口的最小值，<code>来做拥塞控制</code>。</p>
+<h2 id="TCP-流量控制"><a href="#TCP-流量控制" class="headerlink" title="TCP 流量控制"></a>TCP 流量控制</h2><h3 id="停止等待协议，连续ARQ协议和滑动窗口协议"><a href="#停止等待协议，连续ARQ协议和滑动窗口协议" class="headerlink" title="停止等待协议，连续ARQ协议和滑动窗口协议"></a>停止等待协议，连续ARQ协议和滑动窗口协议</h3><h4 id="停止等待协议"><a href="#停止等待协议" class="headerlink" title="停止等待协议"></a>停止等待协议</h4><p>停止等待协议是tcp保证传输可靠的重要途径,”停止等待”就是指发送完一个分组就停止发送,等待对方的确认,只有对方确认过,才发送下一个分组.</p>
+<p>停止等待协议的优点是简单,但是缺点是信道的利用率太低,一次发送一条消息,使得信道的大部分时间内都是空闲的,为了提高效率,我们采用流水线传输,这就与下面两个协议有关系了.</p>
+<h4 id="连续ARQ协议和滑动窗口协议"><a href="#连续ARQ协议和滑动窗口协议" class="headerlink" title="连续ARQ协议和滑动窗口协议"></a>连续ARQ协议和滑动窗口协议</h4><p>这两个协议主要起到解决信道效率低的问题，增大了吞吐量,以及控制流量的作用.</p>
+<ul>
+<li>连续ARQ协议:它是指发送方维护着一个窗口,这个窗口中不止一个分组,有好几个分组,窗口的大小是由接收方返回的win值决定的,所以窗口的大小是动态变化的,只要在窗口中的分组都可以被发送,这就使得TCP一次不是只发送一个分组了,从而大大提高了信道的利用率.并且它采用累积确认的方式,对于<strong>按序</strong>到达的最后一个分组发送确认.</li>
+<li>滑动窗口协议:之所以叫滑动窗口协议,是因为窗口是不断向前走的,该协议允许发送方在停止并等待确认前发送多个数据分组。由于发送方不必每发一个分组就停下来等待确认，因此该协议可以加速数据的传输,还可以控制流量的问题.</li>
+<li>累积确认:如果发送方发送了5个分组,接收方只收到了1,2,4,5,没有收到3分组,那么我的确认信息只会说我期望下一个收到的分组是第三个,此时发送方会将3,4,5,全部重发一次,当通信质量不是很好的时候,连续ARQ还是会带来负面影响.</li>
+</ul>
+<h3 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h3><p>所谓的流量控制就是让发送方的发送速率不要太快，让接收方来得及接受。利用滑动窗口机制可以很方便的在TCP连接上实现对发送方的流量控制。</p>
+<p>TCP的窗口单位是字节，不是报文段，发送方的发送窗口不能超过接收方给出的接收窗口的数值。</p>
+<p>原理这就是<strong>运用TCP报文段中的窗口大小字段来控制，发送方的发送窗口不可以大于接收方发回的窗口大小。</strong></p>
+<h3 id="零窗口"><a href="#零窗口" class="headerlink" title="零窗口"></a>零窗口</h3><p>只要TCP连接的一方收到对方的零窗口通知，就启动持续计时器，若持续计时器设置的时间到期，就发送一个零窗口探测报文段（仅携带1字节的数据），而对方就在确认这个探测报文段时给出了现在的窗口值。</p>
+<p>注意：TCP规定，即使设置为零窗口，也必须接收以下几种报文段：零窗口探测报文段、确认报文段和携带紧急数据的报文段</p>
+<h2 id="TCP拥塞控制"><a href="#TCP拥塞控制" class="headerlink" title="TCP拥塞控制"></a>TCP拥塞控制</h2><p> 在某段时间，若对网络中的某一资源的需求超过了该资源所能提供的可用部分，网络的性能就要变化，这种情况叫做拥塞。</p>
+<p><code>拥塞控制的目的</code>就是防止过多的数据注入到网络中，网络堵塞使得包一直到不了接收端。</p>
+<p>因特网建议标准RFC2581定义了进行拥塞控制的四种算法，即慢开始（Slow-start)，拥塞避免（Congestion Avoidance)，快重传（Fast Restrangsmit)和快恢复（Fast Recovery）。我们假定</p>
+<ul>
+<li><p>数据是单方向传送，而另外一个方向只传送确认。</p>
+</li>
+<li><p>接收方总是有足够大的缓存空间，因为发送窗口的大小由网络的拥塞程度来决定。</p>
+</li>
+</ul>
+<p>拥塞控制算法有四种：</p>
+<ol>
+<li>慢开始</li>
+<li>拥塞避免</li>
+<li>快重传</li>
+<li>快恢复</li>
+</ol>
+<h3 id="拥塞控制的流程"><a href="#拥塞控制的流程" class="headerlink" title="拥塞控制的流程"></a>拥塞控制的流程</h3><p><img src="https://s3.ax1x.com/2021/01/20/sWhJXT.png"></p>
+<h4 id="慢启动原理"><a href="#慢启动原理" class="headerlink" title="慢启动原理"></a>慢启动原理</h4><ul>
+<li>当主机开始发送数据时，如果立即将较大的发送窗口的全部数据字节都注入到网络中，那么由于不清楚网络的情况，有可能引其网络拥塞。</li>
+<li>比较好的方法是试探一下，即从小到达逐渐增大发送端的拥塞控制窗口数值。</li>
+<li>通常在刚刚开始发送报文段时可先将拥塞窗口cwnd(拥塞窗口)设置为一个最大报文段的MSS的数值。在每收到一个对新报文段确认后，将拥塞窗口增加至多一个MSS的数值，当rwind（接收窗口）足够大的时候</li>
+<li>为了防止拥塞窗口cwind的增长引起网络拥塞，还需要另外一个变量—慢开始门限ssthresh</li>
+</ul>
+<h4 id="拥塞避免"><a href="#拥塞避免" class="headerlink" title="拥塞避免"></a>拥塞避免</h4><ul>
+<li><p>TCP连接初始化，将拥塞窗口设置为1</p>
+</li>
+<li><p>执行 <strong>慢开始算法：</strong>cwind按指数规律增长，直到cwind &#x3D;&#x3D; ssthress开始执行 <strong>拥塞避免算法：</strong>cwnd按线性规律增长</p>
+</li>
+<li><p>当网络发生拥塞，把ssthresh值更新为拥塞前ssthresh值的一半，cwnd重新设置为1，按照拥塞避免算法继续执行。</p>
+</li>
+</ul>
+<h4 id="快重传和快恢复"><a href="#快重传和快恢复" class="headerlink" title="快重传和快恢复"></a>快重传和快恢复</h4><p>从图可以看到，Reno版本相对 Tahoe版本，主要是调整了跳崖式降低发送速率这个地方，如果从0开始效率太低了，如果是男女朋友间在发送微信岂不是被折磨的心痒痒。</p>
+<p>拥塞窗口cwnd每次指数增长一次都是在收到了确认报文的情况下增长的，比如A发送1，2，3，4，5，6这些报文段，2丢失了，1345都收到了那么每次345收到都会给A发送确认1收到了的确认报文，让他发2（这个地方上一篇有提到），这种算法就是在2的超时计时器到期之前收到了三个确认之后就马上重传2，接收方都催着要了哥，后面三个确认包都到了说明网络很好的嘛就是你迷路了，因此进行快速重传还是将新的ssthresh值调低为原来拥塞时候的一半又开始线性增长。</p>
+<h5 id="快重传"><a href="#快重传" class="headerlink" title="快重传"></a>快重传</h5><p> <strong>快重传算法</strong>并非取消了<strong>重传机制</strong>，只是在某些情况下更早的重传丢失的报文段（如果当发送端接收到三个重复的确认ACK时，则断定分组丢失，立即重传丢失的报文段，而不必等待重传计时器超时）。</p>
+<p>例如：M1，M2，M3 —–&gt; M1,M3,缺失M2，则接收方向发送方持续发送M2重复确认，当发送方收到M2的三次重复确认，则认为M2报文丢失，启动快重传机制，重传数据，其他数据发送数据放入队列，待快重传结束后再正常传输。</p>
+<h5 id="快恢复"><a href="#快恢复" class="headerlink" title="快恢复"></a>快恢复</h5><p><strong>快恢复算法</strong>有以下两个要点：</p>
+<ul>
+<li>当发送方连续收到接收方发来的三个重复确认时，就执行“乘法减小”算法，把慢开始门限减半，这是为了预防网络发生拥塞。</li>
+<li>由于发送方现在认为网络很可能没有发生拥塞，因此现在不执行慢开始算法，而是把<strong>cwnd(拥塞窗口)<strong>值设置为慢开始门限减半后的值，然后开始执行拥塞避免算法</strong>，使拥塞窗口的线性增大</strong>。</li>
+</ul>
+<h2 id="超时重传（重传机制）"><a href="#超时重传（重传机制）" class="headerlink" title="超时重传（重传机制）"></a>超时重传（重传机制）</h2><p>超时重传是TCP协议保证数据可靠性的另一个重要机制，其原理是在发送某一个数据以后就开启一个计时器，在一定时间内如果没有得到发送的数据报的ACK报文，那么就重新发送数据，直到发送成功为止。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://my.oschina.net/manmao/blog/601585">https://my.oschina.net/manmao/blog/601585</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1632783">https://cloud.tencent.com/developer/article/1632783</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43584807/article/details/93800480">https://blog.csdn.net/weixin_43584807/article/details/93800480</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/tcp/" rel="tag"># tcp</a>
+              <a href="/tags/%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/" rel="tag"># 拥塞控制</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/04/concurrent%20and%20gc/%E5%B9%B6%E5%8F%91%E4%B9%8B%20Golang%20channel/" rel="prev" title="并发之 golang channel">
+      <i class="fa fa-chevron-left"></i> 并发之 golang channel
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/07/http/tcp%E4%B9%8Btcp%E5%92%8Cudp%E5%8D%8F%E8%AE%AE%E5%AF%B9%E6%AF%94/" rel="next" title="tcp之tcp和udp协议的对比">
+      tcp之tcp和udp协议的对比 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E5%92%8C%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.1.</span> <span class="nav-text">拥塞控制和流量控制的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E6%94%B6%E7%AA%97%E5%8F%A3-rwnd-%E5%92%8C%E5%8F%91%E9%80%81%E7%AA%97%E5%8F%A3%EF%BC%88min-rwnd%EF%BC%8Ccwnd-%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">接收窗口 rwnd 和发送窗口（min(rwnd，cwnd)）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6"><span class="nav-number">3.</span> <span class="nav-text">TCP 流量控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE%EF%BC%8C%E8%BF%9E%E7%BB%ADARQ%E5%8D%8F%E8%AE%AE%E5%92%8C%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.</span> <span class="nav-text">停止等待协议，连续ARQ协议和滑动窗口协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%81%9C%E6%AD%A2%E7%AD%89%E5%BE%85%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.1.</span> <span class="nav-text">停止等待协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9E%E7%BB%ADARQ%E5%8D%8F%E8%AE%AE%E5%92%8C%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.2.</span> <span class="nav-text">连续ARQ协议和滑动窗口协议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6"><span class="nav-number">3.2.</span> <span class="nav-text">流量控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%B6%E7%AA%97%E5%8F%A3"><span class="nav-number">3.3.</span> <span class="nav-text">零窗口</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6"><span class="nav-number">4.</span> <span class="nav-text">TCP拥塞控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">拥塞控制的流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%85%A2%E5%90%AF%E5%8A%A8%E5%8E%9F%E7%90%86"><span class="nav-number">4.1.1.</span> <span class="nav-text">慢启动原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E9%81%BF%E5%85%8D"><span class="nav-number">4.1.2.</span> <span class="nav-text">拥塞避免</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%AB%E9%87%8D%E4%BC%A0%E5%92%8C%E5%BF%AB%E6%81%A2%E5%A4%8D"><span class="nav-number">4.1.3.</span> <span class="nav-text">快重传和快恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BF%AB%E9%87%8D%E4%BC%A0"><span class="nav-number">4.1.3.1.</span> <span class="nav-text">快重传</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BF%AB%E6%81%A2%E5%A4%8D"><span class="nav-number">4.1.3.2.</span> <span class="nav-text">快恢复</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%EF%BC%88%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">超时重传（重传机制）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

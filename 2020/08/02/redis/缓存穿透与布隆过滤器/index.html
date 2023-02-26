@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。 简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？ 简单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存穿透与布隆过滤器">
+<meta property="og:url" content="http://example.com/2020/08/02/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E4%B8%8E%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 从缓存穿透聊到布隆过滤器缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。 简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？ 简单">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2020/08/05/ayS2md.png">
+<meta property="article:published_time" content="2020-08-02T12:56:19.000Z">
+<meta property="article:modified_time" content="2023-02-21T10:53:06.216Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="缓存">
+<meta property="article:tag" content="布隆过滤器">
+<meta property="article:tag" content="缓存穿透">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/08/05/ayS2md.png">
+
+<link rel="canonical" href="http://example.com/2020/08/02/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E4%B8%8E%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>缓存穿透与布隆过滤器 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/08/02/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E4%B8%8E%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          缓存穿透与布隆过滤器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-02 20:56:19" itemprop="dateCreated datePublished" datetime="2020-08-02T20:56:19+08:00">2020-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-02-21 18:53:06" itemprop="dateModified" datetime="2023-02-21T18:53:06+08:00">2023-02-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="从缓存穿透聊到布隆过滤器"><a href="#从缓存穿透聊到布隆过滤器" class="headerlink" title="从缓存穿透聊到布隆过滤器"></a>从缓存穿透聊到布隆过滤器</h2><p><strong>缓存穿透是指查询一个根本不存在的数据，缓存层和存储层都不会命中，但是出于容错的考虑，如果从存储层查不到数据则不写入缓存层。</strong></p>
+<p>简单说，就查询一个不存在的key，因为没有缓存，就会去数据库查询，从而达到穿透缓存。增大数据库压力的险恶目的。一般来说，不是恶意操作，正常来说，不会遇到这样的问题，然而，怕的就是一些险恶用心的攻击者。那么，我们如何有效处理这种问题呢？</p>
+<p>简单想一下，如果我们把有效的key集合起来，查询之前我们先判断一下查询的key是否在集合中，如果不在，直接打回去，让你调皮。这个问题不就解决了吗？但是，如果真的先把所有key组成集合，那这个存储占用的内存太大了，当有1亿个key，那存储空间也是相当可观的，有点太过浪费了。</p>
+<h2 id="布隆过滤器"><a href="#布隆过滤器" class="headerlink" title="布隆过滤器"></a>布隆过滤器</h2><p>布隆过滤器（Bloom Filter）是由Howard Bloom在1970年提出的一种比较巧妙的概率型数据结构，它可以告诉你某种东西<strong>一定不存在</strong>或者<strong>可能存在</strong>。当布隆过滤器说，某种东西存在时，这种东西可能不存在；当布隆过滤器说，某种东西不存在时，那么这种东西一定不存在。</p>
+<p>我们可以通过三个哈希算法将w存储到二进制向量，当查询w是否存在时，我们可以再通过这三个算法，如果算法算出来所在的位置均为1，则表示w可能存在（注意是可能存在），否则一定不存在。（这个很好理解，我就不做说明了）</p>
+<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>布隆过滤器的核心是一个<code>超大的位数组（实际可以二维位数组（二维位向量））</code>和<code>几个哈希函数</code>。假设位数组的长度为m,哈希函数的个数为k。<br>下图表示有三个hash函数，比如一个集合中有x，y，z三个元素，分别用三个hash函数映射到二进制序列的某些位上，假设我们判断w是否在集合中，同样用三个hash函数来映射，结果发现取得的结果不全为1，则表示w不在集合里面</p>
+<p><img src="https://s1.ax1x.com/2020/08/05/ayS2md.png"></p>
+<ul>
+<li>添加一个元素：<ul>
+<li>先把这个元素作为k个哈希函数的输入，拿到k个数组位置，然后把所有的这些位置置为1。</li>
+</ul>
+</li>
+<li>查询一个元素（测试这个元素是否在集合里）：<ul>
+<li>把这个元素作为k个哈希函数的输入，得到k个数组位置。这些位置中只要有任意一个是0，元素肯定不在这个集合里。如果元素在集合里，那么这些位置在插入这个元素时都被置为1了。如果这些位置都是1，那么要么元素在集合里，要么所有这些位置是在其他元素插入过程中被偶然置为1了，导致了一次“误报”。</li>
+</ul>
+</li>
+</ul>
+<h4 id="工作流程"><a href="#工作流程" class="headerlink" title="工作流程:"></a>工作流程:</h4><ul>
+<li>第一步：开辟空间：<br>开辟一个长度为m的位数组（或者称二进制向量），这个不同的语言有不同的实现方式，甚至你可以用文件来实现。</li>
+<li>第二步：寻找hash函数<br>获取几个hash函数，前辈们已经发明了很多运行良好的hash函数，比如BKDRHash，JSHash，RSHash等等。这些hash函数我们直接获取就可以了。</li>
+<li>第三步：写入数据<br>将所需要判断的内容经过这些hash函数计算，得到几个值，比如用3个hash函数，得到值分别是1000，2000，3000。之后设置m位数组的第1000，2000，3000位的值位二进制1。</li>
+<li>第四步：判断<br>接下来就可以判断一个新的内容是不是在我们的集合中。判断的流程和写入的流程是一致的。</li>
+</ul>
+<h3 id="布隆过滤器应用场景"><a href="#布隆过滤器应用场景" class="headerlink" title="布隆过滤器应用场景"></a>布隆过滤器应用场景</h3><ul>
+<li>垃圾邮件过滤</li>
+<li>防止缓存击穿</li>
+<li>比特币交易查询</li>
+<li>爬虫的URL过滤</li>
+<li>IP黑名单</li>
+<li>查询加速【比如基于KV结构的数据】</li>
+<li>集合元素重复的判断</li>
+</ul>
+<h2 id="布隆过滤器的优缺点"><a href="#布隆过滤器的优缺点" class="headerlink" title="布隆过滤器的优缺点"></a>布隆过滤器的优缺点</h2><p><strong>1、优点：</strong></p>
+<ul>
+<li>有很好的<code>空间和时间效率</code></li>
+<li><code>存储空间和插入/查询时间都是常数</code>。</li>
+<li>Hash函数相互之间没有关系，方便由硬件并行实现。</li>
+<li>不需要存储元素本身，在某些对保密要求非常严格的场合有优势。</li>
+<li>布隆过滤器可以表示<code>全集</code>，其它任何数据结构都不能。</li>
+</ul>
+<p><strong>2、缺点：</strong></p>
+<ul>
+<li><code>误判率会随元素的增加而增加</code></li>
+<li><code>不能从布隆过滤器中删除元素</code></li>
+</ul>
+<h2 id="redis中的布隆过滤器"><a href="#redis中的布隆过滤器" class="headerlink" title="redis中的布隆过滤器"></a>redis中的布隆过滤器</h2><h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">基于官方的 docker 镜像来的</span></span><br><span class="line"></span><br><span class="line">docker run -p 6379:6379 --name redis-redisbloom redislabs/rebloom:latest</span><br><span class="line"></span><br><span class="line">docker exec -it redis-redisbloom bash</span><br><span class="line"></span><br><span class="line">redis-cli</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; bf.add newFilter abc</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter abc</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.add newFilter def</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter def</span><br><span class="line">(integer) 1</span><br><span class="line">127.0.0.1:6379&gt; bf.exists newFilter hij</span><br><span class="line">(integer) 0</span><br></pre></td></tr></table></figure>
+
+<h2 id="golang-实现"><a href="#golang-实现" class="headerlink" title="golang 实现"></a>golang 实现</h2><h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/willf/bitset&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> DEFAULT_SIZE = <span class="number">2</span> &lt;&lt; <span class="number">24</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> seeds = []<span class="type">uint</span>&#123;<span class="number">7</span>, <span class="number">11</span>, <span class="number">13</span>, <span class="number">31</span>, <span class="number">37</span>, <span class="number">61</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> BloomFilter <span class="keyword">struct</span> &#123;</span><br><span class="line">    Set   *bitset.BitSet</span><br><span class="line">    Funcs [<span class="number">6</span>]SimpleHash</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewBloomFilter</span><span class="params">()</span></span> *BloomFilter &#123;</span><br><span class="line">    bf := <span class="built_in">new</span>(BloomFilter)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(bf.Funcs); i++ &#123;</span><br><span class="line">        bf.Funcs[i] = SimpleHash&#123;DEFAULT_SIZE, seeds[i]&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    bf.Set = bitset.New(DEFAULT_SIZE)</span><br><span class="line">    <span class="keyword">return</span> bf</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(bf BloomFilter)</span></span> Add(value <span class="type">string</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> _, f := <span class="keyword">range</span> (bf.Funcs) &#123;</span><br><span class="line">        bf.Set.Set(f.hash(value))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(bf BloomFilter)</span></span> Contains(value <span class="type">string</span>) <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> value == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">    ret := <span class="literal">true</span></span><br><span class="line">    <span class="keyword">for</span> _, f := <span class="keyword">range</span> (bf.Funcs) &#123;</span><br><span class="line">        ret = ret &amp;&amp; bf.Set.Test(f.hash(value))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> SimpleHash <span class="keyword">struct</span> &#123;</span><br><span class="line">    Cap  <span class="type">uint</span></span><br><span class="line">    Seed <span class="type">uint</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s SimpleHash)</span></span> hash(value <span class="type">string</span>) <span class="type">uint</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> result <span class="type">uint</span> = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(value); i++ &#123;</span><br><span class="line">        result = result*s.Seed + <span class="type">uint</span>(value[i])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> (s.Cap - <span class="number">1</span>) &amp; result</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;github.com/stretchr/testify/assert&quot;</span></span><br><span class="line">    <span class="string">&quot;testing&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestNewBloomFilter</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    filter := NewBloomFilter()</span><br><span class="line">    fmt.Println(filter.Set,filter.Funcs)</span><br><span class="line">    str1 := <span class="string">&quot;hello,bloom filter!&quot;</span></span><br><span class="line">    filter.Add(str1)</span><br><span class="line">    str2 := <span class="string">&quot;A happy day&quot;</span></span><br><span class="line">    filter.Add(str2)</span><br><span class="line">    str3 := <span class="string">&quot;Greate wall&quot;</span></span><br><span class="line">    filter.Add(str3)</span><br><span class="line"></span><br><span class="line">    str4 := <span class="string">&quot;Greate wall abc&quot;</span></span><br><span class="line"></span><br><span class="line">    assert.Equal(t, <span class="type">uint</span>(<span class="number">18</span>), filter.Set.Count())</span><br><span class="line"></span><br><span class="line">    assert.True(t, filter.Contains(str1))</span><br><span class="line">    assert.True(t, filter.Contains(str2))</span><br><span class="line">    assert.True(t, filter.Contains(str3))</span><br><span class="line">    <span class="comment">// 这里实际上是不一定是 False， 因为布隆过滤器只能判断是否不存在，对于是否存在，它是概率性的正确的</span></span><br><span class="line">    assert.False(t, filter.Contains(str4))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/Jack47/p/bloom_filter_intro.html">wiki</a></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Bloom_filter">wiki</a></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Bloom_filter">golang中的布隆过滤器</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/huangxincheng/p/10292303.html">redis中的布隆过滤器</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/RedisBloom/RedisBloom">redis 布隆过滤器插件 github</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+              <a href="/tags/%E7%BC%93%E5%AD%98/" rel="tag"># 缓存</a>
+              <a href="/tags/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" rel="tag"># 布隆过滤器</a>
+              <a href="/tags/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F/" rel="tag"># 缓存穿透</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/05/http/http%E4%B9%8Bhttp2%E5%85%A5%E9%97%A8/" rel="prev" title="【http】http2入门">
+      <i class="fa fa-chevron-left"></i> 【http】http2入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/09/redis/%E7%BC%93%E5%AD%98%E7%AD%96%E7%95%A5%E4%B8%8E%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/" rel="next" title="缓存策略与缓存一致性">
+      缓存策略与缓存一致性 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E8%81%8A%E5%88%B0%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">从缓存穿透聊到布隆过滤器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">布隆过滤器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.1.1.</span> <span class="nav-text">工作流程:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.2.</span> <span class="nav-text">布隆过滤器应用场景</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">3.</span> <span class="nav-text">布隆过滤器的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E4%B8%AD%E7%9A%84%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">redis中的布隆过滤器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-number">4.1.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">4.2.</span> <span class="nav-text">使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#golang-%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.</span> <span class="nav-text">golang 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.1.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">5.2.</span> <span class="nav-text">测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">156</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
