@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="概述当用python3做爬虫的时候，一些网站为了防爬虫会设置一些检查机制，这时我们就需要添加请求头，伪装成浏览器正常访问。 header的内容在浏览器的开发者工具中便可看到，将这些信息添加到我们的爬虫代码中即可。 ‘Accept-Encoding’：是浏览器发给服务器,声明浏览器支持的编码类型。一般有gzip,deflate,br 等等。 python3中的 requests包中response.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="http之请求头之br">
+<meta property="og:url" content="http://example.com/2021/06/07/blog/http/http%E4%B9%8B%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%B9%8Bbr/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="概述当用python3做爬虫的时候，一些网站为了防爬虫会设置一些检查机制，这时我们就需要添加请求头，伪装成浏览器正常访问。 header的内容在浏览器的开发者工具中便可看到，将这些信息添加到我们的爬虫代码中即可。 ‘Accept-Encoding’：是浏览器发给服务器,声明浏览器支持的编码类型。一般有gzip,deflate,br 等等。 python3中的 requests包中response.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-06T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-07T13:15:43.423Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http">
+<meta property="article:tag" content="请求头">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/06/07/blog/http/http%E4%B9%8B%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%B9%8Bbr/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>http之请求头之br | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/07/blog/http/http%E4%B9%8B%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%B9%8Bbr/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          http之请求头之br
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-06-07 00:00:00 / 修改时间：21:15:43" itemprop="dateCreated datePublished" datetime="2021-06-07T00:00:00+08:00">2021-06-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>当用python3做爬虫的时候，一些网站为了防爬虫会设置一些检查机制，这时我们就需要添加请求头，伪装成浏览器正常访问。<br> header的内容在浏览器的开发者工具中便可看到，将这些信息添加到我们的爬虫代码中即可。<br> ‘Accept-Encoding’：是浏览器发给服务器,声明浏览器支持的编码类型。一般有gzip,deflate,br 等等。<br> python3中的 requests包中response.text 和 response.content</p>
+<ul>
+<li>response.content #字节方式的响应体，会自动为你解码 gzip 和 deflate 压缩  类型：bytes</li>
+<li>reponse.text #字符串方式的响应体，会自动根据响应头部的字符编码进行解码。类型：str</li>
+</ul>
+<p>但是这里是默认是不支持解码br的！！！！</p>
+<h2 id="Accept-Encoding-br"><a href="#Accept-Encoding-br" class="headerlink" title="Accept-Encoding: br"></a>Accept-Encoding: br</h2><p>br 指的是 Brotli，是一种全新的数据格式，无损压缩，压缩比极高（比gzip高的）.</p>
+<p>现代的网页通常包含了由大量的HTML, CSS和JavaScript代码编写的图片、视频或其他大型文件数据，导致了网页打开的速度很慢。如果能有一种好的压缩算法将这些内容和数据进行压缩后传输，那么用户只需要等待很短时间就可以完全加载整个页面上的内容。</p>
+<p>2015年9月谷歌发布了Brotli压缩算法，直到现在才开始被大多数的浏览器所兼容。Cloudflare公司的工程师们为了验证Brotli压缩算法比其他压缩算法更好，还特意做了实验来说明。还有<a href="https://link.zhihu.com/?target=http://Discouse.org">http://Discouse.org</a>的联合创始人Sam Saffron给各种压缩算法的文件压缩大小和压缩速度打分，<strong>事后证明Brotli不仅全面吊打其他压缩算法，还能支持HTTPS网络加密下的压缩</strong>。</p>
+<h2 id="请求与相应"><a href="#请求与相应" class="headerlink" title="请求与相应"></a>请求与相应</h2><p>当我们向cdn缓存服务请求一个文本资源，如js，css,html资源时，请求头会携带如下信息</p>
+<blockquote>
+<p>accept-encoding: gzip, deflate, br</p>
+<p>这将表明 client 支持 gzip， deflate， br 等压缩算法</p>
+</blockquote>
+<p>当服务端收到请求的时候，如果只支持gzip协议，那么响应头会有如下信息</p>
+<blockquote>
+<p>content-encoding: gzip</p>
+<p>很遗憾，服务端不支持 br</p>
+</blockquote>
+<p>如果是这样</p>
+<blockquote>
+<p>content-encoding: br</p>
+<p>说明使用br压缩</p>
+</blockquote>
+<h2 id="python-中遇到的问题"><a href="#python-中遇到的问题" class="headerlink" title="python 中遇到的问题"></a>python 中遇到的问题</h2><h3 id="直接出错"><a href="#直接出错" class="headerlink" title="直接出错"></a>直接出错</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 直接 resp.json（返回的数据就是json）会直接报错。resp.text 则完全是乱码， resp.content.decode() 也无法解码</span></span><br><span class="line"><span class="built_in">print</span>(resp.text)</span><br><span class="line">msg = resp.json()</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用brotli解压缩（解决问题）"><a href="#使用brotli解压缩（解决问题）" class="headerlink" title="使用brotli解压缩（解决问题）"></a>使用brotli解压缩（解决问题）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">key = <span class="string">&#x27;Content-Encoding&#x27;</span></span><br><span class="line"><span class="keyword">if</span> key <span class="keyword">in</span> resp.headers <span class="keyword">and</span> resp.headers[key] == <span class="string">&#x27;br&#x27;</span>:</span><br><span class="line">    <span class="built_in">print</span>(resp.encoding)</span><br><span class="line">    <span class="comment"># data = brotli.decompress(resp.content)</span></span><br><span class="line">    <span class="comment"># data1 = data.decode(resp.encoding)</span></span><br><span class="line">    <span class="comment"># print(data1)</span></span><br></pre></td></tr></table></figure>
+
+<p>或者修改请求header，不接受 br 解码就可以了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">requestHeaders = &#123;</span><br><span class="line">    <span class="comment"># &quot;accept-encoding&quot;: &quot;gzip, deflate, br&quot;,</span></span><br><span class="line">    <span class="string">&#x27;accept-encoding&#x27;</span>: <span class="string">&#x27;gzip, deflate, utf-8&#x27;</span>,</span><br><span class="line">    <span class="string">&quot;accept-language&quot;</span>: <span class="string">&quot;zh-CN,zh;q=0.9,en;q=0.8&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/49584929/unable-to-decode-python-web-request">stackoverflow</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/70c3994efcd8">python3爬虫中文乱码之请求头‘Accept-Encoding’：br 的问题</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.alonehero.com/2019/10/13/gzip%E4%B8%8Ebrotli%E5%8E%8B%E7%BC%A9%E7%AE%97%E6%B3%95%E5%AF%B9%E6%AF%94/">gzip与brotli压缩算法对比</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/%E8%AF%B7%E6%B1%82%E5%A4%B4/" rel="tag"># 请求头</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/06/07/blog/http/http%E4%B9%8B%E8%AF%B7%E6%B1%82%E5%A4%B4%E5%92%8C%E5%93%8D%E5%BA%94%E5%A4%B4/" rel="prev" title="http之请求头和响应头">
+      <i class="fa fa-chevron-left"></i> http之请求头和响应头
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/06/07/blog/http/http%E4%B9%8B%E8%AF%B7%E6%B1%82%E6%A0%BC%E5%BC%8F/" rel="next" title="http之请求格式">
+      http之请求格式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Accept-Encoding-br"><span class="nav-number">2.</span> <span class="nav-text">Accept-Encoding: br</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E4%B8%8E%E7%9B%B8%E5%BA%94"><span class="nav-number">3.</span> <span class="nav-text">请求与相应</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#python-%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">python 中遇到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E5%87%BA%E9%94%99"><span class="nav-number">4.1.</span> <span class="nav-text">直接出错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8brotli%E8%A7%A3%E5%8E%8B%E7%BC%A9%EF%BC%88%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">使用brotli解压缩（解决问题）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

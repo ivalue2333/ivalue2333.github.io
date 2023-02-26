@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述使用select搭建的多路I&#x2F;O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I&#x2F;O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I&#x2F;O状态。若每路程序中都没有数据到达，线程将阻塞在sele">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO多路复用 select 入门">
+<meta property="og:url" content="http://example.com/2020/11/20/blog/io/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%20select%20%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述使用select搭建的多路I&#x2F;O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I&#x2F;O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I&#x2F;O状态。若每路程序中都没有数据到达，线程将阻塞在sele">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2020/11/19/DKnEQ0.png">
+<meta property="article:published_time" content="2020-11-20T12:32:37.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.773Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="多路复用">
+<meta property="article:tag" content="select">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2020/11/19/DKnEQ0.png">
+
+<link rel="canonical" href="http://example.com/2020/11/20/blog/io/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%20select%20%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>IO多路复用 select 入门 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/20/blog/io/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%20select%20%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          IO多路复用 select 入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-20 20:32:37" itemprop="dateCreated datePublished" datetime="2020-11-20T20:32:37+08:00">2020-11-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/IO/" itemprop="url" rel="index"><span itemprop="name">IO</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>使用select搭建的多路I&#x2F;O转接服务器是一种基于非阻塞的服务器：当有客户端连接请求到达时，accept会返回一个文件描述符，该文件描述符会被存储到由select监控的文件描述符表中，每个文件描述符对应的文件都可进行I&#x2F;O操作，因此select可通过监控表中各个文件描述符，来获取对应的客户端I&#x2F;O状态。若每路程序中都没有数据到达，线程将阻塞在select上；否则select将已就绪客户端程序的数量返回到服务器。</p>
+<p><strong>不阻塞是指不阻塞在 accept 系统调用上， 也不阻塞在 read 系统调用上（因为数据已经准备好了）， 而是阻塞在 select 系统调用上。</strong> 开始时， 系统阻塞在 select系统调用中。一个数据包过来，如果是请求建立连接的， 那么走 accept 系统调用，得到 connFd， 并注册到 select 监控的 文件描述符列表中。如果是建立好的连接发来的数据包，那么遍历文件描述符集，处理已就绪的文件描述符。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/DKnEQ0"><img src="https://s3.ax1x.com/2020/11/19/DKnEQ0.png" alt="DKnEQ0.png"></a></p>
+<h2 id="select-系统调用"><a href="#select-系统调用" class="headerlink" title="select 系统调用"></a>select 系统调用</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">select</span><span class="params">(<span class="type">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, <span class="keyword">struct</span> timeval *timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>nfds用来设置select监控的文件描述符的范围，需设置为文件描述符最大值加1</li>
+<li>参数readfds、writefds、exceptfds分别用于表示可读取数据的文件描述符集、可写入数据的文件描述符集以及发生异常的文件描述符集，它们都为传入传出参数，其参数类型<strong>fd_set实质为长整型，这些集合中的每一位都对应一个文件描述符的状态</strong>，若集合参数被设置为NULL，表示不关心文件的对应状态。</li>
+<li>select()函数的返回值有3种：若返回值大于0，表示已就绪文件描述符的数量，此种情况下某些文件可读写或有错误信息；若返回值等于0，表示等待超时，没有可读写或错误的文件；若返回值-1，表示出错返回，同时errno将被设置。</li>
+</ul>
+<p>参数timeout用于设置select的阻塞时长，其取值有如下几种情况：</p>
+<p>● 若timeval&#x3D;NULL，表示永远等待；</p>
+<p>● 若timeval&gt;0，表示等待固定时长；</p>
+<p>● 若timeval&#x3D;0，select将在检查过指定文件描述符后立即返回（轮询）。</p>
+<h3 id="文件描述符集操作函数"><a href="#文件描述符集操作函数" class="headerlink" title="文件描述符集操作函数"></a>文件描述符集操作函数</h3><table>
+<thead>
+<tr>
+<th><strong>函数声明</strong></th>
+<th><strong>函数功能</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>void FD_CLR(int fd,fd_set *set);</td>
+<td>将集合中的文件描述符fd清除（将fd位置为0）</td>
+</tr>
+<tr>
+<td>int FD_ISSET(int fd,fd_set *set);</td>
+<td>测试集合中文件描述符fd是否存在于集合中，若存在则返回非0</td>
+</tr>
+<tr>
+<td>void FD_SET(int fd,fd_set *set);</td>
+<td>将文件描述符fd添加到集合中（将fd位置为1）</td>
+</tr>
+<tr>
+<td>void FD_ZERO(fd_set *set);</td>
+<td>清除集合中所有的文件描述符（所有位置0）</td>
+</tr>
+</tbody></table>
+<h2 id="select-模式存在的问题"><a href="#select-模式存在的问题" class="headerlink" title="select 模式存在的问题"></a>select 模式存在的问题</h2><h3 id="超大数据包或超长的处理时间导致连接饿死"><a href="#超大数据包或超长的处理时间导致连接饿死" class="headerlink" title="超大数据包或超长的处理时间导致连接饿死"></a>超大数据包或超长的处理时间导致连接饿死</h3><p>因为我们知道，当建立好的连接连接发来数据包时，服务会去处理这个数据包，而不是阻塞在系统调用上，那么如果这个数据包的处理时间非常长，比如说1个小时，那么整个服务这一个小时内既不能处理新建连接的数据包，也不能处理已建立的连接发来的数据包。对于不能处理新建连接的数据包的情况，如果新建连接的数量超过<strong>全连接队列的长度</strong>，就会导致新建连接直接拒绝。</p>
+<h3 id="数量有限"><a href="#数量有限" class="headerlink" title="数量有限"></a>数量有限</h3><p>select可监控的文件数量是有限的，该数量受到两个因素的限制。第一个因素是进程可打开的文件数量，第二个因素是select中的集合fd_set的容量。进程可打开文件的上限可通过ulimit –n命令或setrlimit函数设置，但系统所能打开的最大文件数也是有限的；select中集合fd_set的容量由宏FD_SETSIZE（定义在linux&#x2F;posix_types.h中）指定，一般为1024，但即便通过重新编译内核的方式修改FD_SETSIZE，也不一定能提升select服务器的性能，因为若select一次监测的进程过多，单轮询便要耗费大量的时间。</p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>go-science&#x2F;example&#x2F;cpp&#x2F;io&#x2F;select_s.c</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://book.itheima.net/course/223/1277519158031949826/1277529226395787268">select</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/skyfsm/p/7079458.html">还没有看</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" rel="tag"># 多路复用</a>
+              <a href="/tags/select/" rel="tag"># select</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/19/blog/io/IO%20%E5%85%A5%E9%97%A8/" rel="prev" title="IO 入门">
+      <i class="fa fa-chevron-left"></i> IO 入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/20/blog/io/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%20poll%20%E5%85%A5%E9%97%A8%20/" rel="next" title="IO多路复用 poll 入门">
+      IO多路复用 poll 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#select-%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">select 系统调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E9%9B%86%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0"><span class="nav-number">2.1.</span> <span class="nav-text">文件描述符集操作函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#select-%E6%A8%A1%E5%BC%8F%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">select 模式存在的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B6%85%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%8C%85%E6%88%96%E8%B6%85%E9%95%BF%E7%9A%84%E5%A4%84%E7%90%86%E6%97%B6%E9%97%B4%E5%AF%BC%E8%87%B4%E8%BF%9E%E6%8E%A5%E9%A5%BF%E6%AD%BB"><span class="nav-number">3.1.</span> <span class="nav-text">超大数据包或超长的处理时间导致连接饿死</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E9%87%8F%E6%9C%89%E9%99%90"><span class="nav-number">3.2.</span> <span class="nav-text">数量有限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

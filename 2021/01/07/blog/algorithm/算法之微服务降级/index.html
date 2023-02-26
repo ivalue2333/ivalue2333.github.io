@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述个人倾向于， 熔断，限流，隔离，都是一种降级的策略。 熔断客户端行为（调用方行为）， 调用方统计一段时间调用失败的次数和总的请求次数，当调用失败达到一定比例时，熔断器打开，直接不调用，返回一个默认的错误。 限流服务端行为（被调用方行为）， 被调用方统计一段时间内的请求数（也可以是其他指标，例如字节数）， 当一段时间内请求数超过阈值时，返回一个限流的错误。 隔离客户端行为（调用方行为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法之微服务降级">
+<meta property="og:url" content="http://example.com/2021/01/07/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%8D%E7%BA%A7/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述个人倾向于， 熔断，限流，隔离，都是一种降级的策略。 熔断客户端行为（调用方行为）， 调用方统计一段时间调用失败的次数和总的请求次数，当调用失败达到一定比例时，熔断器打开，直接不调用，返回一个默认的错误。 限流服务端行为（被调用方行为）， 被调用方统计一段时间内的请求数（也可以是其他指标，例如字节数）， 当一段时间内请求数超过阈值时，返回一个限流的错误。 隔离客户端行为（调用方行为">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-07T12:53:33.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.775Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="过载保护">
+<meta property="article:tag" content="降级">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/01/07/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%8D%E7%BA%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>算法之微服务降级 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%8D%E7%BA%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法之微服务降级
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-07 20:53:33" itemprop="dateCreated datePublished" datetime="2021-01-07T20:53:33+08:00">2021-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>个人倾向于， 熔断，限流，隔离，都是一种降级的策略。</p>
+<h3 id="熔断"><a href="#熔断" class="headerlink" title="熔断"></a>熔断</h3><p><strong>客户端行为</strong>（调用方行为）， 调用方统计一段时间调用失败的次数和总的请求次数，当调用失败达到一定比例时，熔断器打开，直接不调用，返回一个默认的错误。</p>
+<h3 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h3><p><strong>服务端行为</strong>（被调用方行为）， 被调用方统计一段时间内的请求数（也可以是其他指标，例如字节数）， 当一段时间内请求数超过阈值时，返回一个限流的错误。</p>
+<h3 id="隔离"><a href="#隔离" class="headerlink" title="隔离"></a>隔离</h3><p><strong>客户端行为</strong>（调用方行为）， 调用方为某一类调用初始化固定大小的资源，防止因这种调用出错而导致占用大量的资源。比如我们现在某个接口所在的服务A需要调用服务B，而服务B同时需要调用C服务，此时服务C突然宕机同时此时流量暴涨，调用全部打到服务B上，此时B服务调用C超时大量的线程资源被该接口所占全部hang住，<strong>慢慢服务B中的线程数量则会持续增加直致CPU资源耗尽到100%<strong>，整个服务对外不可用渐渐蔓延到B服务集群中的其他节点，</strong>导致服务级联故障</strong>。</p>
+<h4 id="服务级联故障"><a href="#服务级联故障" class="headerlink" title="服务级联故障"></a>服务级联故障</h4><p>当上游服务依赖的下游服务出现故障后，上游服务由于没有做好资源隔离和快速错误等，导致因为下游服务出错，引发上游服务出错，并产生连锁的故障的情况。</p>
+<h4 id="线程池隔离"><a href="#线程池隔离" class="headerlink" title="线程池隔离"></a>线程池隔离</h4><p>线程池隔离顾名思义就是通过Java的线程池进行隔离，B服务调用C服务给予固定的线程数量比如10个线程，如果此时C服务宕机了就算大量的请求过来，调用C服务的接口只会占用10个线程不会占用其他工作线程资源，因此B服务就不会出现级联故障。</p>
+<p><strong>隔离这种思想本质上是规定一类接口只能使用固定配额的资源，这能有效避免单个接口的异常导致的整体异常。例如k8s中限制一个pod使用内存大小也是同样的道理。</strong></p>
+<h3 id="服务降级"><a href="#服务降级" class="headerlink" title="服务降级"></a>服务降级</h3><p>当整个微服务架构整体的负载超出了预设的上限阈值或即将到来的流量预计将会超过预设的阈值时，为了保证重要或基本的服务能正常运行，我们可以将一些 <strong>不重要</strong> 或 <strong>不紧急</strong> 的服务或任务进行服务的 <strong>延迟使用</strong> 或 <strong>暂停使用</strong>。</p>
+<ul>
+<li>如限制流量上限</li>
+<li>如限制事务上限</li>
+<li>如限制cpu，内存，磁盘上线</li>
+<li>如限制某种功能</li>
+<li>如限制某一个群体的用户</li>
+</ul>
+<h4 id="限制-cpu-使用率"><a href="#限制-cpu-使用率" class="headerlink" title="限制 cpu 使用率"></a>限制 cpu 使用率</h4><p>每个节点定时计算cpu的使用率，计算CPU负载时使用滑动平均来降低CPU负载抖动带来的不稳定。</p>
+<p>每次请求到来，检查cpu使用率，如果cpu使用率超过阈值，那么将当前请求直接扔掉。</p>
+<h2 id="Java-中的-Hystrix"><a href="#Java-中的-Hystrix" class="headerlink" title="Java 中的 Hystrix"></a>Java 中的 Hystrix</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>分布式系统环境下，服务间类似依赖非常常见，一个业务调用通常依赖多个基础服务。如下图，对于同步调用，<strong>当库存服务不可用时，商品服务请求线程被阻塞，当有大批量请求调用库存服务时，最终可能导致整个商品服务资源耗尽，无法继续对外提供服务。</strong>并且这种不可用可能沿请求调用链向上传递，这种现象被称为雪崩效应。</p>
+<h3 id="雪崩效应常见场景"><a href="#雪崩效应常见场景" class="headerlink" title="雪崩效应常见场景"></a>雪崩效应常见场景</h3><ul>
+<li>硬件故障：如服务器宕机，机房断电，光纤被挖断等。</li>
+<li>流量激增：如异常流量，重试加大流量等。</li>
+<li>缓存失效：一般发生在应用重启，所有缓存失效时，以及短时间内大量缓存失效时。大量的缓存不命中，使请求直击后端服务，造成服务提供者超负荷运行，引起服务不可用。</li>
+<li>程序BUG：如程序逻辑导致内存泄漏，JVM长时间FullGC等。</li>
+<li>同步等待：服务间采用同步调用模式，同步等待造成的资源耗尽。</li>
+</ul>
+<h3 id="雪崩效应应对策略"><a href="#雪崩效应应对策略" class="headerlink" title="雪崩效应应对策略"></a>雪崩效应应对策略</h3><p>针对造成雪崩效应的不同场景，可以使用不同的应对策略，没有一种通用所有场景的策略，参考如下：</p>
+<ul>
+<li>硬件故障：多机房容灾、异地多活等。</li>
+<li>流量激增：服务自动扩容、流量控制（限流、关闭重试）等。</li>
+<li>缓存穿透：缓存预加载、缓存异步加载等。</li>
+<li>程序BUG：修改程序bug、及时释放资源等。</li>
+<li>同步等待：资源隔离、MQ解耦、不可用服务调用快速失败等。<strong>资源隔离通常指不同服务调用采用不同的线程池；不可用服务调用快速失败一般通过熔断器模式结合超时机制实现。</strong></li>
+</ul>
+<h3 id="Hystrix"><a href="#Hystrix" class="headerlink" title="Hystrix"></a>Hystrix</h3><p>Hystrix如何实现这些设计目标？</p>
+<ul>
+<li>使用命令模式将所有对外部服务（或依赖关系）的调用包装在HystrixCommand或HystrixObservableCommand对象中，并将该对象放在单独的线程中执行；</li>
+<li>每个依赖都维护着一个线程池（或信号量），线程池被耗尽则拒绝请求（而不是让请求排队）。<strong>多个依赖的隔离，限流器</strong></li>
+<li>记录请求成功，失败，超时和线程拒绝。</li>
+<li>服务错误百分比超过了阈值，熔断器开关自动打开，一段时间内停止对该服务的所有请求。<strong>熔断器</strong></li>
+<li>请求失败，被拒绝，超时或熔断时执行降级逻辑。</li>
+<li>近实时地监控指标和配置的修改。</li>
+</ul>
+<h4 id="Hystrix设计思想来源"><a href="#Hystrix设计思想来源" class="headerlink" title="Hystrix设计思想来源!!!"></a>Hystrix设计思想来源!!!</h4><h5 id="舱壁隔离模式"><a href="#舱壁隔离模式" class="headerlink" title="舱壁隔离模式"></a>舱壁隔离模式</h5><p>货船为了进行防止漏水和火灾的扩散,会将货仓分隔为多个，当发生灾害时，将所在货仓进行隔离就可以降低整艘船的风险。</p>
+<h5 id="断路器模式"><a href="#断路器模式" class="headerlink" title="断路器模式"></a>断路器模式</h5><p>熔断器就像家里的保险丝，当电流过载了就会跳闸，不过Hystrix的熔断机制相对复杂一些。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000020791119">微服务容错 - 隔离熔断限流</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c1c0d8305fb4">学习分布式系统限流、降级、熔断框架就要看这篇文章</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/7001/blog/1619842">Hystrix原理与实战（文章略长）</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903830899933198">微服务容错限流Hystrix入门</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/cgjCL59e3CDWhsxzwkuKBg">服务自适应降载保护设计， 实际上是Sentinel自适应限流的简单golang实现</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"># 微服务</a>
+              <a href="/tags/%E8%BF%87%E8%BD%BD%E4%BF%9D%E6%8A%A4/" rel="tag"># 过载保护</a>
+              <a href="/tags/%E9%99%8D%E7%BA%A7/" rel="tag"># 降级</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/26/blog/http/http%E4%B9%8Bhttps%E6%8F%A1%E6%89%8B/" rel="prev" title="http之https握手">
+      <i class="fa fa-chevron-left"></i> http之https握手
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/10/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3/" rel="next" title="算法之滑动窗口">
+      算法之滑动窗口 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%86%94%E6%96%AD"><span class="nav-number">1.1.</span> <span class="nav-text">熔断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%99%90%E6%B5%81"><span class="nav-number">1.2.</span> <span class="nav-text">限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%94%E7%A6%BB"><span class="nav-number">1.3.</span> <span class="nav-text">隔离</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%BA%A7%E8%81%94%E6%95%85%E9%9A%9C"><span class="nav-number">1.3.1.</span> <span class="nav-text">服务级联故障</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%9A%94%E7%A6%BB"><span class="nav-number">1.3.2.</span> <span class="nav-text">线程池隔离</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%99%8D%E7%BA%A7"><span class="nav-number">1.4.</span> <span class="nav-text">服务降级</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%99%90%E5%88%B6-cpu-%E4%BD%BF%E7%94%A8%E7%8E%87"><span class="nav-number">1.4.1.</span> <span class="nav-text">限制 cpu 使用率</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java-%E4%B8%AD%E7%9A%84-Hystrix"><span class="nav-number">2.</span> <span class="nav-text">Java 中的 Hystrix</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">2.1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%AA%E5%B4%A9%E6%95%88%E5%BA%94%E5%B8%B8%E8%A7%81%E5%9C%BA%E6%99%AF"><span class="nav-number">2.2.</span> <span class="nav-text">雪崩效应常见场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%AA%E5%B4%A9%E6%95%88%E5%BA%94%E5%BA%94%E5%AF%B9%E7%AD%96%E7%95%A5"><span class="nav-number">2.3.</span> <span class="nav-text">雪崩效应应对策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hystrix"><span class="nav-number">2.4.</span> <span class="nav-text">Hystrix</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Hystrix%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3%E6%9D%A5%E6%BA%90"><span class="nav-number">2.4.1.</span> <span class="nav-text">Hystrix设计思想来源!!!</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%88%B1%E5%A3%81%E9%9A%94%E7%A6%BB%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">舱壁隔离模式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%96%AD%E8%B7%AF%E5%99%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">断路器模式</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

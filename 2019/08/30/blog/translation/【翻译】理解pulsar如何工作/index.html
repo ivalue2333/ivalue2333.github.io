@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[toc] 译者注： 翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试 原文：https:&#x2F;&#x2F;jack-vanlightly.com&#x2F;blog&#x2F;2018&#x2F;10&#x2F;2&#x2F;understanding-how-apache-p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【翻译】理解pulsar如何工作">
+<meta property="og:url" content="http://example.com/2019/08/30/blog/translation/%E3%80%90%E7%BF%BB%E8%AF%91%E3%80%91%E7%90%86%E8%A7%A3pulsar%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[toc] 译者注： 翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试 原文：https:&#x2F;&#x2F;jack-vanlightly.com&#x2F;blog&#x2F;2018&#x2F;10&#x2F;2&#x2F;understanding-how-apache-p">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538490975658-WSDKSTF2F07QFPMCPJ5H/ke17ZwdGBToddI8pDm48kJV1jAkwtpW9vkLNCzSf2apZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpytRA8_xlmUAUvzOGbUpaLvE7_WuxAn6m-fbd5YwLMJktLDmY5AqKXXDP2XJA3wYEg/TopicsSubscriptions.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538572211110-2C6EPHJTLLAOTVMVHXM1/ke17ZwdGBToddI8pDm48kNuQg4DPj-ZiSLlQ1mA-m5VZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpziKpoV5IaTDWe156eBon-JdNkIvVB8rdM9jZ1mHzghMHtuQ3Bc-WEW1Zva2BOApwg/PulsarBkZkCluster.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538497275047-DGDCYE3LX945H79I1MOI/ke17ZwdGBToddI8pDm48kP4OquFsp0z_4M9SgEdkA-1Zw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpwZopll50m_pEdS__uD2SDZ8yBY1t3JP7PQYoqOUTuOGEif_HaDux59pPCV6sKZagQ/LogLedgerFragmentEntry.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538497570494-EIP81VKC3W4VZQBWCWWH/ke17ZwdGBToddI8pDm48kIbud3I0PP4grOx6GV69VKdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZamWLI2zvYWH8K3-s_4yszcp2ryTI0HqTOaaUohrI8PILXN0epPzkBEfvjJ1KHqFVVIpd5CcZ1H4NuqC5vYibEQ/SubTopicLedgerFragmentBookie.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538556992096-2Y1LIUC0GI3XKGGM064I/ke17ZwdGBToddI8pDm48kMhWbqEOzLM2QU2fvTknMAlZw-zPPgdn4jUwVcJE1ZvWhcwhEtWJXoshNdA9f1qD7YIE3ZwwVlGd312yABb759F_qgn4yC8n-gJY79c93t1ZXZ9isb_v9u5N1MTxi-8cgA/FragmentEnsemble.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538557218910-2K8O0CLWOD9N7ZXX45JS/ke17ZwdGBToddI8pDm48kH1uC8zMwd-1etWmzsTwoCRZw-zPPgdn4jUwVcJE1ZvWEtT5uBSRWt4vQZAgTJucoTqqXjS3CfNDSuuf31e0tVGTXPL0VIdgPuIggbScLSveBvIJz4D2sTx6V5oRWqJGh5uG45vQwBxdpDrCGUSSl5w/FragmentWithStriping.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538559874547-UYUESUUV7Q33RK5BJXDB/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerWrites.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538560169571-MKFXQQ8FJ6MMJH4V59EO/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerReads.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538601042753-J8IXQ06HUPV1R7PEAPFE/ke17ZwdGBToddI8pDm48kGp6mpaF6fRR69MhdwssQUgUqsxRUqqbr1mOJYKfIPR7LoDQ9mXPOjoJoqy81S2I8N_N4V1vUb5AoIIIbLZhVYxCRW4BPu10St3TBAUQYVKcUp2nWII0JUNTlurDWjlSqtH1pYxrnuysKJX4SS0MkLn8sIGgGTuW_pGj0nnlCENC/image-asset.png">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538583413563-QVJ2MWQQK1B10NIP45NZ/ke17ZwdGBToddI8pDm48kF9K_vvjtFzVXH1W4f_DQEpZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyf1S8Qn827K1psbrnM8HhCaEP0bNw_lw7ho1MuAex3PfHhIYVgeZkiJDc-4VfhUAY/RoundUp.png">
+<meta property="article:published_time" content="2019-08-30T09:43:42.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.799Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="消息队列">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="Apache Pulsar">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png">
+
+<link rel="canonical" href="http://example.com/2019/08/30/blog/translation/%E3%80%90%E7%BF%BB%E8%AF%91%E3%80%91%E7%90%86%E8%A7%A3pulsar%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【翻译】理解pulsar如何工作 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/08/30/blog/translation/%E3%80%90%E7%BF%BB%E8%AF%91%E3%80%91%E7%90%86%E8%A7%A3pulsar%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【翻译】理解pulsar如何工作
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-30 17:43:42" itemprop="dateCreated datePublished" datetime="2019-08-30T17:43:42+08:00">2019-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[toc]</p>
+<p>译者注：</p>
+<p>翻译：pulsar broker：pulsar经纪人（代理）。Ledger：分类账。fragment：片段。cursor：游标。Entity：条目。split-brain：裂脑（不是很好的翻译）。chaos testing：混乱测试</p>
+<p>原文：<a target="_blank" rel="noopener" href="https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works">https://jack-vanlightly.com/blog/2018/10/2/understanding-how-apache-pulsar-works</a></p>
+<h2 id="消息系统"><a href="#消息系统" class="headerlink" title="消息系统"></a>消息系统</h2><p>我将撰写一系列关于Apache Pulsar的博客文章，包括一些Kafka vs Pulsar的帖子。 首先，我将在Pulsar集群上运行一些极端情况测试（原文为：chaos tests，译者注），就像我使用RabbitMQ和Kafka一样，看看它有什么故障模式及其消息丢失情况。</p>
+<p>我将尝试通过利用管理员或开发人员的设计缺陷，实现错误或不良配置来做到这一点。</p>
+<p>在这篇文章中，我们将介绍Apache Pulsar设计，以便我们可以更好地设计故障情况。 这篇文章不适合那些想要了解如何使用Apache Pulsar，相反，这篇文章适合想要了解它如何工作的人。 我一直在努力以简单易懂的方式对其架构进行清晰的概述。 我很感激有关此文章的任何反馈。</p>
+<h2 id="申明"><a href="#申明" class="headerlink" title="申明"></a>申明</h2><p>我感兴趣的主要声明（指Apache Pulsar的申明，译者注）是：</p>
+<ul>
+<li>保证没有消息丢失（如果应用推荐的配置，并且您的整个数据中心没有出故障）</li>
+<li>强大的实时订阅保证</li>
+<li>可预测的读写延时</li>
+</ul>
+<p>Apache Pulsar选择一致性而不是可用性，就像它的姐妹项目BookKeeper和ZooKeeper一样。 我们尽一切努力保持一致性。</p>
+<p>我们将看看Pulsar的设计，看看这些说法是否有效。 在下一篇文章中，我们将对该设计的实现进行测试。 我不会在这篇文章中讨论地理复制，我们将在以后看一下，现在，我们只关注一个集群。</p>
+<h2 id="多层抽象"><a href="#多层抽象" class="headerlink" title="多层抽象"></a>多层抽象</h2><p>Apache Pulsar具有主题和订阅的高级概念，其最低级别的数据存储在二进制文件中，这些文件交叉分布在多个服务器上的多个主题的数据。 在它们之间是无数的细节和活动部分。 我个人觉得如果把它分成不同的抽象层，就更容易理解Pulsar架构，所以这就是我在这篇文章中要做的。</p>
+<p>让我们先看一下分层：</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538489997612-OYXFLJVUBYP4TOQDPHW9/ke17ZwdGBToddI8pDm48kBPBTeNcxcfAWtNCaUBD_ARZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyljvS97cYyH0zedltf2oBd_u8JnbgcCswL75I3h5uF8XFnsN0KVckq8AMHMQSUl2Q/LayersOfAbstraction.png"></p>
+<h3 id="第一层-主题，订阅和游标"><a href="#第一层-主题，订阅和游标" class="headerlink" title="第一层-主题，订阅和游标"></a>第一层-主题，订阅和游标</h3><p>这不是关于可以使用Apache Pulsar构建的消息传递体系结构的帖子。 我们将简要介绍主题，订阅和游标的基础知识，但不是关于Pulsar支持的更广泛的消息传递模式的深度。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538490975658-WSDKSTF2F07QFPMCPJ5H/ke17ZwdGBToddI8pDm48kJV1jAkwtpW9vkLNCzSf2apZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpytRA8_xlmUAUvzOGbUpaLvE7_WuxAn6m-fbd5YwLMJktLDmY5AqKXXDP2XJA3wYEg/TopicsSubscriptions.png"></p>
+<p>消息存储在主题中。 逻辑上，一个主题是一个日志结构，每个消息都在一个偏移量。 Apache Pulsar使用术语Cursor来描述偏移的跟踪。 生产者将他们的消息发送到给定的主题，Pulsar保证一旦消息被确认，它就不会丢失（除非一些超级糟糕的灾难或糟糕的配置）。</p>
+<p>消费者通过订阅来消费主题的消息。 订阅是跟踪游标（当前消费者偏移）的逻辑实体，并且还根据订阅类型提供一些额外保证：</p>
+<ul>
+<li>独占订阅 - 一次只有一个消费者可以通过订阅阅读该主题。</li>
+<li>共享订阅 - 竞争消费者可以同时通过同一订阅阅读主题。</li>
+<li>故障转移订阅 - 消费者的活动&#x2F;备份模式。 如果活跃消费者死亡，则备份接管。 但是，同时从来没有两个活跃的消费者。</li>
+</ul>
+<p>一个主题可以有多个附加订阅。 订阅不包含数据，仅包含元数据和游标。<br>Pulsar通过允许消费者将Pulsar主题视为在消费者确认后删除消息的队列，或者像消费者可以根据需要回放游标的日志来提供排队和日志语义。 存储模型底层是相同的 - 日志。</p>
+<p>如果未对主题（通过其名称空间）设置数据保留策略，则在附加订阅的所有游标都已通过其偏移量后，将删除消息。 也就是说，该消息已在附加到该主题的所有订阅上得到确认。</p>
+<p>但是，如果存在涵盖主题的数据保留策略，则一旦通过策略边界（主题的大小，主题中的时间），就会删除消息。</p>
+<p>消息也可以在到期时发送。 如果这些消息在未确认的情况下超过TTL，则会被删除。 这意味着可以在任何消费者有机会阅读之前删除它们。 到期仅适用于未确认的消息，因此更适合于排队语义方面。</p>
+<p>TTL分别适用于每个订阅，这意味着“删除”是逻辑删除。 实际删除将根据其他订阅和任何数据保留策略中发生的情况稍后发生。</p>
+<p>消费者逐个或累积地确认他们的消息。 累积确认对吞吐量会更好，但在消费者失败后会引入重复的消息处理。 但是，累积确认不适用于共享订阅，因为确认基于偏移。 但是，消费者API确实也允许批量确认，这些确认最终会得到相同数量的确认，但这种模式会产生少量的RPC调用。 这可以提高共享订阅上竞争消费者的吞吐量。</p>
+<p>最后，有一些类似于Kafka主题的分区主题。 区别在于Pulsar中的分区也是主题。 就像kafka一样，生产者可以使用散列算法或明确选择分区， 循环发送消息。</p>
+<p>这是对高级概念的旋风式介绍，我们现在将深入研究。 请记住，这不是从顶层来学习使用Apache Pulsar的入门读物，而是看看它在底层的工作原理。</p>
+<h3 id="第二层-逻辑存储模型"><a href="#第二层-逻辑存储模型" class="headerlink" title="第二层-逻辑存储模型"></a>第二层-逻辑存储模型</h3><p>现在Apache BookKeeper进入了场景。 我将在Apache Pulsar的背景下讨论BookKeeper，尽管BookKeeper是一个通用的日志存储解决方案。</p>
+<p>首先，BookKeeper在一组节点上存储数据。 每个BookKeeper节点都称为Bookie。 其次，Pulsar和BookKeeper都使用Apache Zookeeper来存储元数据和监控节点健康状况。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538572211110-2C6EPHJTLLAOTVMVHXM1/ke17ZwdGBToddI8pDm48kNuQg4DPj-ZiSLlQ1mA-m5VZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpziKpoV5IaTDWe156eBon-JdNkIvVB8rdM9jZ1mHzghMHtuQ3Bc-WEW1Zva2BOApwg/PulsarBkZkCluster.png" alt="Fig 3. Apache Pulsar, BookKeeper and ZooKeeper working together"></p>
+<p>一个主题实际上是一个Ledgers流。 Ledger本身就是一个日志。 因此，我们将一系列子日志（Ledgers）中组合成父日志（主题）。</p>
+<p>分类帐（Ledgers）附加到主题，条目（消息或消息组）附加到分类帐。 Ledgers一旦关闭，是不可改变的。 分类帐作为一个单元被删除，也就是说，我们不能删除单个条目而是删除整个分类帐。</p>
+<p>Ledgers本身也被分解成片段。 片段是BookKeeper集群中最小的分布单元（根据您的观点，条带化可能会使该声明无效（原文为：depending on your perspective, striping might invalidate that claim，译者注））。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538497275047-DGDCYE3LX945H79I1MOI/ke17ZwdGBToddI8pDm48kP4OquFsp0z_4M9SgEdkA-1Zw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpwZopll50m_pEdS__uD2SDZ8yBY1t3JP7PQYoqOUTuOGEif_HaDux59pPCV6sKZagQ/LogLedgerFragmentEntry.png"></p>
+<p>主题是Pulsar概念。 分类帐，片段和条目是BookKeeper的概念，尽管Pulsar理解并使用了分类帐和条目。</p>
+<p>每个Ledger（由一个或多个片段组成）可以跨多个BookKeeper节点（Bookies）进行复制，以实现冗余和读取性能。 每个片段都在一组不同的Bookies中复制（如果存在足够的Bookies）。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538497570494-EIP81VKC3W4VZQBWCWWH/ke17ZwdGBToddI8pDm48kIbud3I0PP4grOx6GV69VKdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZamWLI2zvYWH8K3-s_4yszcp2ryTI0HqTOaaUohrI8PILXN0epPzkBEfvjJ1KHqFVVIpd5CcZ1H4NuqC5vYibEQ/SubTopicLedgerFragmentBookie.png"></p>
+<p>每个Ledger有三个关键配置：</p>
+<ul>
+<li>集合大小（Ensemble Size (E)）</li>
+<li>写法定大小（Write Quorum Size (Qw)）</li>
+<li>确认法定大小（Ack Quorum Size (Qa)）</li>
+</ul>
+<p>这些配置应用于主题级别，然后Pulsar在主题的BookKeeper Ledgers &#x2F; Fragments上设置。</p>
+<p>注意：“Ensemble”表示将写入的实际Bookies列表。 集合大小是指Pulsar说它应该创造多大的集合。 请注意，您至少需要E个Bookies才能进行写入。 默认情况下，Bookies被从可用Bookies列表中随机选取（每个Bookies在Zookeeper中注册自己）。</p>
+<p>通过将Bookies标记为属于特定机架，还可以选择配置机架感知。 机架可以是逻辑构造（例如：云环境中的可用区域）。 通过机架感知策略，Pulsar客户端的BookKeeper客户端将尝试从不同的机架中选择Bookies。 也可以插入自定义策略以执行不同类型的选择。</p>
+<p>集合大小（E）控制Pulsar写入的Ledger可用的Bookies池的大小。 每个片段可能有不同的集合，经纪人（pulsar broker）将在创建片段时选择一组Bookies（broker是选取一组bookies作为存储体，这一组存储体就存储这个片段（fragment），译者注），但整体将始终是由E指示的大小。必须有足够的Bookies可用于覆盖E。</p>
+<p>Write Quorum（Qw）是Pulsar写入条目的实际Bookies数。 它可以等于或小于E。A fragment of 8 entries stored across an ensemble of 3 with each entry written to 3 bookies.</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538556992096-2Y1LIUC0GI3XKGGM064I/ke17ZwdGBToddI8pDm48kMhWbqEOzLM2QU2fvTknMAlZw-zPPgdn4jUwVcJE1ZvWhcwhEtWJXoshNdA9f1qD7YIE3ZwwVlGd312yABb759F_qgn4yC8n-gJY79c93t1ZXZ9isb_v9u5N1MTxi-8cgA/FragmentEnsemble.png"></p>
+<p>当Qw小于E时，我们得到条带化，它以这样的方式分配读&#x2F;写，即每个Bookie只需要提供读&#x2F;写请求的子集。 条带化可以提高总吞吐量并降低延迟。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538557218910-2K8O0CLWOD9N7ZXX45JS/ke17ZwdGBToddI8pDm48kH1uC8zMwd-1etWmzsTwoCRZw-zPPgdn4jUwVcJE1ZvWEtT5uBSRWt4vQZAgTJucoTqqXjS3CfNDSuuf31e0tVGTXPL0VIdgPuIggbScLSveBvIJz4D2sTx6V5oRWqJGh5uG45vQwBxdpDrCGUSSl5w/FragmentWithStriping.png"></p>
+<p>Ack Quorum（Qa）是必须承认写入的Bookies的数量，Pulsar经纪人将其确认发送给其客户（客户端：译者注）。 在实践中它可能是：</p>
+<ul>
+<li>(Qa &#x3D;&#x3D; Qw) or</li>
+<li>(Qa &#x3D;&#x3D; Qw -1) —&gt; This will improve latency by ignoring the slowest bookie.</li>
+</ul>
+<p>最终，每个预订者都必须收到写确认。 但是，如果我们总是等待所有的Bookies做出回应，我们就会得到波动的延迟（原文为：spiky latency意为高低不平的延时，且作者有拼写错误，译者注）和没有吸引力的尾部延迟。 Pulsar毕竟承诺可预测的延迟。</p>
+<p>（译者注：topic被分为多个Ledger分类账，而一个分类账需要多个bookie来做记录（高可读和容灾），这多个bookie就为了方便描述就被描述为fragment，但是ledger和fragment并不等价，一个Ledger有多个fragment。<strong>topic和Ledger的关系有点像fragment和bookie的关系</strong>）</p>
+<p>当创建新主题或发生翻转（Roll-over）时，会创建分类帐。 翻转是在以下任何一种情况下创建新Ledger的概念：</p>
+<ul>
+<li>一个分类账的大小或者时间限制已经满足</li>
+<li>一个分类账所有权（一个pulsar经纪人）发生改变</li>
+</ul>
+<p>当一下情形发生时，片段被创建：</p>
+<ul>
+<li>一个分类账被创建</li>
+<li>当前片段集合的一个bookie在写操作时返回一个错误，或者超时</li>
+</ul>
+<p>当一个bookie无法提供写作时，Pulsar经纪人就会忙着创建一个新的片段，并确保写入得到Qw个bookie的认可。 就像终结者一样，它不会停止，直到该消息被持久化。</p>
+<blockquote>
+<p>Insight＃1：增加E以优化延迟和吞吐量。 以写入吞吐量为代价增加Qw以实现冗余。 增加Qa，就增加了已确认写入的持久性，也增加了额外延迟和更长尾部延迟的风险。</p>
+<p>Insight＃2：E和Qw不是Bookies列表。 它们只是表明可以为给定的Ledger服务的Bookies池有多大。 Pulsar将在创建新的Ledger或Fragment时使用E和Qw。 每个片段在其整体中都有一组固定的Bookies，永远不会改变。</p>
+<p>Insight＃3：添加新Bookies并不意味着需要执行手动重新平衡。 这些新的Bookies将自动成为新片段的候选者。 加入群集后，将在创建新的片段&#x2F;分类帐后立即写入新的Bookies。 每个片段都可以存储在群集中不同的Bookies子集中！ 我们不会将主题或分类帐连接到给定的Bookie或Bookies集合。</p>
+</blockquote>
+<p>让我们停下来评估一下。 对于卡夫卡来说，这是一个非常不同且更复杂的模型。 使用Kafka，每个分区副本完全存储在单个代理上。 分区副本由一系列段和索引文件组成。这篇博文（ <a target="_blank" rel="noopener" href="https://thehoard.blog/how-kafkas-storage-internals-work-3a29b02e026%EF%BC%89%E5%BE%88%E5%A5%BD%E5%9C%B0%E6%8F%8F%E8%BF%B0%E4%BA%86%E5%AE%83%E3%80%82">https://thehoard.blog/how-kafkas-storage-internals-work-3a29b02e026）很好地描述了它。</a></p>
+<p>Kafka模型的优点在于它简单快速。 所有读写都是顺序的。 糟糕的是，单个代理必须有足够的存储空间来处理该副本，因此非常大的副本可能会迫使您拥有非常大的磁盘。 第二个缺点是，在扩展集群时重新平衡分区变得必要。 这可能是痛苦的，需要良好的计划和执行才能在没有任何障碍的情况下拉开。</p>
+<p>回到Pulsar + BookKeeper模型。 给定主题的数据分布在多个Bookies中。 该主题已分为Ledgers， 而Ledgers分为片段，并带有条带化，成为可计算的片段集合子集。 当您需要扩展集群时，只需添加更多Bookies，它们就会在创建新片段时开始写入。 不再需要卡夫卡式的再平衡。 但是，读取和写入现在必须在Bookies之间跳跃一点。 我们将在这篇文章看到Pulsar如何管理并高速处理。</p>
+<p>但现在每个Pulsar经纪人都需要跟踪每个主题所包含的Ledgers和Fragments。 这个元数据存储在ZooKeeper中，如果你丢失了，那么你就会陷入严重的困境。</p>
+<p>在存储层中，我们编写的主题均匀的分布到BookKeeper集群。 我们避免了将Topic副本耦合到特定节点的陷阱。 卡夫卡主题就像Toblerone（一种巧克力冰激凌，用中文可以说为老冰棍的棍子，译者注）的棒子一样，我们的Pulsar主题就像一个气体膨胀来填补可用空间。 这避免了痛苦的再平衡。</p>
+<h3 id="第二层-pulsar的broker和topic所有权"><a href="#第二层-pulsar的broker和topic所有权" class="headerlink" title="第二层-pulsar的broker和topic所有权"></a>第二层-pulsar的broker和topic所有权</h3><p>同样在我的抽象层的第2层，我们有Pulsar Brokers。 Pulsar Brokers（经纪人）没有会丢失的持久状态。 它们与存储层分开。 BookKeeper集群本身并不执行复制，每个Bookie只是一个跟随者，被领导者告知应该做什么 - 领导者是Pulsar经纪人。 <strong>每个主题都只由单独一个Pulsar经纪人拥有。 该经纪服务于该主题的所有读写操作。</strong></p>
+<p>当Pulsar经纪人接收到写入时，它将针对该主题的当前片段的集合执行该写入。 请记住，如果没有条带化，则每个条目（<strong>Entity，条目可以认为是一条记录，类似sql中的一行记录</strong>，译者注）的集合与片段集合相同。 如果发生条带化，那么每个条目都有自己的集合，这是片段集合的一个子集。</p>
+<p>在一般情况下，当前的Ledger中将有一个Fragment。 一旦Qa个经纪人承认写入，Pulsar经纪人将向生产者客户发送确认。</p>
+<p>只有在所有先前消息都已通过Qa个确认时，才能发送确认。 如果对于给定的消息，Bookie响应错误或根本没有响应，则经纪人将在新的Bookies集合上创建新的片段（不包括问题Bookie）。</p>
+<p>对于特定的主题，一个经纪人服务所有的读写</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538559874547-UYUESUUV7Q33RK5BJXDB/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerWrites.png"></p>
+<p>请注意，经纪人只会等待来自bookie的Qa ack。</p>
+<p>读取也通过所有者。 作为给定主题的单一入口点的经纪人知道哪些偏移已经安全地保存到BookKeeper。 它只需要从一个Bookie读取即可进行读取。 我们将在第3层中看到它如何使用缓存从其内存缓存中提供许多读取，而不是将读取发送到BookKeeper。</p>
+<p>只需要从一个bookie去读取</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538560169571-MKFXQQ8FJ6MMJH4V59EO/ke17ZwdGBToddI8pDm48kEhfMt_UJWE-NBWU6gIQCfBZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzMDXHj_QteqFFq4zPI8ZR9qIgV0hNheP2G3x6v_w8PhyA9VS238vByjKbGT0QZicU/PulsarBrokerReads.png"></p>
+<p>Pulsar Broker的健康状况由ZooKeeper监控。 当代理失败或变得不可用（对ZooKeeper）时，会发生所有权更改。 新的代理成为主题所有者，然后所有客户端都被定向读取&#x2F;写入此新代理。</p>
+<p>BookKeeper有一个非常重要的功能，称为Fencing。 Fencing允许BookKeeper保证只有一个写入者（Pulsar经纪人）可以写入分类账。</p>
+<p>它按如下流程工作</p>
+<ol>
+<li>拥有主题X的当前Pulsar经纪人（B1）被视为已死或不可用（通过ZooKeeper来监控并判定）。</li>
+<li>另一个代理（B2）将主题X的当前分类帐的状态从OPEN更新为IN_RECOVERY。</li>
+<li>B2向分类账的当前片段的所有bookies发送围栏消息，并等待（Qw-Qa）+1响应。 收到此响应数后，分类帐现在会被围起来。 旧代理如果它实际上仍然存活，则无法进行写入，因为它无法获得Qa确认（由于屏蔽异常响应）。</li>
+<li>B2然后从片段集合中的每个bookie请求他们最后确认的条目是什么。 它需要最新的条目ID，然后从该点开始向前阅读。 它确保从那一点开始的所有条目（可能以前未向Pulsar经纪人确认）都会被复制到Qw个bookies。 一旦B2无法读取并复制任何更多条目，分类帐将完全恢复。</li>
+<li>B2将分类账的状态改变为closed</li>
+<li>B2现在可以在新的分类账上接受写和读操作</li>
+</ol>
+<p>关于这种架构的伟大之处在于，通过让领导者（Pulsar经纪人）没有状态，BookKeeper的围栏功能可以很好地处理裂脑（原文为split-brain， 译者注）问题。 没有裂脑，没有分歧，没有数据丢失。</p>
+<h3 id="第二层-游标追踪"><a href="#第二层-游标追踪" class="headerlink" title="第二层-游标追踪"></a>第二层-游标追踪</h3><p>每个订阅都存储一个游标。 游标是日志中的当前偏移量。 订阅将其游标存储在BookKeeper的分类帐中。 这使游标跟踪可以像主题一样进行扩展。</p>
+<h3 id="第三层-bookie存储"><a href="#第三层-bookie存储" class="headerlink" title="第三层-bookie存储"></a>第三层-bookie存储</h3><p>Ledgers和Fragments是逻辑结构，在ZooKeeper中维护和跟踪。 物理上，数据不存储在与Ledgers和Fragments对应的文件中。 BookKeeper中存储的实际实现是可插拔的，Pulsar默认使用名为DbLedgerStorage的存储实现来存储数据。</p>
+<h4 id="write"><a href="#write" class="headerlink" title="write"></a>write</h4><p>当发生对Bookie的写入时，首先将该消息写入日志文件。 这是一个预写日志（WAL），它有助于BookKeeper在发生故障时避免数据丢失。 这和关系数据库实现其持久性保证的相同机制。</p>
+<p>写入操作也写入写入缓存。 写入缓存会累积写入并定期将写入排序并刷盘到条目日志文件。 对写入进行排序，以便将同一分类帐的条目放在一起，从而提高读取性能。 如果条目以严格的时间顺序（strict temporal）写入，则读取将不能受益于磁盘上的顺序布局。 通过聚合和排序，我们实现了分类账级别的时间排序，这是我们关心的。</p>
+<p>Write Cache还将条目写入RocksDB，RocksDB存储每个条目位置的索引。 它只是将（ledgerId，entryId）映射到（entryLogId，文件中的偏移量）。</p>
+<p>由于<strong>写入缓存具有最新消息</strong>，因此读取首先达到写入缓存。 如果存在写入缓存未命中，则它将命中读取缓存。 如果存在第二次缓存未命中，则读取缓存会在RocksDB中查找所请求条目的位置，然后在正确的条目日志文件中读取该条目。 它执行预读并更新读缓存，以便后续请求更有可能获得缓存命中。 这两层缓存意味着读取通常从内存中提供。</p>
+<p>BookKeeper允许您将磁盘IO与读写隔离。 写入都按顺序写入日志文件，可以存储在专用磁盘上，并以组的形式提交，以获得更高的吞吐量。 之后，从写入者的角度来看，不需要磁盘IO的同步。 数据只写入内存缓冲区。</p>
+<p>写缓存在后台线程上异步执行批量写入Entry Log文件和RocksDB，所以写缓存通常运行自己的共享磁盘。 因此，一个磁盘用于同步写入（日志文件），另一个磁盘用于异步优化写入和所有读取。（译者注：一个磁盘用于批量写入，另一个磁盘接受写入和读取请求（这些都是不连续的））</p>
+<h4 id="read"><a href="#read" class="headerlink" title="read"></a>read</h4><p>在读的方面，读者要么被读缓存服务，要么被日志条目文件和RocksDB服务</p>
+<h4 id="summary"><a href="#summary" class="headerlink" title="summary"></a>summary</h4><p>还要考虑到写入可以使入口网络带宽（ ingress network bandwidth）饱和，并且读取可以使出口网络带宽（egress network bandwidth）饱和，但它们不会相互影响。</p>
+<p>这种优雅的隔离读取来自磁盘和网络级别的写入。</p>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538601042753-J8IXQ06HUPV1R7PEAPFE/ke17ZwdGBToddI8pDm48kGp6mpaF6fRR69MhdwssQUgUqsxRUqqbr1mOJYKfIPR7LoDQ9mXPOjoJoqy81S2I8N_N4V1vUb5AoIIIbLZhVYxCRW4BPu10St3TBAUQYVKcUp2nWII0JUNTlurDWjlSqtH1pYxrnuysKJX4SS0MkLn8sIGgGTuW_pGj0nnlCENC/image-asset.png" alt="Fig 10. A Bookie with the default (with Apache Pulsar) DbLedgerStorage architecture."></p>
+<h3 id="第三层-pulsar代理人缓存"><a href="#第三层-pulsar代理人缓存" class="headerlink" title="第三层-pulsar代理人缓存"></a>第三层-pulsar代理人缓存</h3><p>每个主题都仅有一个代理所有者的代理。 所有读写都通过该代理进行。 这提供了许多好处。</p>
+<p>首先，代理可以将日志尾部缓存在内存中，这意味着代理可以在不需要BookKeeper的情况下为尾部读取器（tailing readers， 译者注）提供服务。 这避免了支付网络往返（network round-trip， 译者注）的费用以及Bookie上可能的磁盘读取。</p>
+<p>经纪人也知道Last Add Confirmed条目的id。 它可以跟踪哪条消息是最后一个安全持久的消息。</p>
+<p>当代理在其缓存中没有消息时，它将从该消息的片段集合中的一个Bookie请求数据。 这意味着尾部读取器和追赶读取器（catch-up readers， 译者注）之间的读取服务性能差异很大。 尾部读取器可以从Pulsar代理的内存中提供，而如果写入和读取高速缓存都没有数据，则追赶读取器可能必须承担额外的网络往返和多次磁盘读取的成本。</p>
+<p>因此，我们从高层次上涵盖了消息的逻辑和物理表示，以及Pulsar集群中的不同参与者及其相互之间的关系。 有很多细节尚未涵盖，但我们会将其作为以后的练习。</p>
+<p>接下来我们将介绍Apache Pulsar集群如何确保在节点故障后消息得到充分复制。</p>
+<h2 id="恢复协议"><a href="#恢复协议" class="headerlink" title="恢复协议"></a>恢复协议</h2><p>当一个bookie失败时，所有在该bookie上有碎片的分类账现在都在复制。 恢复是“重新复制”片段的过程，以确保为每个分类帐维护复制因子（Qw）。</p>
+<p>有两种类型的恢复：手动或自动。 两者的重复复制协议相同，但自动恢复使用内置的失败节点检测机制来注册要执行的重复复制任务。 手动过程需要手动干预。</p>
+<p>我们将聚焦自动回复机制</p>
+<p>自动恢复可以在AutoRecoveryMain流程中从一组专用服务器运行，也可以在Bookies上托管。 其中一个自动恢复进程被选为审计员（原文为：Auditor，译者注）。 审计员的作用是检测崩溃的Bookies然后：</p>
+<ul>
+<li>阅读ZK的完整分类帐清单，找到托管（原文为：hosted on）在失败的Bookies上的分类帐。</li>
+<li>对于每个分类帐，它将在ZooKeeper中的&#x2F;underreplicated znode中创建重新复制任务。</li>
+</ul>
+<p>如果Auditor节点出现故障，则另一个节点将升级为Auditor。 Auditor是AutoRecoveryMain过程中的一个线程。</p>
+<p>AutoRecoveryMain进程还有一个运行Replication Task Worker的线程。 每个工作人员（worker）都会监视未充分复制的znode以查找任务。</p>
+<p>在看到任务时，它会尝试锁定它（获取锁，译者注）。 如果它无法获取锁定，它将进入下一个任务。</p>
+<p>如果它确实设法获得了锁，那么：</p>
+<ul>
+<li>扫描分类帐，查找本地bookie不属于的碎片</li>
+<li>对于每个匹配的片段，它将来自另一个bookie的数据复制到自己的bookie，使用新的集合更新ZooKeeper，并将片段标记为完全复制。</li>
+</ul>
+<p>如果分类帐仍然存在未复制的碎片，则释放锁定。 如果所有片段都完全复制，则从 &#x2F;underreplicated 删除任务。</p>
+<p>如果片段没有结束条目ID，则复制任务将等待并再次检查，如果片段仍然没有结束条目ID，则它会在重新复制片段之前对分类帐进行隔离（fences）。</p>
+<p>因此，使用自动恢复模式，Pulsar集群能够完全复制细节，以确保每个分类帐的正确复制因子。 管理员只需确保部署适量的bookies。</p>
+<h2 id="ZooKeeper"><a href="#ZooKeeper" class="headerlink" title="ZooKeeper"></a>ZooKeeper</h2><p>Pulsar和BookKeeper都需要ZooKeeper。 如果Pulsar节点失去所有ZooKeeper节点的可见性，那么它将停止接受读写并重新启动。 这是一种预防措施，可确保群集无法进入不一致状态。</p>
+<p>这意味着如果ZooKeeper发生故障，一切都变得不可用，并且所有Pulsar节点缓存都将被擦除。 因此，在恢复服务时，理论上可能存在由于所有读取都到达BookKeeper而导致的延迟峰值。</p>
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><ul>
+<li>主题有一个所有者经纪人</li>
+<li>每一个主题逻辑上被分为，分类账们，片段们和条目们</li>
+<li>片段分布在bookie集群中。 给定的主题与给定的bookies没有耦合。</li>
+<li>片段可以跨多个bookies条带化</li>
+<li>当Pulsar经纪人失败（可以翻译为崩溃，但译者不愿意：译者注）时，该经纪人的主题的所有权将故障转移给另一个经纪人。 Fencing避免了两个可能认为自己的所有者同时实际写入当前主题分类帐的经纪人。</li>
+<li>当bookie失败时，自动恢复（如果启用）将自动将数据“重新复制”到其他bookies。 如果禁用，则可以启动手动过程。</li>
+<li>经纪人缓存日志尾部，使他们能够非常有效地为尾部读取器提供服务</li>
+<li>bookie使用日志来提供失败保证。 该日志可用于恢复发生故障时，尚未写入Entry Log文件的数据。</li>
+<li>所有主题的条目都在Entry Log文件中交错。 查找索引保存在RocksDB中。</li>
+<li>Bookies按如下方式提供服务: Write Cache -&gt; Read Cache -&gt; Log Entry files</li>
+<li>Bookies可以通过单独的磁盘隔离读取写入IO，用于日志文件，日志条目文件和RocksDB</li>
+<li>ZooKeeper存储Pulsar和BookKeeper的所有元数据。 如果ZooKeeper不可用，则Pulsar不可用</li>
+<li>存储可以单独扩展到Pulsar经纪人。 如果存储是瓶颈，那么只需添加更多的bookies ，他们将开始承担负载而无需重新平衡。</li>
+</ul>
+<p><img src="https://images.squarespace-cdn.com/content/v1/56894e581c1210fead06f878/1538583413563-QVJ2MWQQK1B10NIP45NZ/ke17ZwdGBToddI8pDm48kF9K_vvjtFzVXH1W4f_DQEpZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpyf1S8Qn827K1psbrnM8HhCaEP0bNw_lw7ho1MuAex3PfHhIYVgeZkiJDc-4VfhUAY/RoundUp.png"></p>
+<h2 id="关于潜在的数据丢失的初步思考"><a href="#关于潜在的数据丢失的初步思考" class="headerlink" title="关于潜在的数据丢失的初步思考"></a>关于潜在的数据丢失的初步思考</h2><p>–这一部分未完全翻译</p>
+<p>让我们来看看RabbitMQ和Kafka承认的写消息丢失情况，看看它们是否适用于Pulsar。</p>
+<h3 id="RabbitMQ具有Ignore或Autoheal模式的裂脑"><a href="#RabbitMQ具有Ignore或Autoheal模式的裂脑" class="headerlink" title="RabbitMQ具有Ignore或Autoheal模式的裂脑"></a>RabbitMQ具有Ignore或Autoheal模式的裂脑</h3><p>分区的丢失方丢失了自分区开始以来未传递的任何消息。</p>
+<p>Apache Pulsar在理论上不存在存储层上的裂脑。</p>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>还有更多的细节，我要么没有涉及，要么还不知道。在协议和存储模型方面，ApachePulsar比ApacheKafka复杂得多。</p>
+<p>pulsar集群的两个显著特点是：</p>
+<ul>
+<li>将存储器与存储分离，结合BookKeepers防护功能，可以优雅地避免可能引起数据丢失的裂脑情况。</li>
+<li>将主题分解为分类帐和碎片，并在群集中分发这些主题，使Pulsar群集可以轻松扩展。 新数据自动开始写入新的bookie。 不需要重新平衡。</li>
+</ul>
+<p>此外，我甚至没有进行到地理复制和分层存储，这也是令人惊叹的功能。</p>
+<p>我的感觉是Pulsar和BookKeeper是下一代数据流系统的一部分。 他们的协议经过深思熟虑，相当优雅。 但随着复杂性的增加，增加了漏洞的风险。 在下一篇文章中，我们将开始对Apache Pulsar集群进行混乱测试，看看我们是否可以识别协议中的弱点，以及任何实现错误或异常。</p>
+<p>标签：Apache Pulsar</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" rel="tag"># 消息队列</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/Apache-Pulsar/" rel="tag"># Apache Pulsar</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/30/blog/concurrent%20and%20gc/golang%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/" rel="prev" title="【gc】golang垃圾回收">
+      <i class="fa fa-chevron-left"></i> 【gc】golang垃圾回收
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/09/09/blog/learn/git%E4%B8%8D%E5%90%8C%E9%98%B6%E6%AE%B5%E6%92%A4%E5%9B%9E/" rel="next" title="git不同阶段撤回">
+      git不同阶段撤回 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.</span> <span class="nav-text">消息系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%B3%E6%98%8E"><span class="nav-number">2.</span> <span class="nav-text">申明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E5%B1%82%E6%8A%BD%E8%B1%A1"><span class="nav-number">3.</span> <span class="nav-text">多层抽象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82-%E4%B8%BB%E9%A2%98%EF%BC%8C%E8%AE%A2%E9%98%85%E5%92%8C%E6%B8%B8%E6%A0%87"><span class="nav-number">3.1.</span> <span class="nav-text">第一层-主题，订阅和游标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82-%E9%80%BB%E8%BE%91%E5%AD%98%E5%82%A8%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.2.</span> <span class="nav-text">第二层-逻辑存储模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82-pulsar%E7%9A%84broker%E5%92%8Ctopic%E6%89%80%E6%9C%89%E6%9D%83"><span class="nav-number">3.3.</span> <span class="nav-text">第二层-pulsar的broker和topic所有权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82-%E6%B8%B8%E6%A0%87%E8%BF%BD%E8%B8%AA"><span class="nav-number">3.4.</span> <span class="nav-text">第二层-游标追踪</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82-bookie%E5%AD%98%E5%82%A8"><span class="nav-number">3.5.</span> <span class="nav-text">第三层-bookie存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#write"><span class="nav-number">3.5.1.</span> <span class="nav-text">write</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#read"><span class="nav-number">3.5.2.</span> <span class="nav-text">read</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#summary"><span class="nav-number">3.5.3.</span> <span class="nav-text">summary</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82-pulsar%E4%BB%A3%E7%90%86%E4%BA%BA%E7%BC%93%E5%AD%98"><span class="nav-number">3.6.</span> <span class="nav-text">第三层-pulsar代理人缓存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D%E5%8D%8F%E8%AE%AE"><span class="nav-number">4.</span> <span class="nav-text">恢复协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ZooKeeper"><span class="nav-number">5.</span> <span class="nav-text">ZooKeeper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">6.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%BD%9C%E5%9C%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1%E7%9A%84%E5%88%9D%E6%AD%A5%E6%80%9D%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">关于潜在的数据丢失的初步思考</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitMQ%E5%85%B7%E6%9C%89Ignore%E6%88%96Autoheal%E6%A8%A1%E5%BC%8F%E7%9A%84%E8%A3%82%E8%84%91"><span class="nav-number">7.1.</span> <span class="nav-text">RabbitMQ具有Ignore或Autoheal模式的裂脑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">8.</span> <span class="nav-text">结论</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

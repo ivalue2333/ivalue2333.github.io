@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tcp之tcp和udp协议的对比">
+<meta property="og:url" content="http://example.com/2020/02/07/blog/http/tcp%E4%B9%8Btcp%E5%92%8Cudp%E5%8D%8F%E8%AE%AE%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="七层模型   层 功能 协议    应用层 网络服务与最终用户的一个接口。 HTTP,  FTP, SMTP, websocket   表示层 数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）    会话层 建立、管理、终止会话。（在五层模型里面已经合并到了应用层）    传输层 定义传输数据的协议端口号，以及流控和差错校验。 TCP, UDP   网络层 进行逻辑地址寻址，实现不同网">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-02-07T09:20:19.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.786Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http">
+<meta property="article:tag" content="tcp">
+<meta property="article:tag" content="udp">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/02/07/blog/http/tcp%E4%B9%8Btcp%E5%92%8Cudp%E5%8D%8F%E8%AE%AE%E5%AF%B9%E6%AF%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>tcp之tcp和udp协议的对比 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/02/07/blog/http/tcp%E4%B9%8Btcp%E5%92%8Cudp%E5%8D%8F%E8%AE%AE%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          tcp之tcp和udp协议的对比
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-07 17:20:19" itemprop="dateCreated datePublished" datetime="2020-02-07T17:20:19+08:00">2020-02-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="七层模型"><a href="#七层模型" class="headerlink" title="七层模型"></a>七层模型</h2><table>
+<thead>
+<tr>
+<th>层</th>
+<th>功能</th>
+<th>协议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>应用层</td>
+<td>网络服务与最终用户的一个接口。</td>
+<td>HTTP,  FTP, SMTP, websocket</td>
+</tr>
+<tr>
+<td>表示层</td>
+<td>数据的表示、安全、压缩。（在五层模型里面已经合并到了应用层）</td>
+<td></td>
+</tr>
+<tr>
+<td>会话层</td>
+<td>建立、管理、终止会话。（在五层模型里面已经合并到了应用层）</td>
+<td></td>
+</tr>
+<tr>
+<td>传输层</td>
+<td>定义传输数据的协议端口号，以及流控和差错校验。</td>
+<td>TCP, UDP</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td>进行逻辑地址寻址，实现不同网络之间的路径选择。</td>
+<td>ICMP, IP</td>
+</tr>
+<tr>
+<td>数据链路层</td>
+<td>建立逻辑连接、进行硬件地址寻址、差错校验等功能。</td>
+<td></td>
+</tr>
+<tr>
+<td>物理层</td>
+<td>建立、维护、断开物理连接。</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>数据在网络上传输，通过网络层的IP地址找到目标主机，通过传输层的端口号定位目标主机上的服务(应用程序)。</p>
+<h2 id="TCP（TCP可靠性）"><a href="#TCP（TCP可靠性）" class="headerlink" title="TCP（TCP可靠性）"></a>TCP（TCP可靠性）</h2><p>传输控制协议（TCP，Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的传输层通信协议。</p>
+<p><strong>可靠性</strong>：TCP为了保证报文传输的可靠，就给每个包一个序号，同时序号也保证了传送到接收端实体的包的按序接收。然后接收端实体对已成功收到的字节发回一个<strong>相应的确认（ACK）</strong>；如果发送端实体在合理的往返时延（RTT）内未收到确认，那么对应的数据（假设丢失了）将会被<strong>重传</strong>。</p>
+<p>TCP如何保证可靠的传输层：<strong>TCP在数据传输之前有三次握手来建立连接，并且在数据传递时，有确认、重传、流量控制、拥塞控制，在数据传输完之后，还会断开连接用来节约系统资源， 其中确认，重传，流量控制以及报文排序都是基于 syn 的设计来实现的</strong></p>
+<p>TCP 会保证每一个报文都能够抵达对方，它的机制是这样：报文发出去后，必须接收到对方返回的确认报文 ACK，如果迟迟未收到，就会超时重发该报文，直到收到对方的 ACK 为止。<strong>所以，TCP 报文发出去后，并不会立马从内存中删除，因为重传时还需要用到它。</strong>由于 TCP 是内核维护的，所以报文存放在内核缓冲区。如果连接非常多，我们可以通过 free 命令观察到 <code>buff/cache</code> 内存是会增大。</p>
+<h3 id="TCP可靠传输的实现"><a href="#TCP可靠传输的实现" class="headerlink" title="TCP可靠传输的实现"></a>TCP可靠传输的实现</h3><p>TCP 连接的每一端都必须设有两个窗口——一个发送窗口和一个接收窗口。TCP 的可靠传输机制用字节的序号进行控制。TCP 所有的确认都是基于序号而不是基于报文段。发送过的数据未收到确认之前必须保留，以便超时重传时使用。发送窗口没收到确认前不动，收到新的确认前移</p>
+<p><strong>发送缓存</strong>用来暂时存放： 发送应用程序传送给发送方 TCP 准备发送的数据；TCP 已发送出但尚未收到确认的数据。</p>
+<p><strong>接收缓存</strong>用来暂时存放：按序到达的、但尚未被接收应用程序读取的数据； 不按序到达的数据。<br>必须强调三点：</p>
+<ul>
+<li>A 的发送窗口并不总是和 B 的接收窗口一样大（因为有一定的时间滞后）。</li>
+<li>TCP 标准没有规定对不按序到达的数据应如何处理。通常是先临时存放在接收窗口中，等到字节流中所缺少的字节收到后，再按序交付上层的应用进程。</li>
+<li>TCP 要求接收方必须有累积确认的功能，这样可以减小传输开销</li>
+</ul>
+<h2 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h2><p>用户数据报协议（UDP，User Datagram Protocol）为应用程序提供了一种无需建立连接就可以发送封装的 IP 数据报的方法。</p>
+<p>在选择UDP作为传输协议时必须要谨慎。在网络质量令人十分不满意的环境下，UDP协议数据包丢失会比较严重。但是由于UDP的特性：它不属于连接型协议，因而具有资源消耗小，处理速度快的优点，所以通常音频、视频和普通数据在传送时使用UDP较多，因为它们即使偶尔丢失一两个数据包，也不会对接收结果产生太大影响。</p>
+<h2 id="TCP-和-UDP-对比"><a href="#TCP-和-UDP-对比" class="headerlink" title="TCP 和 UDP 对比"></a>TCP 和 UDP 对比</h2><table>
+<thead>
+<tr>
+<th align="left">功能</th>
+<th align="left">TCP</th>
+<th>UDP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">连接</td>
+<td align="left">面向连接</td>
+<td>无连接</td>
+</tr>
+<tr>
+<td align="left">传输双方</td>
+<td align="left">一对一，所以必须要提前建立连接，只支持单播</td>
+<td>一对一、一对多、一对全都可以，即支持单播、广播、全播。</td>
+</tr>
+<tr>
+<td align="left">传输可靠性</td>
+<td align="left">可靠</td>
+<td>不可靠</td>
+</tr>
+<tr>
+<td align="left">传输形式</td>
+<td align="left">字节流，仅把应用进程交下来的报文当作一连串的字节流，然后对这些字节流进行分组、编号、发送</td>
+<td>数据报文段（UDP对应用进程交下来的报文既不合并、也不会拆分，而是保留这些报文的边界）</td>
+</tr>
+<tr>
+<td align="left">应用场景</td>
+<td align="left">要求通信数据可靠（比如文件传输、邮件传输）</td>
+<td>要求实时性强，且对丢数据有一定容忍性</td>
+</tr>
+<tr>
+<td align="left">提供服务</td>
+<td align="left">可以向上层提供面向连接可靠服务，不会出现误码、丢失。</td>
+<td>接收方不需要发送ack，发送方也不关系ack</td>
+</tr>
+<tr>
+<td align="left">性能</td>
+<td align="left">传输效率：慢<br>所需资源：多</td>
+<td>传输效率：快<br>所需资源：少</td>
+</tr>
+</tbody></table>
+<ul>
+<li>TCP提供面向连接的服务，在传送数据之前必须先建立连接，数据传输结束之后要释放连接，TCP不提供多播和广播。并且由于TCP提供可靠的、面向连接的运输服务，这些难免会增加系统的开销，如确认，流量控制，计时器以及连接管理，使得首部字节增大很多，还需要占用很多的处理机资源。TCP一般用于文件传输、发送和接受邮件、远程登陆等场景。</li>
+<li>UDP传输数据之前不需要先建立连接，<strong>远地主机在收到UDP报文后，不需要给出任何确认</strong>，远地主机假如发现UDP报文段出错，<strong>直接丢弃，也不需要给发送主机返回消息</strong>。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>百度百科</p>
+<p>计算机网络-TCP和UDP的区别： <a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000021688094">https://segmentfault.com/a/1190000021688094</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/tcp/" rel="tag"># tcp</a>
+              <a href="/tags/udp/" rel="tag"># udp</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/07/blog/http/tcp%E4%B9%8B%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E5%92%8C%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/" rel="prev" title="tcp之的流量控制和拥塞控制">
+      <i class="fa fa-chevron-left"></i> tcp之的流量控制和拥塞控制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/26/blog/http/udp%E5%85%A5%E9%97%A8/" rel="next" title="udp入门">
+      udp入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E5%B1%82%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">七层模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP%EF%BC%88TCP%E5%8F%AF%E9%9D%A0%E6%80%A7%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">TCP（TCP可靠性）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.1.</span> <span class="nav-text">TCP可靠传输的实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP"><span class="nav-number">3.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-%E5%92%8C-UDP-%E5%AF%B9%E6%AF%94"><span class="nav-number">4.</span> <span class="nav-text">TCP 和 UDP 对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

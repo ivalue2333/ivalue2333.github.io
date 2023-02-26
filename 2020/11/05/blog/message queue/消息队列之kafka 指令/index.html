@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 实验消费组（一个分区）创建 topic1docker exec mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 1 --topic test  生产消息12# 生产消息&#x2F;opt&#x2F;kafka&#x2F;bin&#x2F;kafka-console-produce">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列之kafka 指令">
+<meta property="og:url" content="http://example.com/2020/11/05/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%20%E6%8C%87%E4%BB%A4/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 实验消费组（一个分区）创建 topic1docker exec mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 1 --topic test  生产消息12# 生产消息&#x2F;opt&#x2F;kafka&#x2F;bin&#x2F;kafka-console-produce">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-05T11:40:37.000Z">
+<meta property="article:modified_time" content="2023-02-08T11:58:09.275Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="kafka">
+<meta property="article:tag" content="指令">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/11/05/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%20%E6%8C%87%E4%BB%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列之kafka 指令 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/05/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%20%E6%8C%87%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列之kafka 指令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-05 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-05T19:40:37+08:00">2020-11-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-02-08 19:58:09" itemprop="dateModified" datetime="2023-02-08T19:58:09+08:00">2023-02-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><h3 id="消费组（一个分区）"><a href="#消费组（一个分区）" class="headerlink" title="消费组（一个分区）"></a>消费组（一个分区）</h3><h4 id="创建-topic"><a href="#创建-topic" class="headerlink" title="创建 topic"></a>创建 topic</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 1 --topic <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="生产消息"><a href="#生产消息" class="headerlink" title="生产消息"></a>生产消息</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 生产消息</span></span><br><span class="line">/opt/kafka/bin/kafka-console-producer.sh --broker-list mykafka:9092 --topic <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="两个组名称不同"><a href="#两个组名称不同" class="headerlink" title="两个组名称不同"></a>两个组名称不同</h4><p>生产者每生产一份数据，两个消费组都会收到消息。对应 pulsar中 shared 并 subScriptonName 不同， 每一个组都能消费所有的数据。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> -group test_group1 --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 一个新的 group 加入会消费数据，这里指定的是 --from-beginning， 所以会消费所有的数据</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> -group test_group2 --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里只会消费后面增加的数据，这里的分区指定为0，因为这里没有分区，所以就是0， 如果指定分区为1，那么无法消费数据</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --offset latest --partition 0</span><br></pre></td></tr></table></figure>
+
+<h4 id="两个组名称相同，两个随机分组，两个不指定分组"><a href="#两个组名称相同，两个随机分组，两个不指定分组" class="headerlink" title="两个组名称相同，两个随机分组，两个不指定分组"></a>两个组名称相同，两个随机分组，两个不指定分组</h4><ul>
+<li>两个组名称相同，则其中一个会阻塞，另一个能一直获取数据，如果活跃的那个连接挂了，那么阻塞的那个client会获取到连接，并处理接下来的数据。</li>
+<li>随机分组和不指定分组， 每一个client都能获取到所有的消息。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 分组相同</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> -group test_group --from-beginning</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> -group test_group --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 两个随机分组</span></span><br><span class="line"><span class="comment"># kafka-console-consumer.sh 这个脚本如果不指定 consumer group， 会随机生成一个，类似这样 console-consumer-5089</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --from-beginning</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 两个不指定分组</span></span><br><span class="line">python3 main.py</span><br><span class="line"></span><br><span class="line">python3 main.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># Consumer Group: 每个消费者都属于一个特定的Consumer Group，可通过group.id配置项指定，若不指定group name则默认为test-consumer-group， 这句话不对，但是不指定 group name 是什么还不知道, 因为通过下面的指令，看不到 test-consumer-group 这个 group</span></span><br><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list</span><br></pre></td></tr></table></figure>
+
+<h3 id="单消费（三个分区）"><a href="#单消费（三个分区）" class="headerlink" title="单消费（三个分区）"></a>单消费（三个分区）</h3><h4 id="创建-topic-1"><a href="#创建-topic-1" class="headerlink" title="创建 topic"></a>创建 topic</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 三个分区</span></span><br><span class="line">docker <span class="built_in">exec</span> mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 3 --topic test3</span><br></pre></td></tr></table></figure>
+
+<h4 id="生产消息-1"><a href="#生产消息-1" class="headerlink" title="生产消息"></a>生产消息</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 生产消息</span></span><br><span class="line">/opt/kafka/bin/kafka-console-producer.sh --broker-list mykafka:9092 --topic test3</span><br></pre></td></tr></table></figure>
+
+<h4 id="两个消费者-不指定分区"><a href="#两个消费者-不指定分区" class="headerlink" title="两个消费者-不指定分区"></a>两个消费者-不指定分区</h4><p>两个消费者都能收到同一条消息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --from-beginning</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --from-beginning</span><br></pre></td></tr></table></figure>
+
+<h4 id="两个消费者-指定分组"><a href="#两个消费者-指定分组" class="headerlink" title="两个消费者-指定分组"></a>两个消费者-指定分组</h4><p>两个消费者来消费所有的数据</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1 </span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1 </span><br></pre></td></tr></table></figure>
+
+<h4 id="四个消费者-指定分组"><a href="#四个消费者-指定分组" class="headerlink" title="四个消费者-指定分组"></a>四个消费者-指定分组</h4><p>分组和分区不能同时指定，指定了分组，那么同一个组里的 client 会一起去消费数据，一个消费者消费一个分区（为client 分配了的 分区id），如果消费者数量大于分区数量，那么有一些消费就会挂起，直到一些消费者crash， 这些挂起的消费者才可能获得连接，并开始接收消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1 </span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1 </span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 -group test_group1</span><br></pre></td></tr></table></figure>
+
+<h4 id="五个消费者-指定分区（不指定分组）"><a href="#五个消费者-指定分区（不指定分组）" class="headerlink" title="五个消费者-指定分区（不指定分组）"></a>五个消费者-指定分区（不指定分组）</h4><p>在分区3上无法收到消息。指定了相同分区的消费者，都能收到同一条消息。分区消费对应着 pulsar 中的 shared 并且 subScriptoinName 相同，所有的 worker 一起消费所有的数据。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 0</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定了相同分区的消费者，都能收到同一条消息， 因为这里默认会使用不同的 cg</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 2</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在分区3上无法收到消息</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 3</span><br></pre></td></tr></table></figure>
+
+<h4 id="五个消费者-指定分区和不指定分区混合（不指定分组）"><a href="#五个消费者-指定分区和不指定分区混合（不指定分组）" class="headerlink" title="五个消费者-指定分区和不指定分区混合（不指定分组）"></a>五个消费者-指定分区和不指定分区混合（不指定分组）</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 0</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定了相同分区的消费者，都能收到同一条消息</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 2</span><br><span class="line"></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --offset latest --partition 2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 不指定分区，不指定分区的单独消费一份</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test3 --from-beginning</span><br></pre></td></tr></table></figure>
+
+<h2 id="docker-启动"><a href="#docker-启动" class="headerlink" title="docker 启动"></a>docker 启动</h2><p>go-science&#x2F;midd&#x2F;kafka&#x2F;standalone</p>
+<h2 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 我们执行如下命令可以创建一个名为 test 的 Topic，该 Topic 包含一个分区和一个 Replica。</span></span><br><span class="line">docker <span class="built_in">exec</span> mykafka kafka-topics.sh --create --zookeeper myzookeeper:2181 --replication-factor 1 --partitions 1 --topic <span class="built_in">test</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建后可以执行如下命令查看当前的 Topics：</span></span><br><span class="line">docker <span class="built_in">exec</span> mykafka kafka-topics.sh --list --zookeeper myzookeeper:2181</span><br><span class="line"></span><br><span class="line"><span class="comment"># 进入容器内操作</span></span><br><span class="line">docker <span class="built_in">exec</span> -it mykafka bash</span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --list --zookeeper myzookeeper:2181</span><br></pre></td></tr></table></figure>
+
+<h3 id="消息"><a href="#消息" class="headerlink" title="消息"></a>消息</h3><p>注意：如果事先没有使用 kafka-topics 命令来手工创建 Topic，直接使用下面的内容进行消息创建时也会自动创建 Topics。</p>
+<p>首先创建消息生产者。执行如下命令启动 Kafka 基于命令行的消息生产客户端，启动后可以直接在控制台中输入消息来发送，控制台中的每一行数据都会被视为一条消息来发送。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 注意：此时我们可以尝试输入几行消息，由于此时并没有消费者，所以这些输入的消息都会被阻塞在名为 test 的 Topics 中，直到有消费者将其消费掉。</span></span><br><span class="line">docker <span class="built_in">exec</span> -it mykafka kafka-console-producer.sh --broker-list mykafka:9092 --topic <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<p>接着创建消息消费者。我们打开另一个命令窗口执行如下执行命令启动 Kafka 基于命令行的消息消费客户端，启动之后，马上可以在控制台中看到输出了之前我们在消息生产客户端中发送的消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it mykafka kafka-console-consumer.sh --bootstrap-server mykafka:9092 --topic <span class="built_in">test</span> --from-beginning</span><br></pre></td></tr></table></figure>
+
+<h2 id="指令总结"><a href="#指令总结" class="headerlink" title="指令总结"></a>指令总结</h2><h3 id="topic"><a href="#topic" class="headerlink" title="topic"></a>topic</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建topic, 参数 --topic 指定 Topic 名，--partitions 指定分区数，--replication-factor 指定备份数：</span></span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic <span class="built_in">test</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出所有 Topic</span></span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --list --zookeeper localhost:2181 </span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 Topic</span></span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic <span class="built_in">test</span> </span><br><span class="line"></span><br><span class="line"><span class="comment"># 增加 Topic 的 partition 数</span></span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic <span class="built_in">test</span> --partitions 5 </span><br><span class="line"></span><br><span class="line"> <span class="comment"># 查看 topic 指定分区 offset 的最大值或最小值</span></span><br><span class="line"> <span class="comment"># time 为 -1 时表示最大值，为 -2 时表示最小值：</span></span><br><span class="line"> /opt/kafka/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --topic <span class="built_in">test</span> --time -1 --broker-list 127.0.0.1:9092 --partitions 0 </span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除 topic</span></span><br><span class="line">/opt/kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic <span class="built_in">test</span> --delete </span><br></pre></td></tr></table></figure>
+
+<h3 id="消息-1"><a href="#消息-1" class="headerlink" title="消息"></a>消息</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 生产消息</span></span><br><span class="line">/opt/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic <span class="built_in">test</span> </span><br></pre></td></tr></table></figure>
+
+<h4 id="消费消息"><a href="#消费消息" class="headerlink" title="消费消息"></a>消费消息</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 从头开始</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 从尾部开始， 从尾部开始取数据，必需要指定分区：</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --offset latest --partition 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定分区</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --offset latest --partition 0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 取指定个数</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> --offset latest --partition 0 --max-messages 1 </span><br></pre></td></tr></table></figure>
+
+<h4 id="消费者-Group"><a href="#消费者-Group" class="headerlink" title="消费者 Group"></a>消费者 Group</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 指定 Group</span></span><br><span class="line">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="built_in">test</span> -group test_group --from-beginning</span><br><span class="line"></span><br><span class="line"><span class="comment"># 消费者 Group 列表</span></span><br><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 Group 详情</span></span><br><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test_group --describe</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除 Group 中 Topic</span></span><br><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test_group --topic <span class="built_in">test</span> --delete</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除 Group</span></span><br><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test_group --delete</span><br><span class="line"></span><br><span class="line"><span class="comment"># 平衡 leader</span></span><br><span class="line">/opt/kafka/bin/kafka-preferred-replica-election.sh --bootstrap-server localhost:9092</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自带压测工具</span></span><br><span class="line">/opt/kafka/bin/kafka-producer-perf-test.sh --topic <span class="built_in">test</span> --num-records 100 --record-size 1 --throughput 100 --producer-props bootstrap.servers=localhost:9092 </span><br></pre></td></tr></table></figure>
+
+<h3 id="消费者组"><a href="#消费者组" class="headerlink" title="消费者组"></a>消费者组</h3><p>消费者组是属于集群的，不是属于 topic 的</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.hangge.com/blog/cache/detail_2791.html">Docker - 通过容器部署Kafka环境教程（以及ZooKeeper）</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903829352382471#heading-11">kafka常用命令</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/wurstmeister/kafka-docker/blob/master/docker-compose.yml">docker compose 启动 kafka</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+              <a href="/tags/%E6%8C%87%E4%BB%A4/" rel="tag"># 指令</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/05/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%20%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" rel="prev" title="消息队列之kafka 的负载均衡">
+      <i class="fa fa-chevron-left"></i> 消息队列之kafka 的负载均衡
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/09/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%85%A5%E9%97%A8/" rel="next" title="消息队列之入门">
+      消息队列之入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E7%BB%84%EF%BC%88%E4%B8%80%E4%B8%AA%E5%88%86%E5%8C%BA%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">消费组（一个分区）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-topic"><span class="nav-number">1.1.1.</span> <span class="nav-text">创建 topic</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E6%B6%88%E6%81%AF"><span class="nav-number">1.1.2.</span> <span class="nav-text">生产消息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E7%BB%84%E5%90%8D%E7%A7%B0%E4%B8%8D%E5%90%8C"><span class="nav-number">1.1.3.</span> <span class="nav-text">两个组名称不同</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E7%BB%84%E5%90%8D%E7%A7%B0%E7%9B%B8%E5%90%8C%EF%BC%8C%E4%B8%A4%E4%B8%AA%E9%9A%8F%E6%9C%BA%E5%88%86%E7%BB%84%EF%BC%8C%E4%B8%A4%E4%B8%AA%E4%B8%8D%E6%8C%87%E5%AE%9A%E5%88%86%E7%BB%84"><span class="nav-number">1.1.4.</span> <span class="nav-text">两个组名称相同，两个随机分组，两个不指定分组</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E6%B6%88%E8%B4%B9%EF%BC%88%E4%B8%89%E4%B8%AA%E5%88%86%E5%8C%BA%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">单消费（三个分区）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-topic-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">创建 topic</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E6%B6%88%E6%81%AF-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">生产消息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85-%E4%B8%8D%E6%8C%87%E5%AE%9A%E5%88%86%E5%8C%BA"><span class="nav-number">1.2.3.</span> <span class="nav-text">两个消费者-不指定分区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85-%E6%8C%87%E5%AE%9A%E5%88%86%E7%BB%84"><span class="nav-number">1.2.4.</span> <span class="nav-text">两个消费者-指定分组</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85-%E6%8C%87%E5%AE%9A%E5%88%86%E7%BB%84"><span class="nav-number">1.2.5.</span> <span class="nav-text">四个消费者-指定分组</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85-%E6%8C%87%E5%AE%9A%E5%88%86%E5%8C%BA%EF%BC%88%E4%B8%8D%E6%8C%87%E5%AE%9A%E5%88%86%E7%BB%84%EF%BC%89"><span class="nav-number">1.2.6.</span> <span class="nav-text">五个消费者-指定分区（不指定分组）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85-%E6%8C%87%E5%AE%9A%E5%88%86%E5%8C%BA%E5%92%8C%E4%B8%8D%E6%8C%87%E5%AE%9A%E5%88%86%E5%8C%BA%E6%B7%B7%E5%90%88%EF%BC%88%E4%B8%8D%E6%8C%87%E5%AE%9A%E5%88%86%E7%BB%84%EF%BC%89"><span class="nav-number">1.2.7.</span> <span class="nav-text">五个消费者-指定分区和不指定分区混合（不指定分组）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker-%E5%90%AF%E5%8A%A8"><span class="nav-number">2.</span> <span class="nav-text">docker 启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4"><span class="nav-number">3.</span> <span class="nav-text">指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF"><span class="nav-number">3.1.</span> <span class="nav-text">消息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">指令总结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#topic"><span class="nav-number">4.1.</span> <span class="nav-text">topic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF-1"><span class="nav-number">4.2.</span> <span class="nav-text">消息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E6%B6%88%E6%81%AF"><span class="nav-number">4.2.1.</span> <span class="nav-text">消费消息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85-Group"><span class="nav-number">4.2.2.</span> <span class="nav-text">消费者 Group</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E7%BB%84"><span class="nav-number">4.3.</span> <span class="nav-text">消费者组</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

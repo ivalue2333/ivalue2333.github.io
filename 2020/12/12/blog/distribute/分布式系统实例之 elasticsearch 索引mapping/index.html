@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述映射是定义文档及其包含的字段如何存储和索引的过程。例如，使用映射来定义：  哪些字符串字段应该被视为全文字段。 哪些字段包含数字、日期或地理位置。 日期值的格式。 自定义规则来控制动态添加字段的映射。  字段类型每个字段都有一个数据类型，可以是以下类型：  简单类型如text, keyword, date, long, double, boolean, ip. 一种支持JSON的分">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统实例之 elasticsearch索引mapping">
+<meta property="og:url" content="http://example.com/2020/12/12/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8B%20elasticsearch%20%E7%B4%A2%E5%BC%95mapping/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述映射是定义文档及其包含的字段如何存储和索引的过程。例如，使用映射来定义：  哪些字符串字段应该被视为全文字段。 哪些字段包含数字、日期或地理位置。 日期值的格式。 自定义规则来控制动态添加字段的映射。  字段类型每个字段都有一个数据类型，可以是以下类型：  简单类型如text, keyword, date, long, double, boolean, ip. 一种支持JSON的分">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-12-12T02:42:33.000Z">
+<meta property="article:modified_time" content="2022-09-22T06:26:27.995Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="分布式系统">
+<meta property="article:tag" content="elasticsearch">
+<meta property="article:tag" content="index mapping">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/12/12/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8B%20elasticsearch%20%E7%B4%A2%E5%BC%95mapping/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分布式系统实例之 elasticsearch索引mapping | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/12/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8B%20elasticsearch%20%E7%B4%A2%E5%BC%95mapping/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式系统实例之 elasticsearch索引mapping
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-12 10:42:33" itemprop="dateCreated datePublished" datetime="2020-12-12T10:42:33+08:00">2020-12-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-09-22 14:26:27" itemprop="dateModified" datetime="2022-09-22T14:26:27+08:00">2022-09-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">分布式系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>映射是定义文档及其包含的字段如何<strong>存储和索引的过程</strong>。例如，使用映射来定义：</p>
+<ul>
+<li>哪些字符串字段应该被视为全文字段。</li>
+<li>哪些字段包含数字、日期或地理位置。</li>
+<li>日期值的格式。</li>
+<li>自定义规则来控制动态添加字段的映射。</li>
+</ul>
+<h2 id="字段类型"><a href="#字段类型" class="headerlink" title="字段类型"></a>字段类型</h2><p>每个字段都有一个数据类型，可以是以下类型：</p>
+<ul>
+<li>简单类型如<code>text</code>, <code>keyword</code>, <code>date</code>, <code>long</code>, <code>double</code>, <code>boolean</code>, <code>ip</code>.</li>
+<li>一种支持JSON的分层特性的类型，例如<code>object</code>或<code>nested</code>。</li>
+<li>或特殊的类型，例如<code>geo_point</code>，<code>geo_shape</code>或<code>completion</code>。</li>
+</ul>
+<p>为不同的目的以不同的方式为同一字段建立索引通常很有用。例如，<code>string</code>字段可以作为全文搜索的<code>text</code>字段建立索引，也可以作为排序或聚合的<code>keyword</code>字段建立索引。或者，您可以使用标准分析器、英语分析器和法语分析器来索引字符串字段。</p>
+<p>这是多字段的目的。 大多数数据类型通过fields参数支持多字段。</p>
+<ul>
+<li>Text：默认情况下会进行分词</li>
+<li>Keyword：不会进行分词，全文本匹配</li>
+<li>Date：日期类型</li>
+<li>Integer&#x2F;Floating：整数&#x2F;浮点数</li>
+<li>Boolean：布尔类型</li>
+<li>IPv4 &amp; IPv6</li>
+<li>特殊类型：geo_point &amp; geo_shape &amp; percolator</li>
+<li>index：表示该字段是否可以被搜索，是否需要建立倒排索引</li>
+</ul>
+<h3 id="类型详解"><a href="#类型详解" class="headerlink" title="类型详解"></a>类型详解</h3><h4 id="text"><a href="#text" class="headerlink" title="text"></a>text</h4><p><code>text</code> 类型适用于需要被全文检索的字段，例如新闻正文、邮件内容等比较长的文字，<code>text</code> 类型会被 Lucene 分词器（Analyzer）处理为一个个词项，并使用 Lucene 倒排索引存储，<strong>text 字段不能被用于排序</strong>，如果需要使用该类型的字段只需要在定义映射时指定 JSON 中对应字段的 <code>type</code> 为 <code>text</code>。</p>
+<h4 id="keyword"><a href="#keyword" class="headerlink" title="keyword"></a>keyword</h4><p><code>keyword</code> 适合简短、结构化字符串，例如主机名、姓名、商品名称等，<strong>可以用于过滤、排序、聚合检索，也可以用于精确查询</strong>。</p>
+<h4 id="数字类型"><a href="#数字类型" class="headerlink" title="数字类型"></a>数字类型</h4><p>数字类型分为 <code>long、integer、short、byte、double、float、half_float、scaled_float</code>。</p>
+<p>数字类型的字段在满足需求的前提下应当尽量选择范围较小的数据类型，字段长度越短，搜索效率越高，对于浮点数，可以优先考虑使用 <code>scaled_float</code> 类型，该类型可以通过缩放因子来精确浮点数，例如 12.34 可以转换为 1234 来存储。</p>
+<h4 id="日期类型"><a href="#日期类型" class="headerlink" title="日期类型"></a>日期类型</h4><p>在 ES 中日期可以为以下形式：</p>
+<ul>
+<li>格式化的日期字符串，例如 2020-03-17 00:00、2020&#x2F;03&#x2F;17</li>
+<li>时间戳（和 1970-01-01 00:00:00 UTC 的差值），单位毫秒或者秒</li>
+</ul>
+<blockquote>
+<p>即使是格式化的日期字符串，ES 底层依然采用的是时间戳的形式存储。</p>
+</blockquote>
+<h4 id="布尔类型"><a href="#布尔类型" class="headerlink" title="布尔类型"></a>布尔类型</h4><p>JSON 文档中同样存在布尔类型，不过 JSON 字符串类型也可以被 ES 转换为布尔类型存储，前提是字符串的取值为 <code>true</code> 或者 <code>false</code>，布尔类型常用于检索中的过滤条件</p>
+<h2 id="动态Mapping"><a href="#动态Mapping" class="headerlink" title="动态Mapping"></a>动态Mapping</h2><p>字段和映射类型在使用之前不需要定义。通过动态映射，仅通过索引文档即可自动添加新的字段名称。新字段既可以添加到顶级映射类型，也可以添加到内部对象和嵌套字段.</p>
+<p>可以将动态映射规则配置为自定义用于新字段的映射。</p>
+<h2 id="显式的映射"><a href="#显式的映射" class="headerlink" title="显式的映射"></a>显式的映射</h2><p>您对数据的了解超出了Elasticsearch的猜测，因此尽管动态映射对于入门非常有用，但有时您仍需要指定自己的显式映射。</p>
+<p>你可以创建字段映射，当你创建一个索引或者在已经存在的索引中新增字段</p>
+<ul>
+<li>创建索引的显示映射</li>
+</ul>
+<p>您可以使用create index API创建带有显式映射的新索引。</p>
+<h3 id="创建和新增字段的mapping"><a href="#创建和新增字段的mapping" class="headerlink" title="创建和新增字段的mapping"></a>创建和新增字段的mapping</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT <span class="string">&quot;localhost:9200/my-index?pretty&quot;</span> -H <span class="string">&#x27;Content-Type: application/json&#x27;</span> -d<span class="string">&#x27;</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line"><span class="string">  &quot;mappings&quot;: &#123;</span></span><br><span class="line"><span class="string">    &quot;properties&quot;: &#123;</span></span><br><span class="line"><span class="string">      &quot;age&quot;:    &#123; &quot;type&quot;: &quot;integer&quot; &#125;,  </span></span><br><span class="line"><span class="string">      &quot;email&quot;:  &#123; &quot;type&quot;: &quot;keyword&quot;  &#125;, </span></span><br><span class="line"><span class="string">      &quot;name&quot;:   &#123; &quot;type&quot;: &quot;text&quot;  &#125;     </span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">  &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>您可以使用put mapping API向现有索引添加一个或多个新字段。下面的示例添加了<code>employee-id</code>，这是一个<code>keyword</code>字段，其索引映射参数值为<code>false</code>。这意味着存储了<code>employee-id</code>字段的值，但是不能进行索引，也不能用于搜索。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">curl -X PUT <span class="string">&quot;localhost:9200/my-index/_mapping?pretty&quot;</span> -H <span class="string">&#x27;Content-Type: application/json&#x27;</span> -d<span class="string">&#x27;</span></span><br><span class="line"><span class="string">&#123;</span></span><br><span class="line"><span class="string">  &quot;properties&quot;: &#123;</span></span><br><span class="line"><span class="string">    &quot;employee-id&quot;: &#123;</span></span><br><span class="line"><span class="string">      &quot;type&quot;: &quot;keyword&quot;,</span></span><br><span class="line"><span class="string">      &quot;index&quot;: false</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">  &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string">&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="更新字段的mapping"><a href="#更新字段的mapping" class="headerlink" title="更新字段的mapping"></a>更新字段的mapping</h3><p>除了支持的映射参数外，您无法更改现有字段的映射或字段类型。 更改现有字段可能会使已经建立索引的数据无效。</p>
+<p>如果需要更改字段的映射，请使用正确的映射创建一个新索引，然后将数据重新索引到该索引中。</p>
+<p>重命名字段会使在旧字段名称下已建立索引的数据无效。 而是添加一个别名字段以创建备用字段名称。</p>
+<h3 id="查看索引的映射"><a href="#查看索引的映射" class="headerlink" title="查看索引的映射"></a>查看索引的映射</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET <span class="string">&quot;localhost:9200/my-index/_mapping?pretty&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904104330788877">Elasticsearch教程之Mapping</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/wupeixuan/p/12514843.html">一文搞懂 Elasticsearch 之 Mapping</a></p>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/prestigeding/article/details/84675404">Elasticsearch Mapping parameters（主要参数一览)</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="tag"># 分布式系统</a>
+              <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+              <a href="/tags/index-mapping/" rel="tag"># index mapping</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/12/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8B%20elasticsearch%20%E7%B4%A2%E5%BC%95%E6%A8%A1%E6%9D%BF/" rel="prev" title="分布式系统实例之 elasticsearch 索引模板">
+      <i class="fa fa-chevron-left"></i> 分布式系统实例之 elasticsearch 索引模板
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/12/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E5%AE%9E%E4%BE%8B%E4%B9%8B%20elasticsearch%20reindx%20%E5%92%8C%E5%88%AB%E5%90%8D/" rel="next" title="分布式系统实例之 elasticsearch reindex 和别名">
+      分布式系统实例之 elasticsearch reindex 和别名 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">字段类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E8%AF%A6%E8%A7%A3"><span class="nav-number">2.1.</span> <span class="nav-text">类型详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#text"><span class="nav-number">2.1.1.</span> <span class="nav-text">text</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#keyword"><span class="nav-number">2.1.2.</span> <span class="nav-text">keyword</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E5%AD%97%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.3.</span> <span class="nav-text">数字类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A5%E6%9C%9F%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.4.</span> <span class="nav-text">日期类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%83%E5%B0%94%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.5.</span> <span class="nav-text">布尔类型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81Mapping"><span class="nav-number">3.</span> <span class="nav-text">动态Mapping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%BE%E5%BC%8F%E7%9A%84%E6%98%A0%E5%B0%84"><span class="nav-number">4.</span> <span class="nav-text">显式的映射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%92%8C%E6%96%B0%E5%A2%9E%E5%AD%97%E6%AE%B5%E7%9A%84mapping"><span class="nav-number">4.1.</span> <span class="nav-text">创建和新增字段的mapping</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%AD%97%E6%AE%B5%E7%9A%84mapping"><span class="nav-number">4.2.</span> <span class="nav-text">更新字段的mapping</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%B4%A2%E5%BC%95%E7%9A%84%E6%98%A0%E5%B0%84"><span class="nav-number">4.3.</span> <span class="nav-text">查看索引的映射</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TODO"><span class="nav-number">6.</span> <span class="nav-text">TODO</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

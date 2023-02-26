@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[toc] 常见的执行速度1234567891011# 1. 内网 ping 时间（阿里云内网）# time &#x3D; 0.2 ms# 2. 外网 ping 时间 （访问www.baidu.com）# time &#x3D; 40 ms# 3. 为什么dns采用udp协议# TCP通信过程太复杂并且开销大，一次TCP交换需要9个包： 三个连接包，四个断开包，一个request包，一个响应包, （大概还有个响应ac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常见的执行速度">
+<meta property="og:url" content="http://example.com/2020/01/14/blog/operation%20system/%E5%B8%B8%E8%A7%81%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%9F%E5%BA%A6/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[toc] 常见的执行速度1234567891011# 1. 内网 ping 时间（阿里云内网）# time &#x3D; 0.2 ms# 2. 外网 ping 时间 （访问www.baidu.com）# time &#x3D; 40 ms# 3. 为什么dns采用udp协议# TCP通信过程太复杂并且开销大，一次TCP交换需要9个包： 三个连接包，四个断开包，一个request包，一个响应包, （大概还有个响应ac">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://z3.ax1x.com/2021/03/23/67eout.png">
+<meta property="og:image" content="https://z3.ax1x.com/2021/03/23/67KmKs.png">
+<meta property="article:published_time" content="2020-01-14T09:26:53.000Z">
+<meta property="article:modified_time" content="2021-06-11T09:14:42.611Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="常见的执行速度">
+<meta property="article:tag" content="cpu">
+<meta property="article:tag" content="耗时">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://z3.ax1x.com/2021/03/23/67eout.png">
+
+<link rel="canonical" href="http://example.com/2020/01/14/blog/operation%20system/%E5%B8%B8%E8%A7%81%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%9F%E5%BA%A6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>常见的执行速度 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/01/14/blog/operation%20system/%E5%B8%B8%E8%A7%81%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%9F%E5%BA%A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          常见的执行速度
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-14 17:26:53" itemprop="dateCreated datePublished" datetime="2020-01-14T17:26:53+08:00">2020-01-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-11 17:14:42" itemprop="dateModified" datetime="2021-06-11T17:14:42+08:00">2021-06-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">计算机基础</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[toc]</p>
+<h2 id="常见的执行速度"><a href="#常见的执行速度" class="headerlink" title="常见的执行速度"></a>常见的执行速度</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1. 内网 ping 时间（阿里云内网）</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">time = 0.2 ms</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">2. 外网 ping 时间 （访问www.baidu.com）</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">time = 40 ms</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">3. 为什么dns采用udp协议</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP通信过程太复杂并且开销大，一次TCP交换需要9个包： 三个连接包，四个断开包，一个request包，一个响应包, （大概还有个响应ack的包）。UDP通信过程简单，只需要一个查询包和一个响应包。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">地多活面临的主要挑战是网络延迟，以北京到上海 1468 公里，即使是光速传输，一个来回也需要接近10ms，我们在实际测试的过程中，发现上海到北京的网络延迟，一般是 30 ms。这 30 ms可以和运算系统中其他的延迟时间做个比较：</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="计算存储体系结构"><a href="#计算存储体系结构" class="headerlink" title="计算存储体系结构"></a>计算存储体系结构</h2><p><a target="_blank" rel="noopener" href="https://imgtu.com/i/67eout"><img src="https://z3.ax1x.com/2021/03/23/67eout.png" alt="67eout.png"></a></p>
+<h2 id="计算存储速度"><a href="#计算存储速度" class="headerlink" title="计算存储速度"></a>计算存储速度</h2><p><a target="_blank" rel="noopener" href="https://imgtu.com/i/67KmKs"><img src="https://z3.ax1x.com/2021/03/23/67KmKs.png" alt="67KmKs.png"></a></p>
+<h3 id="CPU眼中的时间"><a href="#CPU眼中的时间" class="headerlink" title="CPU眼中的时间"></a>CPU眼中的时间</h3><p>CPU绝对称得上是“闪电侠”，因为它们做事都有自己的一套时钟。我们故事的主人公是一个主频为2.5GHz的CPU，如果它的世界也有“秒”的概念，并且它的时钟跳一下为一秒，那么在CPU（CPU的一个核心）眼中的时间概念是啥样的呢？</p>
+<p>CPU先生所在的组是硬件部计算组。对它来说，与其一起紧密合作的几个小伙伴还能跟的上它的节奏：</p>
+<p>CPU先生很利索，只需要一秒就可以完成一个指令，复杂的动作可能需要多个指令。<br>好在“贴身秘书”一级缓存反应比较快，能够秒懂CPU先生的意思。<br>来自“秘书组”的二级缓存虽然要十几秒才能“get”到CPU先生的点，但也不算太迟钝。<br>和内存组的合作已经习以为常了，跟内存请求的数据通常要4-5分钟才能找到（内存寻址），不过也还好啦，毕竟一级缓存那里能拿到80%想要的数据，其余的二级缓存也能搞定一大部分，不怎么耽误事儿。<br>CPU先生是典型的工作狂，任务多的时候，通宵达旦也毫无怨言，但是有什么事情让它等，那简直要他命了。恰恰一起共事的其他组（尤其是I&#x2F;O组的磁盘和网卡）相对来说那效率是低的离谱啊：</p>
+<p>关于I&#x2F;O组的同事，CPU先生已经抱怨很久了，每次找SSD要东西，都要花费4-5天才能找到（寻址），等到数据传送过来，几周都过去了。机械磁盘更是过分地离谱，跟他要个数据，竟然要平均花费10个月才能找到，如果要读取1M的数据，竟然要20个月！这种员工怎么还不下岗？！<br>关于网卡，CPU先生知道它们也尽力了，毕竟万兆网络成本颇高。与机房内的其他小伙伴们用千兆网络互相沟通也算顺畅，给另一台机器的CPU朋友发送1K的书信，最快七八个小时就可以送过去了。但是1K的书信经过层层包裹，实际也写不了多少话。更要命的是，网卡们的沟通手续繁杂，每次网络沟通前的 “你好能听到我吗？——我能听到，你那边能听到我吗？——我也能听到你，那我们开始吧！” 这样的握手确认都要花掉很长的时间，不过不能当面沟通，也只能这样了。这还好，最恐怖的是与其他城市的小伙伴沟通，有时候传递消息要花费好几年呢！</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/get_set/article/details/79466402">（2）响应式流——响应式Spring的道法术器</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B8%B8%E8%A7%81%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%9F%E5%BA%A6/" rel="tag"># 常见的执行速度</a>
+              <a href="/tags/cpu/" rel="tag"># cpu</a>
+              <a href="/tags/%E8%80%97%E6%97%B6/" rel="tag"># 耗时</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/03/blog/http/http%E4%B9%8B%E6%9C%8D%E5%8A%A1%E6%A1%86%E6%9E%B6%E5%85%A5%E9%97%A8/" rel="prev" title="http之服务框架入门">
+      <i class="fa fa-chevron-left"></i> http之服务框架入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/20/blog/http/http%E4%B9%8Bgolang%20gin%20%E6%A1%86%E6%9E%B6%E7%9A%84%E8%B7%AF%E7%94%B1%E7%AE%97%E6%B3%95/" rel="next" title="http之golang gin 框架的路由算法">
+      http之golang gin 框架的路由算法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E6%89%A7%E8%A1%8C%E9%80%9F%E5%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">常见的执行速度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%AD%98%E5%82%A8%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">计算存储体系结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%AD%98%E5%82%A8%E9%80%9F%E5%BA%A6"><span class="nav-number">3.</span> <span class="nav-text">计算存储速度</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU%E7%9C%BC%E4%B8%AD%E7%9A%84%E6%97%B6%E9%97%B4"><span class="nav-number">3.1.</span> <span class="nav-text">CPU眼中的时间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

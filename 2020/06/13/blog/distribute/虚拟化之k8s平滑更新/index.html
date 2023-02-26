@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344&#x2F;*	客户端会报如下错误	 Get Get http:&#x2F;&#x2F;127.0.0.1:9991&#x2F;ping: read tcp 127.0.0.1:61733-&gt;127.0.0.1:9991: wsarecv: An existi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟化之K8S平滑更新(zero-downtime with Kubernetes)">
+<meta property="og:url" content="http://example.com/2020/06/13/blog/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8Bk8s%E5%B9%B3%E6%BB%91%E6%9B%B4%E6%96%B0/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="服务如何优雅退出1234567891011121314151617181920212223242526272829303132333435363738394041424344&#x2F;*	客户端会报如下错误	 Get Get http:&#x2F;&#x2F;127.0.0.1:9991&#x2F;ping: read tcp 127.0.0.1:61733-&gt;127.0.0.1:9991: wsarecv: An existi">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-06-13T11:08:33.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.781Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="分布式系统">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/06/13/blog/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8Bk8s%E5%B9%B3%E6%BB%91%E6%9B%B4%E6%96%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>虚拟化之K8S平滑更新(zero-downtime with Kubernetes) | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/06/13/blog/distribute/%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B9%8Bk8s%E5%B9%B3%E6%BB%91%E6%9B%B4%E6%96%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          虚拟化之K8S平滑更新(zero-downtime with Kubernetes)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-13 19:08:33" itemprop="dateCreated datePublished" datetime="2020-06-13T19:08:33+08:00">2020-06-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="服务如何优雅退出"><a href="#服务如何优雅退出" class="headerlink" title="服务如何优雅退出"></a>服务如何优雅退出</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	客户端会报如下错误</span></span><br><span class="line"><span class="comment">	 Get Get http://127.0.0.1:9991/ping: read tcp 127.0.0.1:61733-&gt;127.0.0.1:9991: wsarecv: An existing connection was forcibly closed by the remote host.</span></span><br><span class="line"><span class="comment">	这是因为一个正在使用的 tcp 连接被服务端强行关闭了。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BadServer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	engine := gin.Default()</span><br><span class="line">	util.Router(engine)</span><br><span class="line">	srv := &amp;http.Server&#123;Handler: engine, Addr: <span class="string">&quot;:9991&quot;</span>&#125;</span><br><span class="line">	err := srv.ListenAndServe()</span><br><span class="line">	_ = srv.Shutdown(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	客户端不会报错</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GraceServer</span><span class="params">()</span></span> &#123;</span><br><span class="line">	engine := gin.Default()</span><br><span class="line">	util.Router(engine)</span><br><span class="line">	srv := &amp;http.Server&#123;Handler: engine, Addr: <span class="string">&quot;:9991&quot;</span>&#125;</span><br><span class="line">	channelMark := <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal, <span class="number">2</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		ch := <span class="built_in">make</span>(<span class="keyword">chan</span> os.Signal)</span><br><span class="line">		<span class="comment">// k8s 会发 TERM 信号</span></span><br><span class="line">		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGINT)</span><br><span class="line">		tmp := &lt;-ch</span><br><span class="line">		channelMark &lt;- tmp</span><br><span class="line">		_ = srv.Shutdown(context.Background())</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	err := srv.ListenAndServe()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;ListenAndServe-&gt;&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	err = srv.Shutdown(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;Shutdown-&gt;&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	tmp := &lt;-channelMark</span><br><span class="line">	fmt.Println(<span class="string">&quot;Notify-&gt;&quot;</span>, tmp, fmt.Sprintf(<span class="string">&quot;%d&quot;</span>, tmp))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="k8s-如何优雅更新"><a href="#k8s-如何优雅更新" class="headerlink" title="k8s 如何优雅更新"></a>k8s 如何优雅更新</h2><p>简单说就是加两个探针并设置 preStop， liveness 用于检测已注册的节点是否可用，readiness 用于检测新创建的节点是否可用。示例如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">grace-shut-example-deploy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">imagePullSecrets:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">all-aliyuncs</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">grace-shut-example</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">          <span class="attr">command:</span> [<span class="string">&quot;./grace_shut_example&quot;</span>, <span class="string">&quot;&gt;&gt;&quot;</span>, <span class="string">&quot;/var/log/xiaoduo/grace_shut_example.out&quot;</span>]</span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8080</span></span><br><span class="line">              <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/var/log/xiaoduo</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">log-volume</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">tcpSocket:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">9991</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">1</span></span><br><span class="line">            <span class="attr">successThreshold:</span> <span class="number">1</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">2</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">tcpSocket:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">9991</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">1</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">2</span></span><br><span class="line">          <span class="attr">lifecycle:</span></span><br><span class="line">            <span class="attr">preStop:</span></span><br><span class="line">              <span class="attr">exec:</span></span><br><span class="line">                <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;sleep 10&quot;</span>]</span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">log-volume</span></span><br><span class="line">          <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">            <span class="attr">claimName:</span> <span class="string">log-volume-claim</span></span><br></pre></td></tr></table></figure>
+
+<p>以上示例使用 tcp 探测的方式，并设置探测时间间隔为 1 秒。</p>
+<h3 id="核心配置探针"><a href="#核心配置探针" class="headerlink" title="核心配置探针"></a>核心配置探针</h3><p>主要是设置存活探针和就绪探针。</p>
+<h3 id="核心配置-preStop"><a href="#核心配置-preStop" class="headerlink" title="核心配置 preStop"></a>核心配置 preStop</h3><ul>
+<li>为什么要配置 preStop<ul>
+<li>因为 通知 load balance 将老节点摘除和 向老节点 发送 TERM 信号，是并发的（实际上是先通知load balance 摘掉老节点，然后再异步的发送 TERM 信号），没有保证先后顺序，这就意味着，可能 load balance 还没有将老借点摘除，但是老节点已经接受到了 TERM 信号并且关闭了TCP连接请求，这样部分请求就到了一个已关闭的节点上。</li>
+<li>preStop 是在通知 load balance 摘掉老节点之后的一个操作，这是一个阻塞操作，他会执行指令，直到指令接受，所以，我们在preStop中调用 sleep 函数，给load balance 足够的时间来摘除老节点。然后再‘异步’地发送 TERM 信号。</li>
+</ul>
+</li>
+</ul>
+<p><code>Kubernetes 在容器结束前立即发送 preStop 事件。除非 Pod 宽限期限超时，Kubernetes 的容器管理逻辑 会一直阻塞等待 preStop 处理函数执行完毕。</code></p>
+<p><code>This deployment configuration will perform version updates in the following way: It will create one pod with the new version at a time, wait for the pod to start-up and become ready, trigger the termination of one of the old pods, and continue with the next new pod until all replicas have been transitioned. In order to tell Kubernetes when our pods are running and ready to handle traffic we need to configure liveness and readiness probes.</code></p>
+<p><code>此部署配置将以以下方式执行版本更新：它将一次创建一个具有新版本的Pod，等待Pod启动并准备就绪，触发其中一个旧Pod的终止，然后继续 下一个新的Pod，直到所有副本都已转换。 为了告诉Kubernetes我们的Pod何时运行并准备处理流量，我们需要配置活动和就绪探针。</code></p>
+<p><code>If our client, that is the zero-downtime test, connects to the </code>coffee-shop<code> service directly from inside the cluster, it typically uses the service VIP resolved via Cluster DNS and ends up at a Pod instance. This is realized via the kube-proxy that runs on every Kubernetes node and updates iptables that route to the IP addresses of the pods.</code></p>
+<p><code>如果我们的客户端（即零停机时间测试）直接从群集内部连接到服务，则它通常使用通过群集DNS解析的服务VIP，最终到达Pod实例。 这是通过在每个Kubernetes节点上运行并更新路由到Pod的IP地址的iptables的kube-proxy来实现的。</code></p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>目前是在公司 gitlab 个人目录下实现了一个 k8s 优雅退出的 模板，经过测试。在 qps 为 1000（更高的qps还没有测试） 可以实现<strong>零报错</strong>的更新镜像。</p>
+<p>gitlab地址：<a target="_blank" rel="noopener" href="https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example">https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example</a></p>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><h4 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">项目：https://gitlab.xiaoduoai.com/devops/k8s-app-deploy</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">目录：/ks-prod/ecrobot/grace-shut-example/grace</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="模拟更新镜像"><a href="#模拟更新镜像" class="headerlink" title="模拟更新镜像"></a>模拟更新镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如在测试环境</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">以下两个指令模拟线上更新镜像</span></span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.7 --namespace=test-ks</span><br><span class="line"></span><br><span class="line">kubectl set image deployment/grace-shut-example-deploy grace-shut-example=registry.cn-zhangjiakou.aliyuncs.com/xiaoduoai/ecrobot-grace_shut_example:v0.0.4 --namespace=test-ks</span><br></pre></td></tr></table></figure>
+
+<h4 id="并发测试工具"><a href="#并发测试工具" class="headerlink" title="并发测试工具"></a>并发测试工具</h4><ul>
+<li>ab</li>
+<li>wrk</li>
+<li>mock： <a target="_blank" rel="noopener" href="https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example/client/mock.go">https://gitlab.xiaoduoai.com/zhuyuanbing/grace_shut_example/client/mock.go</a></li>
+</ul>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><p>将上线的 http 服务全部替换为平滑更新的方案。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>最佳实践文档：<a target="_blank" rel="noopener" href="https://blog.sebastian-daschner.com/entries/zero-downtime-updates-kubernetes">https://blog.sebastian-daschner.com/entries/zero-downtime-updates-kubernetes</a></p>
+<p>k8s探针：<a target="_blank" rel="noopener" href="https://jimmysong.io/kubernetes-handbook/guide/configure-liveness-readiness-probes.html">https://jimmysong.io/kubernetes-handbook/guide/configure-liveness-readiness-probes.html</a></p>
+<p>k8s preStop：<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/">https://kubernetes.io/zh/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="tag"># 分布式系统</a>
+              <a href="/tags/golang/" rel="tag"># golang</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/10/blog/concurrent%20and%20gc/%E5%B9%B6%E5%8F%91%E4%B9%8B%E8%87%AA%E6%97%8B%E9%94%81/" rel="prev" title="【并发】并发基础及锁">
+      <i class="fa fa-chevron-left"></i> 【并发】并发基础及锁
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/06/14/blog/http/tcp%E4%B9%8B%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/" rel="next" title="tcp之三次握手">
+      tcp之三次握手 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E9%80%80%E5%87%BA"><span class="nav-number">1.</span> <span class="nav-text">服务如何优雅退出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#k8s-%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E6%9B%B4%E6%96%B0"><span class="nav-number">2.</span> <span class="nav-text">k8s 如何优雅更新</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E9%85%8D%E7%BD%AE%E6%8E%A2%E9%92%88"><span class="nav-number">2.1.</span> <span class="nav-text">核心配置探针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E9%85%8D%E7%BD%AE-preStop"><span class="nav-number">2.2.</span> <span class="nav-text">核心配置 preStop</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2"><span class="nav-number">3.1.1.</span> <span class="nav-text">部署</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E6%9B%B4%E6%96%B0%E9%95%9C%E5%83%8F"><span class="nav-number">3.1.2.</span> <span class="nav-text">模拟更新镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="nav-number">3.1.3.</span> <span class="nav-text">并发测试工具</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TODO"><span class="nav-number">4.</span> <span class="nav-text">TODO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

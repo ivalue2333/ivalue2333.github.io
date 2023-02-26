@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【http】http2入门">
+<meta property="og:url" content="http://example.com/2020/07/05/blog/http/http%E4%B9%8Bhttp2%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述HTTP2的核心概念有哪些 二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式 请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧）） 服务器推送，一问多答（一次请求多次相应） 头部压缩，相同的头在同一连接上，在再次">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/e2895a9110224e0c9c378dddfd2d5cb8.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/09bfb281d2d34e8cbad71f2e4b201030.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/40bdcc2e7f3f4c9e9233fb37ed3d87ec.png">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/89b01e68c0594163a6ccd8085c529589.png">
+<meta property="article:published_time" content="2020-07-05T15:11:00.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.785Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http2">
+<meta property="article:tag" content="入门">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png">
+
+<link rel="canonical" href="http://example.com/2020/07/05/blog/http/http%E4%B9%8Bhttp2%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>【http】http2入门 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/07/05/blog/http/http%E4%B9%8Bhttp2%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          【http】http2入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-05 23:11:00" itemprop="dateCreated datePublished" datetime="2020-07-05T23:11:00+08:00">2020-07-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><h3 id="HTTP2的核心概念有哪些"><a href="#HTTP2的核心概念有哪些" class="headerlink" title="HTTP2的核心概念有哪些"></a>HTTP2的核心概念有哪些</h3><ul>
+<li>二进制分帧层，在 http 与 tcp 层中间的一层，将传输的数据编码为二进制的帧格式</li>
+<li>请求与响应复用，http2采用tcp永久连接，在这个连接上抽象出数据帧（被编码的传输数据），消息（一条完整的需要发送的消息），数据流（双向字节流，用于承载消息（实际上是消息被编码的帧））</li>
+<li>服务器推送，一问多答（一次请求多次相应）</li>
+<li>头部压缩，相同的头在同一连接上，在再次请求时，不用显式地传递（客户端和服务端维护一个头索引表）</li>
+</ul>
+<h3 id="如何查看当前使用的是http哪个协议"><a href="#如何查看当前使用的是http哪个协议" class="headerlink" title="如何查看当前使用的是http哪个协议"></a>如何查看当前使用的是http哪个协议</h3><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/a68524865582468791bf12aaaee99763.png"></p>
+<h2 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h2><h3 id="二进制分帧"><a href="#二进制分帧" class="headerlink" title="二进制分帧"></a>二进制分帧</h3><p>HTTP&#x2F;2 所有性能增强的核心在于新的二进制分帧层，它定义了如何封装 HTTP 消息并在客户端与服务器之间传输。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/e2895a9110224e0c9c378dddfd2d5cb8.png"></p>
+<p>这里所谓的“层”，指的是位于套接字接口与应用可见的高级 HTTP API 之间一个<strong>经过优化的新编码机制</strong>：HTTP 的语义（包括各种动词、方法、标头）都不受影响，不同的是传输期间对它们的编码方式变了。<strong>HTTP&#x2F;1.x 协议以换行符作为纯文本的分隔符，而 HTTP&#x2F;2 将所有传输的信息分割为更小的消息和帧，并采用二进制格式对它们编码。</strong></p>
+<h4 id="数据流，消息和帧"><a href="#数据流，消息和帧" class="headerlink" title="数据流，消息和帧"></a>数据流，消息和帧</h4><ul>
+<li>连接： tcp 连接</li>
+<li>数据流（stream）：已建立的连接内的双向字节流，可以承载一条或多条消息。</li>
+<li><em>消息</em>（message）：与逻辑请求或响应消息对应的完整的一系列帧。</li>
+<li>帧（frame）：HTTP&#x2F;2 通信的最小单位，每个帧都包含帧头，至少也会标识出当前帧所属的数据流。</li>
+</ul>
+<p>这些概念的关系总结如下：</p>
+<ul>
+<li><strong>所有通信都在一个 TCP 连接上完成，此连接可以承载任意数量的双向数据流。</strong></li>
+<li>每个数据流都有一个唯一的标识符和可选的优先级信息，用于承载双向消息。</li>
+<li>每条消息都是一条逻辑 HTTP 消息（例如请求或响应），包含一个或多个帧。（<strong>程序一次可以发送一次消息，且不用等待返回，就继续发送新的消息，而这个消息会在同一个数据流中传递</strong>）</li>
+<li>帧是最小的通信单位，承载着特定类型的数据，例如 HTTP 标头、消息负载等等。 来自不同数据流的帧可以交错发送，然后再根据每个帧头的数据流标识符重新组装。</li>
+</ul>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/09bfb281d2d34e8cbad71f2e4b201030.png"></p>
+<h3 id="请求与响应复用"><a href="#请求与响应复用" class="headerlink" title="请求与响应复用"></a>请求与响应复用</h3><p>我们知道，在HTTP 1.x中，我们是可以并行请求的。但是，浏览器对于同一个域名的并行请求是有上限的（FireFox, Chrome上限6个 ）。所以很多网站的静态资源站可能会有多个。虽然http1.x里有keep-alive可以避免TCP三次握手，但是keep-alive又是串行的。<strong>所以要么并行多握手，要么串行不握手，都不是最好的结果，我们希望的是并行也不握手。</strong></p>
+<p>幸运的是HTTP&#x2F;2解决了这个问题。当客户端与服务端建立连接后，就会在双方建立一个双向流通道。这个流通道，可以同时包含多个消息（http请求），不同消息各自的数据帧在流里可以乱序并行的发送，不会互相影响与堵塞，从而实现了一个TCP链接，并发执行N个http请求。通过提高并发，减少TCP连接开销，HTTP&#x2F;2的速度得到了很大提升，尤其是在网络延迟比较高的情况下。这个是如何实现的呢，它的实现是因为 http2 有了<strong>二进制分帧</strong>层。</p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/40bdcc2e7f3f4c9e9233fb37ed3d87ec.png"></p>
+<p>将 HTTP 消息分解为独立的帧，交错发送，然后在另一端重新组装是 HTTP 2 最重要的一项增强。事实上，这个机制会在整个网络技术栈中引发一系列连锁反应，从而带来巨大的性能提升，让我们可以：</p>
+<ul>
+<li>并行交错地发送多个请求，请求之间互不影响。</li>
+<li>并行交错地发送多个响应，响应之间互不干扰。</li>
+<li>使用一个连接并行发送多个请求和响应。</li>
+<li>不必再为绕过 HTTP&#x2F;1.x 限制而做很多工作（请参阅<a target="_blank" rel="noopener" href="https://hpbn.co/optimizing-application-delivery/#optimizing-for-http1x">针对 HTTP&#x2F;1.x 进行优化</a>，例如级联文件、image sprites 和域名分片。</li>
+<li>消除不必要的延迟和提高现有网络容量的利用率，从而减少页面加载时间。</li>
+</ul>
+<h3 id="数据优先级"><a href="#数据优先级" class="headerlink" title="数据优先级"></a>数据优先级</h3><p>HTTP&#x2F;2 标准允许每个数据流都有一个关联的权重和依赖关系，来保证高优先级的流优先被 client 和 server 的操作系统和处理程序处理。</p>
+<h3 id="每个来源一个连接"><a href="#每个来源一个连接" class="headerlink" title="每个来源一个连接"></a>每个来源一个连接</h3><p>有了新的分帧机制后，HTTP&#x2F;2 不再依赖多个 TCP 连接去并行复用数据流；每个数据流都拆分成很多帧，而这些帧可以交错，还可以分别设定优先级。 <strong>因此，所有 HTTP&#x2F;2 连接都是永久的，而且仅需要每个来源一个连接，随之带来诸多性能优势。</strong></p>
+<p><strong>大多数 HTTP 传输都是短暂且急促的，而 TCP 则针对长时间的批量数据传输进行了优化。 通过重用相同的连接，HTTP&#x2F;2 既可以更有效地利用每个 TCP 连接，也可以显著降低整体协议开销。</strong>不仅如此，使用更少的连接还可以减少占用的内存和处理空间，也可以缩短完整连接路径（即，客户端、可信中介和源服务器之间的路径） 这降低了整体运行成本并提高了网络利用率和容量。 因此，迁移到 HTTP&#x2F;2 不仅可以减少网络延迟，还有助于提高通量和降低运行成本。</p>
+<h3 id="流控制"><a href="#流控制" class="headerlink" title="流控制"></a>流控制</h3><p>流控制是一种阻止发送方向接收方发送大量数据的机制，以免超出后者的需求或处理能力。</p>
+<h3 id="服务器推送"><a href="#服务器推送" class="headerlink" title="服务器推送"></a>服务器推送</h3><p>HTTP&#x2F;2 新增的另一个强大的新功能是，服务器可以对一个客户端请求发送多个响应。 换句话说，除了对最初请求的响应外，服务器还可以向客户端推送额外资源，而无需客户端明确地请求。</p>
+<h3 id="标头压缩"><a href="#标头压缩" class="headerlink" title="标头压缩"></a>标头压缩</h3><p>每个 HTTP 传输都承载一组标头，这些标头说明了传输的资源及其属性。 在 HTTP&#x2F;1.x 中，此元数据始终以纯文本形式，<strong>通常会给每个传输增加 500–800 字节的开销。如果使用 HTTP Cookie，增加的开销有时会达到上千字节</strong>。为了减少此开销和提升性能，HTTP&#x2F;2 使用 HPACK 压缩格式压缩请求和响应标头元数据，这种格式采用两种简单但是强大的技术：</p>
+<ol>
+<li>这种格式支持通过静态霍夫曼代码对传输的标头字段进行编码，从而减小了各个传输的大小。</li>
+<li>这种格式要<strong>求客户端和服务器同时维护和更新一个包含之前见过的标头字段的索引列表</strong>（换句话说，它可以建立一个共享的压缩上下文），此列表随后会用作参考，对之前传输的值进行有效编码。</li>
+</ol>
+<p>利用霍夫曼编码，可以在传输时对各个值进行压缩，而利用之前传输值的索引列表，我们可以通过传输索引值的方式对重复值进行编码，索引值可用于有效查询和重构完整的标头键值对。</p>
+<p>作为一种进一步优化方式，HPACK 压缩上下文包含一个静态表和一个动态表：静态表在规范中定义，并提供了一个包含所有连接都可能使用的常用 HTTP 标头字段（例如，有效标头名称）的列表；动态表最初为空，将根据在特定连接内交换的值进行更新。</p>
+<h2 id="Golang-实现-server-push"><a href="#Golang-实现-server-push" class="headerlink" title="Golang 实现 server push"></a>Golang 实现 server push</h2><p>server push 简单说就是 client 请求一次，但是 server 返回几次。个人感觉这个东西还是比较鸡肋的，这是因为现在的文件资源很多都是放在cdn的，这样 server push 的意义就不是很大了。</p>
+<p>server push 不仅可以用作拉取静态资源，我们的 cgi 请求即 ajax 请求同样可以使用 server push 来发送数据。</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://github.com/tylerchr/examples%E3%80%82%E6%95%88%E6%9E%9C%E5%A6%82%E4%B8%8B%EF%BC%9A">https://github.com/tylerchr/examples。效果如下：</a></p>
+<p>启动服务访问 <a target="_blank" rel="noopener" href="https://127.0.0.1:4430/index.html%EF%BC%88%E6%88%91%E4%B8%AA%E4%BA%BA%E5%9C%A8%E9%A1%B5%E9%9D%A2%E5%8A%A0%E4%BA%86%E4%BA%9B%E9%A2%9D%E5%A4%96%E7%9A%84%E4%B8%9C%E8%A5%BF%EF%BC%89%EF%BC%9A">https://127.0.0.1:4430/index.html（我个人在页面加了些额外的东西）：</a></p>
+<p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/89b01e68c0594163a6ccd8085c529589.png"></p>
+<h2 id="golang-实现全双工通信"><a href="#golang-实现全双工通信" class="headerlink" title="golang 实现全双工通信"></a>golang 实现全双工通信</h2><p>HTTP2是支持全双工通信的。这里需要注意的是，一般来说 HTTP2 server push 指的是，client 的一个请求，server 可以回复多个资源。但是全双工通信指的是，在一个已经建立的 tcp 连接中，基于 http2 的长连接及二进制分帧等设计。实现全双工通信。</p>
+<p>实现，目前已实现，但是一些技术还需要更深的理解。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><h3 id="重点"><a href="#重点" class="headerlink" title="重点"></a>重点</h3><p><a target="_blank" rel="noopener" href="https://posener.github.io/http2/">golang 实例</a>。<a target="_blank" rel="noopener" href="https://github.com/posener/h2conn">github 仓库</a>。 <a target="_blank" rel="noopener" href="https://www.bangbangde.com/post/http2_adventure_in_the_go_world.html">翻译</a></p>
+<p><a target="_blank" rel="noopener" href="https://developers.google.com/web/fundamentals/performance/http2?hl=zh-cn#%E8%AE%BE%E8%AE%A1%E5%92%8C%E6%8A%80%E6%9C%AF%E7%9B%AE%E6%A0%87">谷歌对http2的详细介绍：本文抄袭了极多</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.alloyteam.com/2015/03/http2-0-di-qi-miao-ri-chang/#prettyPhoto">腾讯前端对http2的介绍，实际上和谷歌的介绍重合度很高</a></p>
+<p><a target="_blank" rel="noopener" href="https://http2.github.io/faq/">https://http2.github.io/faq/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/0c4ac947c34b">如何验证网站是否是 HTTP2.0</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.codenong.com/28582935/">关于http2：HTTP &#x2F; 2是否会使websocke</a></p>
+<h3 id="非重点"><a href="#非重点" class="headerlink" title="非重点"></a>非重点</h3><p><a target="_blank" rel="noopener" href="https://ops.tips/blog/nginx-http2-server-push/">nginx + golang server push</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/tylerchr/examples">golang 的htt2 server push 的实现</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.golang.org/h2push">golang 官方 h2 server push </a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http2/" rel="tag"># http2</a>
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/30/blog/http/websocket%E4%B9%8Bwebsocket%E5%85%A5%E9%97%A8/" rel="prev" title="websocket之websocket入门">
+      <i class="fa fa-chevron-left"></i> websocket之websocket入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/02/blog/redis/%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%E4%B8%8E%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/" rel="next" title="缓存穿透与布隆过滤器">
+      缓存穿透与布隆过滤器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP2%E7%9A%84%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E6%9C%89%E5%93%AA%E4%BA%9B"><span class="nav-number">1.1.</span> <span class="nav-text">HTTP2的核心概念有哪些</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E4%BD%BF%E7%94%A8%E7%9A%84%E6%98%AFhttp%E5%93%AA%E4%B8%AA%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.2.</span> <span class="nav-text">如何查看当前使用的是http哪个协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text">核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%88%86%E5%B8%A7"><span class="nav-number">2.1.</span> <span class="nav-text">二进制分帧</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%EF%BC%8C%E6%B6%88%E6%81%AF%E5%92%8C%E5%B8%A7"><span class="nav-number">2.1.1.</span> <span class="nav-text">数据流，消息和帧</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E4%B8%8E%E5%93%8D%E5%BA%94%E5%A4%8D%E7%94%A8"><span class="nav-number">2.2.</span> <span class="nav-text">请求与响应复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E4%BC%98%E5%85%88%E7%BA%A7"><span class="nav-number">2.3.</span> <span class="nav-text">数据优先级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%8F%E4%B8%AA%E6%9D%A5%E6%BA%90%E4%B8%80%E4%B8%AA%E8%BF%9E%E6%8E%A5"><span class="nav-number">2.4.</span> <span class="nav-text">每个来源一个连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E6%8E%A7%E5%88%B6"><span class="nav-number">2.5.</span> <span class="nav-text">流控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%8E%A8%E9%80%81"><span class="nav-number">2.6.</span> <span class="nav-text">服务器推送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E5%A4%B4%E5%8E%8B%E7%BC%A9"><span class="nav-number">2.7.</span> <span class="nav-text">标头压缩</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Golang-%E5%AE%9E%E7%8E%B0-server-push"><span class="nav-number">3.</span> <span class="nav-text">Golang 实现 server push</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#golang-%E5%AE%9E%E7%8E%B0%E5%85%A8%E5%8F%8C%E5%B7%A5%E9%80%9A%E4%BF%A1"><span class="nav-number">4.</span> <span class="nav-text">golang 实现全双工通信</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E7%82%B9"><span class="nav-number">5.1.</span> <span class="nav-text">重点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E9%87%8D%E7%82%B9"><span class="nav-number">5.2.</span> <span class="nav-text">非重点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

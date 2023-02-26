@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 两种模式生产消费者模式（队列）生产消费者模式，指的是由生产者将数据源源不断推送到消息中心，由不同的消费者从消息中心取出数据做自己的处理，在同一类别下，所有消费者拿到的都是同样的数据。是一种点对点的方式，消息不会被重复消费，可以粗暴的理解为消息被消费后就被标记删除或者已删除了，这是常见的消息队列通常的模式。比如说进程间通信，这种基于队列实现消息传输服务的。 队列下，就是每条记录被池子中的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列之入门">
+<meta property="og:url" content="http://example.com/2020/11/09/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 两种模式生产消费者模式（队列）生产消费者模式，指的是由生产者将数据源源不断推送到消息中心，由不同的消费者从消息中心取出数据做自己的处理，在同一类别下，所有消费者拿到的都是同样的数据。是一种点对点的方式，消息不会被重复消费，可以粗暴的理解为消息被消费后就被标记删除或者已删除了，这是常见的消息队列通常的模式。比如说进程间通信，这种基于队列实现消息传输服务的。 队列下，就是每条记录被池子中的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHIkFI.md.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/09/BHIEfP.md.png">
+<meta property="article:published_time" content="2020-11-09T11:40:37.000Z">
+<meta property="article:modified_time" content="2023-02-08T11:58:14.046Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="入门">
+<meta property="article:tag" content="kafka">
+<meta property="article:tag" content="消息队列">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/11/09/BHIkFI.md.png">
+
+<link rel="canonical" href="http://example.com/2020/11/09/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列之入门 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/09/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列之入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-09 19:40:37" itemprop="dateCreated datePublished" datetime="2020-11-09T19:40:37+08:00">2020-11-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-02-08 19:58:14" itemprop="dateModified" datetime="2023-02-08T19:58:14+08:00">2023-02-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="两种模式"><a href="#两种模式" class="headerlink" title="两种模式"></a>两种模式</h2><h3 id="生产消费者模式（队列）"><a href="#生产消费者模式（队列）" class="headerlink" title="生产消费者模式（队列）"></a>生产消费者模式（队列）</h3><p>生产消费者模式，指的是由生产者将数据源源不断推送到消息中心，由不同的消费者从消息中心取出数据做自己的处理，在同一类别下，所有消费者拿到的都是同样的数据。<strong>是一种点对点的方式，消息不会被重复消费，可以粗暴的理解为消息被消费后就被标记删除或者已删除了，这是常见的消息队列通常的模式。比如说进程间通信，这种基于队列实现消息传输服务的。</strong></p>
+<p>队列下，就是每条记录被池子中的一个消费者消费。kafka中对队列的实现就是同一个消费者组下面的消费者就是队列式消费。</p>
+<h3 id="发布订阅模式"><a href="#发布订阅模式" class="headerlink" title="发布订阅模式"></a>发布订阅模式</h3><p>订阅发布模式，本质上也是一种生产消费者模式，不同的是，由订阅者首先向消息中心指定自己对哪些数据感兴趣，发布者推送的数据经过消息中心后，每个订阅者拿到的仅仅是自己感兴趣的一组数据（<strong>最简单的实现，就是多个topic</strong>）。这两种模式是使用消息中间件时最常用的，用于功能解耦和分布式系统间的消息通信。</p>
+<p>相对于生产者 消费者模式，消息可能会被多方消费，可以简单的理解为一份报纸的内容，订阅它的人都可以读到它，当一个人读完之后也就没必要再次去读了。<strong>并且在发布订阅模式中，通常有个概念叫做topic</strong>，每个topic 有对应的发布者（publisher）、订阅者（subsciber）。<strong>发布订阅模式和设计模式中的观察者模式是一个思路，观察者订阅自己感兴趣的 topic， 然后 topic 有消息就得到通知。</strong></p>
+<p>发布订阅模式下，记录被广播到所有的消费者。kafka中对发布订阅的实现就是多个不同的消费者组同时消费同一个topic，多个consumer group 都能消费到每一条数据。但是kafka是多播。</p>
+<h2 id="kafka-中的单播和多播"><a href="#kafka-中的单播和多播" class="headerlink" title="kafka 中的单播和多播"></a>kafka 中的单播和多播</h2><h3 id="单播"><a href="#单播" class="headerlink" title="单播"></a>单播</h3><p>一条消息只能被某一个消费者消费的模式称为单播。要实现消息单播，只要让这些消费者属于同一个消费者组即可。当生产者发送一条消息时，同一消费者组中的多个消费者中只有一个能收到消息。</p>
+<h3 id="多播"><a href="#多播" class="headerlink" title="多播"></a>多播</h3><p>一条消息能够被多个消费者消费的模式称为多播。之所以不称之为广播，是因为一条消息只能被Kafka同一个分组下某一个消费者消费，而不是所有消费者都能消费，所以从严格意义上来讲并不能算是广播模式，当然如果希望实现广播模式只要保证每个消费者均属于不同的消费者组。针对Kafka同一条消息只能被同一个消费者组下的某一个消费者消费的特性，要实现多播只要保证这些消费者属于不同的消费者组即可。然后通过生产者发送几条消息，可以看到不同消费者组的消费者同时能消费到消息，然而同一个消费者组下的消费者却只能有一个消费者能消费到消息。</p>
+<h2 id="消息解耦的优点"><a href="#消息解耦的优点" class="headerlink" title="消息解耦的优点"></a>消息解耦的优点</h2><p>假设有一个用户行为采集系统，负责从App端采集用户点击行为数据。通常会将数据上报和数据处理分离开，即App端通过REST API上报数据，后端拿到数据后放入队列中就立刻返回，而数据处理则另外使用Worker从队列中取出数据来做，如下图所示。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/BHIkFI"><img src="https://s1.ax1x.com/2020/11/09/BHIkFI.md.png" alt="BHIkFI.md.png"></a></p>
+<h3 id="优点一：功能分离"><a href="#优点一：功能分离" class="headerlink" title="优点一：功能分离"></a>优点一：功能分离</h3><p>功能分离，上报的API接口不关心数据处理功能，只负责接入数据</p>
+<h3 id="优点二：数据缓冲"><a href="#优点二：数据缓冲" class="headerlink" title="优点二：数据缓冲"></a>优点二：数据缓冲</h3><p>数据上报的速率是不可控的，取决于用户使用频率，采用该模式可以一定程度地缓冲数据</p>
+<h3 id="优点三：易于扩展"><a href="#优点三：易于扩展" class="headerlink" title="优点三：易于扩展"></a>优点三：易于扩展</h3><p>在数据量大时，通过增加数据处理Worker来扩展，提高处理速率。这便是典型的生产消费者模式，数据上报为生产者，数据处理为消费者。</p>
+<h3 id="有点四：事件分发"><a href="#有点四：事件分发" class="headerlink" title="有点四：事件分发"></a>有点四：事件分发</h3><p>假设有一个电商系统，那么，用户“收藏”、“下单”、“付款”等行为都是非常重要的事件，通常后端服务在完成相应的功能处理外，还需要在这些事件点上做很多其他处理动作，比如发送短信通知、记录用户积分等等。我们可以将这些额外的处理动作放到每个模块中，但这并不是优雅的实现，不利于功能解耦和代码维护。</p>
+<p>我们需要的是一个事件分发系统，在各个功能模块中将对应的事件发布出来，由对其感兴趣的处理者进行处理。这里涉及两个角色：A对B感兴趣，A是处理者，B是事件，由事件处理器完成二者的绑定，并向消息中心订阅事件。服务模块是后端的业务逻辑服务，在不同的事件点发布事件，事件经过消息中心分发给事件处理器对应的处理者。整个流程如下图所示。这边是典型的订阅发布模式。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/BHIEfP"><img src="https://s1.ax1x.com/2020/11/09/BHIEfP.md.png" alt="BHIEfP.md.png"></a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1639449">Kafka下的生产消费者模式与订阅发布模式</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%85%A5%E9%97%A8/" rel="tag"># 入门</a>
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+              <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" rel="tag"># 消息队列</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/05/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%20%E6%8C%87%E4%BB%A4/" rel="prev" title="消息队列之kafka 指令">
+      <i class="fa fa-chevron-left"></i> 消息队列之kafka 指令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/09/blog/message%20queue/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8Bkafka%E5%85%A5%E9%97%A8/" rel="next" title="消息队列之kafka 入门">
+      消息队列之kafka 入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E7%A7%8D%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">两种模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88%E9%98%9F%E5%88%97%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">生产消费者模式（队列）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">发布订阅模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka-%E4%B8%AD%E7%9A%84%E5%8D%95%E6%92%AD%E5%92%8C%E5%A4%9A%E6%92%AD"><span class="nav-number">2.</span> <span class="nav-text">kafka 中的单播和多播</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E6%92%AD"><span class="nav-number">2.1.</span> <span class="nav-text">单播</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E6%92%AD"><span class="nav-number">2.2.</span> <span class="nav-text">多播</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E8%A7%A3%E8%80%A6%E7%9A%84%E4%BC%98%E7%82%B9"><span class="nav-number">3.</span> <span class="nav-text">消息解耦的优点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%E4%B8%80%EF%BC%9A%E5%8A%9F%E8%83%BD%E5%88%86%E7%A6%BB"><span class="nav-number">3.1.</span> <span class="nav-text">优点一：功能分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%E4%BA%8C%EF%BC%9A%E6%95%B0%E6%8D%AE%E7%BC%93%E5%86%B2"><span class="nav-number">3.2.</span> <span class="nav-text">优点二：数据缓冲</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%E4%B8%89%EF%BC%9A%E6%98%93%E4%BA%8E%E6%89%A9%E5%B1%95"><span class="nav-number">3.3.</span> <span class="nav-text">优点三：易于扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E7%82%B9%E5%9B%9B%EF%BC%9A%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91"><span class="nav-number">3.4.</span> <span class="nav-text">有点四：事件分发</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

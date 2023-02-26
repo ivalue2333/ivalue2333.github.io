@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 概述用户数据报协议 UDP 只在 IP 的数据报服务之上增加了很少一点的功能，这就是复用和分用的功能以及查错检测的功能  空间复杂度和时间复杂度封装带来的空间复杂度， 缓存带来的时间复杂度。两者是对立影响的，如果想减少封装消耗，那么就必须缓存用户数据到一定量在一次性封装发送出去，这样每个协议包的有效载荷将达到最大化，这无疑是节省了带宽空间，带宽利用率较高，但是延时增大了。如果想降低延时">
+<meta property="og:type" content="article">
+<meta property="og:title" content="udp入门">
+<meta property="og:url" content="http://example.com/2020/02/26/blog/http/udp%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 概述用户数据报协议 UDP 只在 IP 的数据报服务之上增加了很少一点的功能，这就是复用和分用的功能以及查错检测的功能  空间复杂度和时间复杂度封装带来的空间复杂度， 缓存带来的时间复杂度。两者是对立影响的，如果想减少封装消耗，那么就必须缓存用户数据到一定量在一次性封装发送出去，这样每个协议包的有效载荷将达到最大化，这无疑是节省了带宽空间，带宽利用率较高，但是延时增大了。如果想降低延时">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/26/yzn5GD.png">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-d333829c32143757758102ece0b262f8_720w.jpg">
+<meta property="article:published_time" content="2020-02-25T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.787Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http">
+<meta property="article:tag" content="udp">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2021/02/26/yzn5GD.png">
+
+<link rel="canonical" href="http://example.com/2020/02/26/blog/http/udp%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>udp入门 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/02/26/blog/http/udp%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          udp入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-26 00:00:00" itemprop="dateCreated datePublished" datetime="2020-02-26T00:00:00+08:00">2020-02-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>用户数据报协议 UDP 只在 IP 的数据报服务之上增加了很少一点的功能，这就是复用和分用的功能以及查错检测的功能</p>
+<p><a target="_blank" rel="noopener" href="https://imgtu.com/i/yzn5GD"><img src="https://s3.ax1x.com/2021/02/26/yzn5GD.png" alt="yzn5GD.png"></a></p>
+<h3 id="空间复杂度和时间复杂度"><a href="#空间复杂度和时间复杂度" class="headerlink" title="空间复杂度和时间复杂度"></a>空间复杂度和时间复杂度</h3><p>封装带来的空间复杂度， 缓存带来的时间复杂度。两者是对立影响的，如果想减少封装消耗，那么就必须缓存用户数据到一定量在一次性封装发送出去，这样每个协议包的有效载荷将达到最大化，这无疑是节省了带宽空间，带宽利用率较高，但是延时增大了。如果想降低延时，那么就需要将用户数据立马封装发出去，这样显然会造成消耗更多的协议头等消耗，浪费带宽空间。</p>
+<h2 id="UDP-包的大小"><a href="#UDP-包的大小" class="headerlink" title="UDP 包的大小"></a>UDP 包的大小</h2><p>面向报文的传输方式决定了 UDP 的数据发送方式是一份一份的，也就是应用层交给 UDP 多长的报文，UDP 就照样发送，即一次发送一个报文。那么UDP的报文大小由哪些影响因素呢？ UDP 数据包的理论长度是多少，合适的 UDP 数据包应该是多少呢？</p>
+<h3 id="UDP-报文大小的影响因素，主要有以下3个："><a href="#UDP-报文大小的影响因素，主要有以下3个：" class="headerlink" title="UDP 报文大小的影响因素，主要有以下3个："></a>UDP 报文大小的影响因素，主要有以下3个：</h3><ul>
+<li>UDP协议本身，UDP协议中有16位的UDP报文长度，那么UDP报文长度不能超过 2^16 -1 &#x3D;65536 -1 ；</li>
+<li>以太网(Ethernet)数据帧的长度，数据链路层的MTU(最大传输单元)；</li>
+<li>socket的UDP发送缓存区大小。</li>
+</ul>
+<h3 id="UDP数据包最大长度："><a href="#UDP数据包最大长度：" class="headerlink" title="UDP数据包最大长度："></a>UDP数据包最大长度：</h3><p>根据 UDP 协议，从 UDP 数据包的包头可以看出，UDP 的最大包长度是2^16-1的个字节。由于UDP包头占8个字节，而在IP层进行封装后的IP包头占去20字节，所以这个是UDP数据包的最大理论长度是2^16 - 1 - 8 - 20 &#x3D; 65507字节。</p>
+<h3 id="UDP数据包理想长度："><a href="#UDP数据包理想长度：" class="headerlink" title="UDP数据包理想长度："></a>UDP数据包理想长度：</h3><h4 id="MTU-最大传输单元（数据链路层）"><a href="#MTU-最大传输单元（数据链路层）" class="headerlink" title="MTU 最大传输单元（数据链路层）"></a>MTU 最大传输单元（数据链路层）</h4><p>MTU 最大传输单元，这个最大传输单元实际上和链路层协议有着密切的关系，EthernetII 帧的结构 DMAC + SMAC + Type + Data + CRC 由于以太网传输电气方面的限制，每个以太网帧都有最小的大小64字节，最大不能超过1518字节，对于小于或者大于这个限制的以太网帧我们都可以视之为错误的数据帧，一般的以太网转发设备会丢弃这些数据帧。由于以太网 EthernetII 最大的数据帧是1518字节，除去以太网帧的帧头（DMAC目的 MAC 地址48bit&#x3D;6Bytes+SMAC源 MAC 地址48bit&#x3D;6Bytes+Type域2bytes）14Bytes和帧尾CRC校验部分4Bytes那么剩下承载上层协议的地方也就是Data域最大就只能有1500字节这个值我们就把它称之为MTU。</p>
+<h4 id="UDP数据包理想长度"><a href="#UDP数据包理想长度" class="headerlink" title="UDP数据包理想长度"></a>UDP数据包理想长度</h4><p>在下层数据链路层最大传输单元是1500字节的情况下，要想IP层不分包，那么UDP数据包的最大大小应该是1500字节 – IP头(20字节) – UDP头(8字节) &#x3D; 1472字节。不过鉴于Internet上的标准MTU值为576字节，所以建议在进行Internet的UDP编程时，<strong>最好将UDP的数据长度控制在 (576-8-20)548字节以内</strong>。</p>
+<h2 id="UDP数据包的发送和接收问题"><a href="#UDP数据包的发送和接收问题" class="headerlink" title="UDP数据包的发送和接收问题"></a>UDP数据包的发送和接收问题</h2><h3 id="1-UDP的通信有界性："><a href="#1-UDP的通信有界性：" class="headerlink" title="(1) UDP的通信有界性："></a>(1) UDP的通信有界性：</h3><p>在阻塞模式下，UDP的通信是以数据包作为界限的，即使server端的缓冲区再大也要按照client发包的次数来多次接收数据包，server只能一次一次的接收，client发送多少次，server就需接收多少次，即客户端分几次发送过来，服务端就必须按几次接收。</p>
+<h3 id="2-UDP数据包的无序性和非可靠性："><a href="#2-UDP数据包的无序性和非可靠性：" class="headerlink" title="(2) UDP数据包的无序性和非可靠性："></a>(2) UDP数据包的无序性和非可靠性：</h3><p>client依次发送1、2、3三个UDP数据包，server端先后调用3次接收函数，可能会依次收到3、2、1次序的数据包，收包可能是1、2、3的任意排列组合，也可能丢失一个或多个数据包。</p>
+<h3 id="3-UDP数据包的接收："><a href="#3-UDP数据包的接收：" class="headerlink" title="(3) UDP数据包的接收："></a>(3) UDP数据包的接收：</h3><p>client发送两次UDP数据，第一次 500字节，第二次300字节，server端阻塞模式下接包，第一次recvfrom( 1000 )，收到是 1000，还是500，还是300，还是其他？</p>
+<p>由于UDP通信的有界性，接收到只能是500或300，又由于UDP的无序性和非可靠性，接收到可能是300，也可能是500，也可能一直阻塞在recvfrom调用上，直到超时返回(也就是什么也收不到)。</p>
+<p>在假定数据包是不丢失并且是按照发送顺序按序到达的情况下，server端阻塞模式下接包，先后三次调用：recvfrom( 200)，recvfrom( 1000)，recvfrom( 1000)，接收情况如何呢？</p>
+<p>由于UDP通信的有界性，第一次recvfrom( 200)将接收第一个500字节的数据包，但是因为用户空间buf只有200字节，于是只会返回前面200字节，剩下300字节将丢弃。第二次recvfrom( 1000)将返回300字节，第三次recvfrom( 1000)将会阻塞。</p>
+<h3 id="4-UDP包分片问题："><a href="#4-UDP包分片问题：" class="headerlink" title="(4) UDP包分片问题："></a>(4) UDP包分片问题：</h3><p>如果MTU是1500，Client发送一个8000字节大小的UDP包，那么Server端阻塞模式下接包，在不丢包的情况下，recvfrom(9000)是收到1500，还是8000。如果某个IP分片丢失了，recvfrom(9000)，又返回什么呢？</p>
+<p>根据UDP通信的有界性，在buf足够大的情况下，接收到的一定是一个完整的数据包，<strong>UDP数据在下层的分片和组片问题由IP层来处理，提交到UDP传输层一定是一个完整的UDP包</strong>，那么recvfrom(9000)将返回8000。如果某个IP分片丢失，udp里有个CRC检验，如果包不完整就会丢弃，也不会通知是否接收成功，所以UDP是不可靠的传输协议，那么recvfrom(9000)将阻塞。</p>
+<h2 id="UDP丢包问题"><a href="#UDP丢包问题" class="headerlink" title="UDP丢包问题"></a>UDP丢包问题</h2><h3 id="UDP-socket缓冲区满造成的UDP丢包："><a href="#UDP-socket缓冲区满造成的UDP丢包：" class="headerlink" title="UDP socket缓冲区满造成的UDP丢包："></a>UDP socket缓冲区满造成的UDP丢包：</h3><p>通过 cat &#x2F;proc&#x2F;sys&#x2F;net&#x2F;core&#x2F;rmem_default 和cat &#x2F;proc&#x2F;sys&#x2F;net&#x2F;core&#x2F;rmem_max可以查看socket缓冲区的缺省值和最大值。<strong>如果socket缓冲区满了，应用程序没来得及处理在缓冲区中的UDP包，那么后续来的UDP包会被内核丢弃，造成丢包。</strong>在socket缓冲区满造成丢包的情况下，可以通过增大缓冲区的方法来缓解UDP丢包问题。但是，如果服务已经过载了，简单的增大缓冲区并不能解决问题，反而会造成滚雪球效应，造成请求全部超时，服务不可用。</p>
+<p><strong>作为对比，tcp 协议因为存在流量控制，所以更不容易出现socket缓冲区满的情况</strong></p>
+<h3 id="UDP-socket缓冲区过小造成的UDP丢包："><a href="#UDP-socket缓冲区过小造成的UDP丢包：" class="headerlink" title="UDP socket缓冲区过小造成的UDP丢包："></a>UDP socket缓冲区过小造成的UDP丢包：</h3><p>如果Client发送的UDP报文很大，而socket缓冲区过小无法容下该UDP报文，那么该报文就会丢失。</p>
+<h3 id="ARP缓存过期导致UDP丢包："><a href="#ARP缓存过期导致UDP丢包：" class="headerlink" title="ARP缓存过期导致UDP丢包："></a>ARP缓存过期导致UDP丢包：</h3><p>ARP 的缓存时间约10分钟，APR 缓存列表没有对方的 MAC 地址或缓存过期的时候，会发送 ARP 请求获取 MAC 地址，在没有获取到 MAC 地址之前，用户发送出去的 UDP 数据包会被内核缓存到 arp_queue 这个队列中，默认最多缓存3个包，多余的 UDP 包会被丢弃。</p>
+<h2 id="UDP的冗余传输方案"><a href="#UDP的冗余传输方案" class="headerlink" title="UDP的冗余传输方案"></a>UDP的冗余传输方案</h2><p>在外网通信链路不稳定的情况下，有什么办法可以降低UDP的丢包率呢？一个简单的办法来采用冗余传输的方式。如下图，一般采用较多的是延时双发，双发指的是将原本单发的前后连续的两个包合并成一个大包发送，这样发送的数据量是原来的两倍。这种方式提高丢包率的原理比较简单，例如本例的冗余发包方式，在偶数包全丢的情况下，依然能够还原出完整的数据，也就是在这种情况下，50%的丢包率，依然能够达到100%的数据接收。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-d333829c32143757758102ece0b262f8_720w.jpg"></p>
+<h2 id="UDP真的比TCP要高效吗"><a href="#UDP真的比TCP要高效吗" class="headerlink" title="UDP真的比TCP要高效吗"></a>UDP真的比TCP要高效吗</h2><p>相信很多同学都认为UDP无连接，无需重传和处理确认，UDP比较高效。然而UDP在大多情况下并不一定比TCP高效，TCP发展至今天，为了适应各种复杂的网络环境，其算法已经非常丰富，协议本身经过了很多优化，如果能够合理配置TCP的各种参数选项，那么在多数的网络环境下TCP是要比UDP更高效的。</p>
+<p>影响UDP高效因素有以下3点。</p>
+<h3 id="1-无法智能利用空闲带宽导致资源利用率低："><a href="#1-无法智能利用空闲带宽导致资源利用率低：" class="headerlink" title="(1) 无法智能利用空闲带宽导致资源利用率低："></a>(1) 无法智能利用空闲带宽导致资源利用率低：</h3><p>一个简单的事实是UDP并不会受到MTU的影响，MTU只会影响下层的IP分片，对此UDP一无所知。在极端情况下，UDP每次都是发小包，包是MTU的几百分之一，这样就造成UDP包的有效数据占比较小(UDP头的封装成本)；或者，UDP每次都是发巨大的UDP包，包大小MTU的几百倍，这样会造成下层IP层的大量分片，大量分片的情况下，其中某个分片丢失了，就会导致整个UDP包的无效。由于网络情况是动态变化的，UDP无法根据变化进行调整，发包过大或过小，从而导致带宽利用率低下，有效吞吐量较低。而TCP有一套智能算法，当发现数据必须积攒的时候，就说明此时不积攒也不行，TCP的复杂算法会在延迟和吞吐量之间达到一个很好的平衡。</p>
+<h3 id="2-无法动态调整发包："><a href="#2-无法动态调整发包：" class="headerlink" title="(2) 无法动态调整发包："></a>(2) 无法动态调整发包：</h3><p><strong>由于UDP没有确认机制，没有流量控制和拥塞控制</strong>，这样在网络出现拥塞或通信两端处理能力不匹配的时候，UDP并不会进行调整发送速率，从而导致大量丢包。在丢包的时候，不合理的简单重传策略会导致重传风暴，进一步加剧网络的拥塞，从而导致丢包率雪上加霜。</p>
+<h3 id="3-改进UDP的成本较高："><a href="#3-改进UDP的成本较高：" class="headerlink" title="(3) 改进UDP的成本较高："></a>(3) 改进UDP的成本较高：</h3><p>可能有同学想到针对UDP的一些缺点，在用户态做些调整改进，添加上简单的重传和动态发包大小优化。然而，这样的改进并不简单的，UDP编程可是比TCP要难不少的，考虑到改造成本，为什么不直接用TCP呢？</p>
+<h2 id="UDP协议的正确使用场合"><a href="#UDP协议的正确使用场合" class="headerlink" title="UDP协议的正确使用场合"></a>UDP协议的正确使用场合</h2><h3 id="高通信实时性要求和低持续性要求的场景下"><a href="#高通信实时性要求和低持续性要求的场景下" class="headerlink" title="高通信实时性要求和低持续性要求的场景下"></a>高通信实时性要求和低持续性要求的场景下</h3><p>对于<strong>短连接通信，一方面如果业务只需要发一两个包并且对丢包有一定的容忍度</strong>，同时业务自己有简单的轮询或重复机制，那么采用UDP会较为好些。在这样的场景下，如果用TCP，仅仅握手就需要3个包，这样显然有点不划算，一个典型的例子是DNS查询。</p>
+<p>另一方面，如果业务<strong>实时性要求非常高</strong>，并且不能忍受重传，那么首先就是UDP了或者只能用UDP了</p>
+<h3 id="多点通信的场景下"><a href="#多点通信的场景下" class="headerlink" title="多点通信的场景下"></a>多点通信的场景下</h3><p>对于一些多点通信的场景，如果采用有连接的TCP，那么就需要和多个通信节点建立其双向连接，然后有时在NAT环境下，两个通信节点建立其直接的TCP连接不是一个容易的事情，在涉及NAT穿越的时候，UDP协议的无连接性使得穿透成功率更高（原因详见：由于UDP的无连接性，那么其完全可以向一个组播地址发送数据或者轮转地向多个目的地持续发送相同的数据，从而更为容易实现多点通信。）</p>
+<p>一个典型的场景是多人实时音视频通信，这种场景下实时性要求比较高，可以容忍一定的丢包率。比如：对于音频，对端连续发送p1、p2、p3三个包，另一端收到了p1和p3，在没收到p2的保持p1的最后一个音（也是为什么有时候网络丢包就会听到嗞嗞嗞嗞嗞嗞…或者卟卟卟卟卟卟卟卟…重音的原因），等到到p3就接着播p3了，不需要也不能补帧，一补就越来越大的延时。对于这样的场景就比较合适用UDP了，如果采用TCP，那么在出现丢包的时候，就可能会出现比较大的延时。</p>
+<h2 id="UDP的使用原则小结"><a href="#UDP的使用原则小结" class="headerlink" title="UDP的使用原则小结"></a>UDP的使用原则小结</h2><ul>
+<li>实时性要求很高，并且几乎不能容忍重传：<ul>
+<li>例子：NTP协议，实时音视频通信，多人动作类游戏中人物动作、位置。</li>
+</ul>
+</li>
+<li>TCP实在不方便实现多点传输的情况；</li>
+<li>需要进行NAT穿越；</li>
+<li>对网络状态很熟悉，确保udp网络中没有氓流行为，疯狂抢带宽；</li>
+<li>熟悉UDP编程。</li>
+</ul>
+<h2 id="UDP-小结"><a href="#UDP-小结" class="headerlink" title="UDP 小结"></a>UDP 小结</h2><ul>
+<li>UDP 是无连接的，即发送数据之前不需要建立连接(发送数据结束时也没有连接可释放)，减少了开销和发送数据之前的时延</li>
+<li>UDP 使用尽最大努力交付，即不保证可靠交付，主机不需要维持复杂的连接状态表</li>
+<li>UDP 是面向报文的，发送方的 UDP 对应用程序交下来的报文，在添加首部后就向下交付 IP 层。UDP 对应用层交下来的报文，既不合并，也不拆分，而是保留这些报文的边界</li>
+<li>UDP <code>没有拥塞控制</code>，网络出现的拥塞不会使源主机的发送速率降低。这对某些实时应用是很重要的</li>
+<li>UDP 支持一对一、一对多、多对一和多对多的交互通信</li>
+<li>UDP 的<code>首部开销小</code>，只有8个字节，比 TCP 的20个字节的首部要短</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/101552588">原文：不为人知的UDP：深入地理解UDP协议并用好它</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/64154915">udp协议-看这篇就够了</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/udp/" rel="tag"># udp</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/07/blog/http/tcp%E4%B9%8Btcp%E5%92%8Cudp%E5%8D%8F%E8%AE%AE%E5%AF%B9%E6%AF%94/" rel="prev" title="tcp之tcp和udp协议的对比">
+      <i class="fa fa-chevron-left"></i> tcp之tcp和udp协议的对比
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/03/05/blog/operation%20system/linux%E8%99%9A%E6%8B%9F%E7%A9%BA%E9%97%B4%E5%B8%83%E5%B1%80/" rel="next" title="linux虚拟空间布局">
+      linux虚拟空间布局 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%92%8C%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">1.1.</span> <span class="nav-text">空间复杂度和时间复杂度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP-%E5%8C%85%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="nav-number">2.</span> <span class="nav-text">UDP 包的大小</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP-%E6%8A%A5%E6%96%87%E5%A4%A7%E5%B0%8F%E7%9A%84%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0%EF%BC%8C%E4%B8%BB%E8%A6%81%E6%9C%89%E4%BB%A5%E4%B8%8B3%E4%B8%AA%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">UDP 报文大小的影响因素，主要有以下3个：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E6%9C%80%E5%A4%A7%E9%95%BF%E5%BA%A6%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">UDP数据包最大长度：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E7%90%86%E6%83%B3%E9%95%BF%E5%BA%A6%EF%BC%9A"><span class="nav-number">2.3.</span> <span class="nav-text">UDP数据包理想长度：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#MTU-%E6%9C%80%E5%A4%A7%E4%BC%A0%E8%BE%93%E5%8D%95%E5%85%83%EF%BC%88%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82%EF%BC%89"><span class="nav-number">2.3.1.</span> <span class="nav-text">MTU 最大传输单元（数据链路层）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E7%90%86%E6%83%B3%E9%95%BF%E5%BA%A6"><span class="nav-number">2.3.2.</span> <span class="nav-text">UDP数据包理想长度</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E5%8F%91%E9%80%81%E5%92%8C%E6%8E%A5%E6%94%B6%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">UDP数据包的发送和接收问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-UDP%E7%9A%84%E9%80%9A%E4%BF%A1%E6%9C%89%E7%95%8C%E6%80%A7%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">(1) UDP的通信有界性：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%A0%E5%BA%8F%E6%80%A7%E5%92%8C%E9%9D%9E%E5%8F%AF%E9%9D%A0%E6%80%A7%EF%BC%9A"><span class="nav-number">3.2.</span> <span class="nav-text">(2) UDP数据包的无序性和非可靠性：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-UDP%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%8E%A5%E6%94%B6%EF%BC%9A"><span class="nav-number">3.3.</span> <span class="nav-text">(3) UDP数据包的接收：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-UDP%E5%8C%85%E5%88%86%E7%89%87%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">3.4.</span> <span class="nav-text">(4) UDP包分片问题：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E4%B8%A2%E5%8C%85%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">UDP丢包问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP-socket%E7%BC%93%E5%86%B2%E5%8C%BA%E6%BB%A1%E9%80%A0%E6%88%90%E7%9A%84UDP%E4%B8%A2%E5%8C%85%EF%BC%9A"><span class="nav-number">4.1.</span> <span class="nav-text">UDP socket缓冲区满造成的UDP丢包：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP-socket%E7%BC%93%E5%86%B2%E5%8C%BA%E8%BF%87%E5%B0%8F%E9%80%A0%E6%88%90%E7%9A%84UDP%E4%B8%A2%E5%8C%85%EF%BC%9A"><span class="nav-number">4.2.</span> <span class="nav-text">UDP socket缓冲区过小造成的UDP丢包：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E7%BC%93%E5%AD%98%E8%BF%87%E6%9C%9F%E5%AF%BC%E8%87%B4UDP%E4%B8%A2%E5%8C%85%EF%BC%9A"><span class="nav-number">4.3.</span> <span class="nav-text">ARP缓存过期导致UDP丢包：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E7%9A%84%E5%86%97%E4%BD%99%E4%BC%A0%E8%BE%93%E6%96%B9%E6%A1%88"><span class="nav-number">5.</span> <span class="nav-text">UDP的冗余传输方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E7%9C%9F%E7%9A%84%E6%AF%94TCP%E8%A6%81%E9%AB%98%E6%95%88%E5%90%97"><span class="nav-number">6.</span> <span class="nav-text">UDP真的比TCP要高效吗</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%97%A0%E6%B3%95%E6%99%BA%E8%83%BD%E5%88%A9%E7%94%A8%E7%A9%BA%E9%97%B2%E5%B8%A6%E5%AE%BD%E5%AF%BC%E8%87%B4%E8%B5%84%E6%BA%90%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E%EF%BC%9A"><span class="nav-number">6.1.</span> <span class="nav-text">(1) 无法智能利用空闲带宽导致资源利用率低：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%97%A0%E6%B3%95%E5%8A%A8%E6%80%81%E8%B0%83%E6%95%B4%E5%8F%91%E5%8C%85%EF%BC%9A"><span class="nav-number">6.2.</span> <span class="nav-text">(2) 无法动态调整发包：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%94%B9%E8%BF%9BUDP%E7%9A%84%E6%88%90%E6%9C%AC%E8%BE%83%E9%AB%98%EF%BC%9A"><span class="nav-number">6.3.</span> <span class="nav-text">(3) 改进UDP的成本较高：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E5%8D%8F%E8%AE%AE%E7%9A%84%E6%AD%A3%E7%A1%AE%E4%BD%BF%E7%94%A8%E5%9C%BA%E5%90%88"><span class="nav-number">7.</span> <span class="nav-text">UDP协议的正确使用场合</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E9%80%9A%E4%BF%A1%E5%AE%9E%E6%97%B6%E6%80%A7%E8%A6%81%E6%B1%82%E5%92%8C%E4%BD%8E%E6%8C%81%E7%BB%AD%E6%80%A7%E8%A6%81%E6%B1%82%E7%9A%84%E5%9C%BA%E6%99%AF%E4%B8%8B"><span class="nav-number">7.1.</span> <span class="nav-text">高通信实时性要求和低持续性要求的场景下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E7%82%B9%E9%80%9A%E4%BF%A1%E7%9A%84%E5%9C%BA%E6%99%AF%E4%B8%8B"><span class="nav-number">7.2.</span> <span class="nav-text">多点通信的场景下</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP%E7%9A%84%E4%BD%BF%E7%94%A8%E5%8E%9F%E5%88%99%E5%B0%8F%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">UDP的使用原则小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UDP-%E5%B0%8F%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">UDP 小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">10.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

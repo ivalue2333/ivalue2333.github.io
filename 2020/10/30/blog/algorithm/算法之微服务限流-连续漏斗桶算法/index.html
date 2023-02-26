@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[TOC] 开篇在开发高并发系统时有三把利器用来保护系统：缓存、降级和限流  缓存：缓存的目的是提升系统访问速度和增大系统处理容量 降级：降级是当服务器压力剧增的情况下，根据当前业务情况及流量对一些服务和页面有策略的降级，以此释放服务器资源以保证核心任务的正常运行 限流：限流的目的是通过对并发访问&#x2F;请求进行限速，或者对一个时间窗口内的请求进行限速来保护系统，一旦达到限制速率则可以拒绝服务">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法之微服务限流-连续漏斗桶算法">
+<meta property="og:url" content="http://example.com/2020/10/30/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%90%E6%B5%81-%E8%BF%9E%E7%BB%AD%E6%BC%8F%E6%96%97%E6%A1%B6%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[TOC] 开篇在开发高并发系统时有三把利器用来保护系统：缓存、降级和限流  缓存：缓存的目的是提升系统访问速度和增大系统处理容量 降级：降级是当服务器压力剧增的情况下，根据当前业务情况及流量对一些服务和页面有策略的降级，以此释放服务器资源以保证核心任务的正常运行 限流：限流的目的是通过对并发访问&#x2F;请求进行限速，或者对一个时间窗口内的请求进行限速来保护系统，一旦达到限制速率则可以拒绝服务">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/f1798b7201b347849e02c289cba284e6.png">
+<meta property="article:published_time" content="2020-10-30T06:33:37.000Z">
+<meta property="article:modified_time" content="2021-04-07T09:01:18.775Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="限流算法">
+<meta property="article:tag" content="漏斗桶">
+<meta property="article:tag" content="as a meter">
+<meta property="article:tag" content="as a queue">
+<meta property="article:tag" content="滑动窗口">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/f1798b7201b347849e02c289cba284e6.png">
+
+<link rel="canonical" href="http://example.com/2020/10/30/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%90%E6%B5%81-%E8%BF%9E%E7%BB%AD%E6%BC%8F%E6%96%97%E6%A1%B6%E7%AE%97%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>算法之微服务限流-连续漏斗桶算法 | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/30/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%BE%AE%E6%9C%8D%E5%8A%A1%E9%99%90%E6%B5%81-%E8%BF%9E%E7%BB%AD%E6%BC%8F%E6%96%97%E6%A1%B6%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法之微服务限流-连续漏斗桶算法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-30 14:33:37" itemprop="dateCreated datePublished" datetime="2020-10-30T14:33:37+08:00">2020-10-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-07 17:01:18" itemprop="dateModified" datetime="2021-04-07T17:01:18+08:00">2021-04-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">数据结构与算法</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[TOC]</p>
+<h2 id="开篇"><a href="#开篇" class="headerlink" title="开篇"></a>开篇</h2><p>在开发高并发系统时有三把利器用来保护系统：<strong>缓存、降级和限流</strong></p>
+<ul>
+<li><strong>缓存</strong>：缓存的目的是提升系统访问速度和增大系统处理容量</li>
+<li><strong>降级</strong>：降级是当服务器压力剧增的情况下，根据当前业务情况及流量对一些服务和页面有策略的降级，以此释放服务器资源以保证核心任务的正常运行</li>
+<li><strong>限流</strong>：限流的目的是通过对并发访问&#x2F;请求进行限速，或者对一个时间窗口内的请求进行限速来保护系统，一旦达到限制速率则可以拒绝服务、排队或等待、降级等处理</li>
+</ul>
+<h2 id="漏斗桶概览"><a href="#漏斗桶概览" class="headerlink" title="漏斗桶概览"></a>漏斗桶概览</h2><p>文献中描述了两种不同的应用漏斗类比的方法。[1] [2] [3] [4]这些给出了似乎是两种不同的算法，这两种算法都称为漏斗算法，通常不参考其他方法。这导致了关于漏桶算法是什么及其性质的困惑。</p>
+<p>在其中一种类比的实现中，存储桶的类比是计数器或变量，与流量或事件调度分开。[1] [3] [4]此计数器仅用于检查流量或事件是否符合限制：<strong>当每个数据包到达进行检查或发生事件的点时，该计数器就会递增，这等效于间歇地向其中添加水的方式桶。计数器也以固定的速率递减，这与水从水桶漏出的方式相同。</strong>结果，计数器中的值代表类似桶中的水位。如果在数据包到达时或事件发生时计数器保持在指定的限值以下，即存储桶未溢出，则表明其符合带宽和突发性限值或平均和峰值速率事件限值。因此，在此版本中，水的类似物由数据包或事件携带，在到达或发生时添加到水桶中，然后泄漏出去。此版本在这里称为漏斗式计量表。</p>
+<p>在第二个版本中，桶的类似物是交通流中的一个队列。[2]此队列用于直接控制流量：数据包到达时将其输入到队列中，相当于将水添加到桶中。然后通常以固定的速率，例如从队列中将这些分组从队列中删除（先到先服务）。向前传输，相当于水从桶中漏出。结果，为队列提供服务的速率直接控制流量的向前传输速率。因此，<strong>它强加一致性而不是检查一致性</strong>，并且在以固定速率为队列提供服务的情况下（以及数据包的长度均相同），所得到的流量必然没有突发性或抖动。因此，在此版本中，流量本身就是流过水桶的水的类似物。目前尚不清楚这种应用类比的版本如何用于检查离散事件的发生率。此版本在此处称为泄漏存储桶作为队列。</p>
+<p>作为仪表的泄漏桶与令牌桶算法完全相同（即镜像），即，向泄漏桶加水的过程恰好反映了在合格数据包到达时从令牌桶中删除令牌的过程，即从漏水桶漏水完全反映了定期向令牌桶中添加令牌的过程，漏水桶不会溢出的测试也反映了令牌桶包含足够的令牌并且不会“下溢”的测试。因此，在给定等效参数的情况下，这两种算法将看到相同的流量，即符合或不符合。可以将漏斗作为队列视为漏斗作为仪表的特例。[6]</p>
+<h2 id="AS-A-METER"><a href="#AS-A-METER" class="headerlink" title="AS A METER"></a>AS A METER</h2><p>乔纳森·S·特纳（Jonathan S. Turner）对漏斗算法的原始描述有功劳[7]，其描述如下：“与每个在连接上传输的用户相关的计数器，每当用户发送一个数据包时就增加，并周期性地减少。 计数器增加后超过阈值，网络将丢弃该数据包。用户指定计数器减少的速率（这确定平均带宽）和阈值（突发性的度量）”。[1] 在这种情况下，存储桶（类似于计数器）被用作计量器来测试数据包的一致性，而不是用作直接控制数据包的队列。</p>
+<p>ITU-T在建议I.371和ATM论坛的UNI规范中给出了对该算法的本质上相同的仪表版本（通用信元速率算法）的另一种描述。[3] [4] ITU-T给出了以下描述，其中术语“单元”等效于特纳描述[1]中的数据包：“<strong>连续状态泄漏桶可以看作是一个容量有限的桶，其实际值内容会以每个时间单位1个单位的内容的连续速率耗尽，并且每个合格单元格的内容以增量T递增…如果在单元格到达时，存储桶的内容小于或等于极限值τ，则[4]该单元格是合格的；否则，该单元格是不合格的。</strong>存储桶的容量（计数器的上限）为（T +τ）“。[4]这些规范还指出，由于其有限的容量，如果在测试一致性时漏斗的内容物大于极限值，并且因此单元格不合格，则漏斗保持不变；否则，漏斗将保持不变。也就是说，如果会使水桶溢出，则根本不添加水。</p>
+<p>可以将泄漏存储桶算法作为一种可以在流量监管或流量整形中使用的仪表的操作概念描述如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">emission_interval = period / rate <span class="comment"># 60 / 100 # 一个包需要 0.6 秒才能处理完 0.6s/package</span></span><br><span class="line">increment = emission_interval * cost <span class="comment"># 0.6 * cost 比如本次的数据包需要使用几个速率</span></span><br><span class="line">burst_offset = 60s <span class="comment"># 时间的长度 是 60s</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>与每个虚拟连接或用户关联的固定容量的存储桶以固定的速率泄漏。<ul>
+<li>速率 &#x3D; 时长 &#x2F;  数据包个数， 例如，在一分钟内，只能处理， 100 个 数据包，那么速率是 60 &#x2F;  100</li>
+</ul>
+</li>
+<li>如果漏斗是空的，它将停止泄漏。</li>
+<li>为了使包装符合要求，必须向桶中添加一定量的水：符合要求的包所添加的特定量对于所有包都可以相同，或者与包的长度成比例。</li>
+<li>如果此水量会使水桶超出其容量，则说明包不合格，水桶中的水保持不变。</li>
+</ul>
+<h3 id="图解如下"><a href="#图解如下" class="headerlink" title="图解如下"></a>图解如下</h3><p><img src="https://xdmp-new.oss-cn-hangzhou.aliyuncs.com/answer_pics/f1798b7201b347849e02c289cba284e6.png" alt="图解漏斗桶算法"></p>
+<h3 id="lua-script"><a href="#lua-script" class="headerlink" title="lua script"></a>lua script</h3><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Copyright (c) 2017 Pavel Pravosud</span></span><br><span class="line"><span class="comment">-- https://github.com/rwz/redis-gcra/blob/master/vendor/perform_gcra_ratelimit.lua</span></span><br><span class="line">redis.replicate_commands()</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> rate_limit_key = KEYS[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">local</span> burst = ARGV[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">local</span> rate = ARGV[<span class="number">2</span>]</span><br><span class="line"><span class="keyword">local</span> period = ARGV[<span class="number">3</span>]</span><br><span class="line"><span class="keyword">local</span> cost = <span class="built_in">tonumber</span>(ARGV[<span class="number">4</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> emission_interval = period / rate</span><br><span class="line"><span class="keyword">local</span> increment = emission_interval * cost</span><br><span class="line"><span class="keyword">local</span> burst_offset = emission_interval * burst</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> jan_1_2017 = <span class="number">1483228800</span></span><br><span class="line"><span class="keyword">local</span> now = redis.call(<span class="string">&quot;TIME&quot;</span>)</span><br><span class="line">now = (now[<span class="number">1</span>] - jan_1_2017) + (now[<span class="number">2</span>] / <span class="number">1000000</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> tat = redis.call(<span class="string">&quot;GET&quot;</span>, rate_limit_key)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> tat <span class="keyword">then</span></span><br><span class="line">  tat = now</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  tat = <span class="built_in">tonumber</span>(tat)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">tat = <span class="built_in">math</span>.<span class="built_in">max</span>(tat, now)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> new_tat = tat + increment</span><br><span class="line"><span class="keyword">local</span> allow_at = new_tat - burst_offset</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> diff = now - allow_at</span><br><span class="line"><span class="keyword">local</span> remaining = <span class="built_in">math</span>.<span class="built_in">floor</span>(diff / emission_interval + <span class="number">0.5</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> remaining &lt; <span class="number">0</span> <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">local</span> reset_after = tat - now</span><br><span class="line">  <span class="keyword">local</span> retry_after = diff * <span class="number">-1</span></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="number">0</span>, <span class="comment">-- allowed</span></span><br><span class="line">    <span class="number">0</span>, <span class="comment">-- remaining</span></span><br><span class="line">    <span class="built_in">tostring</span>(retry_after),</span><br><span class="line">    <span class="built_in">tostring</span>(reset_after),</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> reset_after = new_tat - now</span><br><span class="line">redis.call(<span class="string">&quot;SET&quot;</span>, rate_limit_key, new_tat, <span class="string">&quot;EX&quot;</span>, <span class="built_in">math</span>.<span class="built_in">ceil</span>(reset_after))</span><br><span class="line"><span class="keyword">local</span> retry_after = <span class="number">-1</span></span><br><span class="line"><span class="keyword">return</span> &#123;cost, remaining, <span class="built_in">tostring</span>(retry_after), <span class="built_in">tostring</span>(reset_after)&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="AS-A-QUEUE"><a href="#AS-A-QUEUE" class="headerlink" title="AS A QUEUE"></a>AS A QUEUE</h2><p>uber-go 实现的漏斗桶算法 (as a queue)， 比较简单的非分布式漏斗桶，<a target="_blank" rel="noopener" href="https://github.com/uber-go/ratelimit/blob/a7b5fef1e7d73c4f8832efdd129a81996cf12ad0/ratelimit.go#L108">代码如下</a></p>
+<p>主要是基于 sleep 函数做速率控制。所以核心实际上是计算 需要睡眠的时间， 需要睡眠的时间由两部分组成，一部分是每一个请求需要花费的时间 perRequest, 另一个是之前的所有请求所使用了的时间 now.Sub(oldState.last)， 如果这个时间为正数， 说明前面一段时间处理不是很忙碌，现在能处理更多的请求。如果这个时间为负数，说明前面已经排队了很多请求，这里需要更多的睡眠时间。</p>
+<ul>
+<li>如果是第一次调用 Take 函数，那么直接返回，并设置 state.last &#x3D; now</li>
+<li>如果是非第一次调用 Take 函数，那么计算当前请求需要休眠的时间 <code>newState.sleepFor += t.perRequest - now.Sub(oldState.last)</code><ul>
+<li>其中 perRequest 表示每一个请求需要的理论平均时间，例如该 limiter 初始化为 100 qps，那么 preRequest 就是 0.01 s， 对应的初始化代码 <code>perRequest: time.Second / time.Duration(rate)</code></li>
+</ul>
+</li>
+<li>然后更新 state.last <code>newState.last = now; newState.last = newState.last.Add(newState.sleepFor)</code></li>
+<li>然后 sleep</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">func (t *limiter) Take() time.Time &#123;</span><br><span class="line">	newState := state&#123;&#125;</span><br><span class="line">	taken := <span class="literal">false</span></span><br><span class="line">	<span class="keyword">for</span> !taken &#123;</span><br><span class="line">		now := t.clock.Now()</span><br><span class="line"></span><br><span class="line">		previousStatePointer := atomic.LoadPointer(&amp;t.state)</span><br><span class="line">		oldState := (*state)(previousStatePointer)</span><br><span class="line"></span><br><span class="line">		newState = state&#123;&#125;</span><br><span class="line">		newState.last = now</span><br><span class="line"></span><br><span class="line">		// If this is our first request, <span class="keyword">then</span> we allow it.</span><br><span class="line">		<span class="keyword">if</span> oldState.last.<span class="function"><span class="title">IsZero</span></span>() &#123;</span><br><span class="line">			taken = atomic.CompareAndSwapPointer(&amp;t.state, previousStatePointer, unsafe.Pointer(&amp;newState))</span><br><span class="line">			<span class="built_in">continue</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// sleepFor calculates how much time we should <span class="built_in">sleep</span> based on</span><br><span class="line">		// the perRequest budget and how long the last request took.</span><br><span class="line">		// Since the request may take longer than the budget, this number</span><br><span class="line">		// can get negative, and is summed across requests.</span><br><span class="line">		newState.sleepFor += t.perRequest - now.Sub(oldState.last)</span><br><span class="line">		// We shouldn<span class="string">&#x27;t allow sleepFor to get too negative, since it would mean that</span></span><br><span class="line"><span class="string">		// a service that slowed down a lot for a short period of time would get</span></span><br><span class="line"><span class="string">		// a much higher RPS following that.</span></span><br><span class="line"><span class="string">		if newState.sleepFor &lt; t.maxSlack &#123;</span></span><br><span class="line"><span class="string">			newState.sleepFor = t.maxSlack</span></span><br><span class="line"><span class="string">		&#125;</span></span><br><span class="line"><span class="string">		if newState.sleepFor &gt; 0 &#123;</span></span><br><span class="line"><span class="string">			newState.last = newState.last.Add(newState.sleepFor)</span></span><br><span class="line"><span class="string">		&#125;</span></span><br><span class="line"><span class="string">		taken = atomic.CompareAndSwapPointer(&amp;t.state, previousStatePointer, unsafe.Pointer(&amp;newState))</span></span><br><span class="line"><span class="string">	&#125;</span></span><br><span class="line"><span class="string">	t.clock.Sleep(newState.sleepFor)</span></span><br><span class="line"><span class="string">	return newState.last</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Leaky_bucket">wiki leaky bucket</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/go-redis/redis_rate">go redis 实现分布式漏斗桶算法 (as a meter)</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/uber-go/ratelimit">uber-go 实现的漏斗桶(as a queue)</a></p>
+<p>下一篇谷歌实现的令牌桶算法，有时间再看了，<a target="_blank" rel="noopener" href="https://github.com/golang/time">https://github.com/golang/time</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" rel="tag"># 微服务</a>
+              <a href="/tags/%E9%99%90%E6%B5%81%E7%AE%97%E6%B3%95/" rel="tag"># 限流算法</a>
+              <a href="/tags/%E6%BC%8F%E6%96%97%E6%A1%B6/" rel="tag"># 漏斗桶</a>
+              <a href="/tags/as-a-meter/" rel="tag"># as a meter</a>
+              <a href="/tags/as-a-queue/" rel="tag"># as a queue</a>
+              <a href="/tags/%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3/" rel="tag"># 滑动窗口</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/19/blog/distribute/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B9%8B%E6%8C%87%E6%A0%87/" rel="prev" title="分布式系统之指标">
+      <i class="fa fa-chevron-left"></i> 分布式系统之指标
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/30/blog/algorithm/%E7%AE%97%E6%B3%95%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8FID-%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95/" rel="next" title="算法之分布式ID-雪花算法">
+      算法之分布式ID-雪花算法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E7%AF%87"><span class="nav-number">1.</span> <span class="nav-text">开篇</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BC%8F%E6%96%97%E6%A1%B6%E6%A6%82%E8%A7%88"><span class="nav-number">2.</span> <span class="nav-text">漏斗桶概览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-A-METER"><span class="nav-number">3.</span> <span class="nav-text">AS A METER</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E8%A7%A3%E5%A6%82%E4%B8%8B"><span class="nav-number">3.1.</span> <span class="nav-text">图解如下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lua-script"><span class="nav-number">3.2.</span> <span class="nav-text">lua script</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AS-A-QUEUE"><span class="nav-number">4.</span> <span class="nav-text">AS A QUEUE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">参考：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

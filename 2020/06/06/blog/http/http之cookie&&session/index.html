@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[toc] 是什么早期的 Web 应用面临的最大问题之一就是如何维持状态。简言之，服务器无法知道两个请求是否来自于同一个浏览器。当时，最简单的办法就是在请求的页面中插入一个 token，然后在下次请求时将这个 token 返回至服务器。后面就衍生出来cookie。简单地说，cookie 就是浏览器储存在用户电脑上的一小段文本文件。cookie 是纯文本格式，不包含任何可执行的代码。一个 Web 页">
+<meta property="og:type" content="article">
+<meta property="og:title" content="http之cookie&amp;&amp;session">
+<meta property="og:url" content="http://example.com/2020/06/06/blog/http/http%E4%B9%8Bcookie&&session/index.html">
+<meta property="og:site_name" content="blog | percy">
+<meta property="og:description" content="[toc] 是什么早期的 Web 应用面临的最大问题之一就是如何维持状态。简言之，服务器无法知道两个请求是否来自于同一个浏览器。当时，最简单的办法就是在请求的页面中插入一个 token，然后在下次请求时将这个 token 返回至服务器。后面就衍生出来cookie。简单地说，cookie 就是浏览器储存在用户电脑上的一小段文本文件。cookie 是纯文本格式，不包含任何可执行的代码。一个 Web 页">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-06-06T12:37:37.000Z">
+<meta property="article:modified_time" content="2021-08-02T02:26:17.867Z">
+<meta property="article:author" content="Percy">
+<meta property="article:tag" content="http">
+<meta property="article:tag" content="cookie - session">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2020/06/06/blog/http/http%E4%B9%8Bcookie&&session/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>http之cookie&&session | blog | percy</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog | percy</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/06/06/blog/http/http%E4%B9%8Bcookie&&session/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ivalue2333.github.io/percy/images/percy.jpg">
+      <meta itemprop="name" content="Percy">
+      <meta itemprop="description" content="IOT2014">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog | percy">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          http之cookie&&session
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-06 20:37:37" itemprop="dateCreated datePublished" datetime="2020-06-06T20:37:37+08:00">2020-06-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-02 10:26:17" itemprop="dateModified" datetime="2021-08-02T10:26:17+08:00">2021-08-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/http/" itemprop="url" rel="index"><span itemprop="name">http</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>[toc]</p>
+<h2 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h2><p>早期的 Web 应用面临的最大问题之一就是如何维持状态。简言之，服务器无法知道两个请求是否来自于同一个浏览器。当时，最简单的办法就是在请求的页面中插入一个 token，然后在下次请求时将这个 token 返回至服务器。后面就衍生出来cookie。简单地说，cookie 就是浏览器储存在用户电脑上的一小段文本文件。cookie 是纯文本格式，不包含任何可执行的代码。一个 Web 页面或服务器告知浏览器按照一定规范来储存这些信息，并在随后的请求中将这些信息发送至服务器，Web 服务器就可以使用这些信息来识别不同的用户。</p>
+<h2 id="Cookie"><a href="#Cookie" class="headerlink" title="Cookie"></a>Cookie</h2><h3 id="创建cookie"><a href="#创建cookie" class="headerlink" title="创建cookie"></a>创建cookie</h3><p>Web 服务器通过发送一个称为 Set-Cookie 的 HTTP 消息头来创建一个 cookie，Set-Cookie消息头是一个字符串，其格式如下（中括号中的部分是可选的）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: value[; expires=date][; domain=domain][; path=path][; secure]</span><br></pre></td></tr></table></figure>
+
+<p>服务器端框架通常包含解析 cookie 的方法，可以通过编程的方式获取 cookie 的值。</p>
+<h3 id="cookie过期时间"><a href="#cookie过期时间" class="headerlink" title="cookie过期时间"></a>cookie过期时间</h3><p>紧跟 cookie 值后面的每个选项都以分号和空格分开，每个选择都指定了 cookie 在什么情况下应该被发送至服务器。第一个选项是过期时间（expires），指定了 cookie 何时不会再被发送至服务器，随后浏览器将删除该 cookie。该选项的值是一个 <code>Wdy, DD-Mon-YYYY HH:MM:SS GMT</code>日期格式的值，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: name=Nicholas; expires=Sat, 02 May 2009 23:38:25 GMT</span><br></pre></td></tr></table></figure>
+
+<p>没有设置 expires 选项时，cookie 的生命周期仅限于当前会话中（<strong>会话cookie</strong>），关闭浏览器意味着这次会话的结束，所以会话 cookie 仅存在于浏览器打开状态之下。这就是为什么为什么当你登录一个 Web 应用时经常会看到一个复选框，询问你是否记住登录信息：如果你勾选了复选框，那么一个 expires 选项会被附加到登录 cookie 中（<strong>持久化cookie</strong>）。如果 expires 设置了一个过去的时间点，那么这个 cookie 会被立即删掉。</p>
+<h3 id="secure选项"><a href="#secure选项" class="headerlink" title="secure选项"></a>secure选项</h3><p>最后一个选项是 secure。不像其它选项，该选项只是一个标记而没有值。只有当一个请求通过 SSL 或 HTTPS 创建时，包含 secure 选项的 cookie 才能被发送至服务器。这种 cookie 的内容具有很高的价值，如果以纯文本形式传递很有可能被篡改，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: name=Nicholas; secure</span><br></pre></td></tr></table></figure>
+
+<p>事实上，机密且敏感的信息绝不应该在 cookie 中存储或传输，因为 cookie 的整个机制原本都是不安全的。默认情况下，在 HTTPS 链接上传输的 cookie 都会被自动添加上 secure 选项。</p>
+<h3 id="cookie-属性"><a href="#cookie-属性" class="headerlink" title="cookie 属性"></a>cookie 属性</h3><h4 id="expires-属性"><a href="#expires-属性" class="headerlink" title="expires 属性"></a>expires 属性</h4><p>Cookie 的expires 属性指定浏览器可发送Cookie 的有效期。当省略expires 属性时，Cookie仅在浏览器关闭之前有效。<br>另外，一旦Cookie 从服务器端发送至客户端，服务器端就不存在可以显式删除Cookie 的方法。但可通过覆盖已过期的Cookie，实现对客户端Cookie 的实质性删除操作。</p>
+<h4 id="path-属性"><a href="#path-属性" class="headerlink" title="path 属性"></a>path 属性</h4><p>Cookie 的path 属性可用于限制指定Cookie 的发送范围的文件目录。不过另有办法可避开这项限制，看来对其作为安全机制的效果不能抱有期待。</p>
+<h4 id="domain-属性"><a href="#domain-属性" class="headerlink" title="domain 属性"></a>domain 属性</h4><p>通过Cookie 的domain 属性指定的域名可做到与结尾匹配一致。比如， 当指定<a href="http://example.com/">http://example.com</a> 后， 除<a href="http://example.com/">http://example.com</a> 以外，okr.example.com 或 www2.example.com 等都可以发送Cookie。因此，除了针对具体指定的多个域名发送Cookie 之外，不指定domain 属性显得更安全。</p>
+<h4 id="secure-属性"><a href="#secure-属性" class="headerlink" title="secure 属性"></a>secure 属性</h4><p>Cookie 的secure 属性用于限制Web 页面仅在HTTPS 安全连接时，才可以发送Cookie。发送Cookie 时，指定secure 属性的方法如下所示。<br>Set-Cookie: name&#x3D;value; secure<br>以上例子仅当在https ：&#x2F;&#x2F;Example Domain（HTTPS）安全连接的情况下才会进行Cookie 的回收。也就是说，即使域名相同时http : &#x2F;&#x2F;Example Domain（HTTP） 也不会发生Cookie 回收行为。当省略secure 属性时，不论HTTP 还是HTTPS，都会对Cookie 进行回收。</p>
+<h4 id="HttpOnly-属性"><a href="#HttpOnly-属性" class="headerlink" title="HttpOnly 属性"></a>HttpOnly 属性</h4><p>Cookie 的HttpOnly 属性是Cookie 的扩展功能，它使JavaScript 脚本无法获得Cookie。其主要目的为防止跨站脚本攻击（Cross-sitescripting，XSS）对Cookie 的信息窃取。<br>发送指定HttpOnly 属性的Cookie 的方法如下所示。<br>Set-Cookie: name&#x3D;value; HttpOnly<br>通过上述设置，通常从Web 页面内还可以对Cookie 进行读取操作。但使用JavaScript 的document.cookie 就无法读取附加HttpOnly 属性后的Cookie 的内容了。因此，也就无法在XSS 中利用JavaScript 劫持Cookie 了。<br>虽然是独立的扩展功能，但Internet Explorer 6 SP1 以上版本等当下的主流浏览器都已经支持该扩展了。另外顺带一提，该扩展并非是为了防止XSS 而开发的。</p>
+<h2 id="session"><a href="#session" class="headerlink" title="session"></a>session</h2><h3 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h3><p>cookie 虽然很方便，但是使用 cookie 有一个很大的弊端，cookie 中的所有数据在客户端就可以被修改，数据非常容易被伪造，那么一些重要的数据就不能存放在 cookie 中了，而且如果 cookie 中数据字段太多会影响传输效率。为了解决这些问题，就产生了 session，session 中的数据是保留在服务器端的。Session是另一种记录客户状态的机制，不同的是Cookie保存在客户端浏览器中，而Session保存在服务器上。客户端浏览器访问服务器的时候，服务器把客户端信息以某种形式记录在服务器上。这就是Session。客户端浏览器再次访问时只需要从该Session中查找该客户的状态就可以了。</p>
+<h3 id="session运作"><a href="#session运作" class="headerlink" title="session运作"></a>session运作</h3><p>session 的运作通过一个 session_id 来进行。session_id 通常是存放在客户端的 cookie 中。session可以存放在任何位置，一般是放内存或者缓存中。</p>
+<h3 id="session-cookie"><a href="#session-cookie" class="headerlink" title="session-cookie"></a>session-cookie</h3><p>初学者容易犯的一个错误是，忘记了 session_id 在 cookie 中的存储方式是 session cookie。即，当用户一关闭浏览器，浏览器 cookie 中的 session_id 字段就会消失。常见的场景就是在开发用户登陆状态保持时。假如用户在之前登陆了你的网站，你在他对应的 session 中存了信息，当他关闭浏览器再次访问时，你还是不懂他是谁。所以我们要在 cookie 中，也保存一份关于用户身份的信息。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>一、基于Session实现会话保持</p>
+<p>基于Session实现会话保持的原理是：在会话的开始（即客户端第一次向服务器发送HTTP请求时），服务器会将会话状态保存起来（一般保存在本机内存，当然也可以保存在其他存储系统），然后分配一个会话标识（也叫SessionId）给客户端，这个会话标识一般保存在浏览Cookie里，以后每次浏览器发送HTTP请求的时候，都会带上这个会话标识到服务器，服务器拿到这个会话标识之后就可以把之前存储在服务端的状态信息与该会话联系起来，因此也就实现了会话保持。当然如果遇到浏览器禁用了Cookie的情况，则可以通过url重写的方式将会话标识放在url的参数里，这样也可以实现会话保持。</p>
+<p>二、基于Cookie实现会话保持</p>
+<p>基于Cookie实现会话保持与上述基于Session实现会话保持的最主要区别是前者完全将会话状态信息存储在浏览器Cookie中，这样一来每次浏览器发送HTTP请求的时候都会带上状态信息，因此也就可以实现状态保持。以上述购物车应用为例，服务端可以将商品信息加密（也可以不加密，但为了安全性，一般会此对状态信息进行加密处理）后保存在浏览器的Cookie中，这样一来服务端就能知道你在浏览的过程中添加了哪些商品到购物车中了。</p>
+<p>三、两者的优缺点</p>
+<p>基于Session的会话保持的优点是具有安全性，因为状态信息是保存在服务端的，缺点是不便于服务器的水平扩展。大型网站的后台一般都不止一台服务器，可能几台甚至上百台，浏览器发送的HTTP请求一般要先通过负载均衡器才能到达具体的后台服务器，这就会导致每次HTTP请求可能落到不同的服务器上，比如说第一次HTTP请求落到server1上，第二次HTTP请求落到server2上。而Session默认是存储在服务器本机内存的，当多次请求落到不同的服务器上时，上述方案就不能实现会话保持了。</p>
+<p>基于Cookie的会话保持的优点是服务器不用保存状态信息，减轻服务端存储压力，也便于服务端做水平扩展。缺点是不够安全，因为状态信息是存储在客户端的，这意味着不能在会话中保存机密数据，另一个缺点是每次HTTP请求都需要发送额外的Cookie到服务端，会消耗更多带宽。</p>
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><p>通过这篇文章，你会知道。</p>
+<ul>
+<li>cookie 是什么。</li>
+<li>cookie 怎么使用</li>
+<li>session</li>
+<li>session怎么使用</li>
+<li>一般来说，都是cookie中存储 session_id&#x3D;”xxx”，请求服务端时，服务端拿到xxx中的信息后，去内存，或者缓存中拿存储的数据，所以不存在说水平扩展的问题，上面人的说法只是在特定的模式下成立。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>看云：<a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/http-cookies-explained%EF%BC%88%E5%85%A8%E6%96%87%E6%91%98%E5%BD%95%EF%BC%89">https://www.kancloud.cn/kancloud/http-cookies-explained（全文摘录）</a></p>
+<p>看云：<a target="_blank" rel="noopener" href="https://www.kancloud.cn/codepan/cookie-session">https://www.kancloud.cn/codepan/cookie-session</a></p>
+<p>微信：<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/y-o87DhpZAvceRruDMF4QA">谈谈http的状态</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"># http</a>
+              <a href="/tags/cookie-session/" rel="tag"># cookie - session</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/05/blog/translation/%E3%80%90%E7%BF%BB%E8%AF%91%E3%80%91%E5%9F%BA%E4%BA%8E%E5%A0%86%E6%A0%88(stack)%E7%9A%84%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/" rel="prev" title="【翻译】基于栈(stack)的内存分配">
+      <i class="fa fa-chevron-left"></i> 【翻译】基于栈(stack)的内存分配
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/06/06/blog/http/http%E4%B9%8B%E9%95%BF%E8%BF%9E%E6%8E%A5/" rel="next" title="http之长连接">
+      http之长连接 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">1.</span> <span class="nav-text">是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cookie"><span class="nav-number">2.</span> <span class="nav-text">Cookie</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAcookie"><span class="nav-number">2.1.</span> <span class="nav-text">创建cookie</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cookie%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4"><span class="nav-number">2.2.</span> <span class="nav-text">cookie过期时间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#secure%E9%80%89%E9%A1%B9"><span class="nav-number">2.3.</span> <span class="nav-text">secure选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cookie-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.</span> <span class="nav-text">cookie 属性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#expires-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.1.</span> <span class="nav-text">expires 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#path-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.2.</span> <span class="nav-text">path 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#domain-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.3.</span> <span class="nav-text">domain 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#secure-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.4.</span> <span class="nav-text">secure 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HttpOnly-%E5%B1%9E%E6%80%A7"><span class="nav-number">2.4.5.</span> <span class="nav-text">HttpOnly 属性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#session"><span class="nav-number">3.</span> <span class="nav-text">session</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#session%E8%BF%90%E4%BD%9C"><span class="nav-number">3.2.</span> <span class="nav-text">session运作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#session-cookie"><span class="nav-number">3.3.</span> <span class="nav-text">session-cookie</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Percy"
+      src="https://ivalue2333.github.io/percy/images/percy.jpg">
+  <p class="site-author-name" itemprop="name">Percy</p>
+  <div class="site-description" itemprop="description">IOT2014</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">194</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Percy</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
